@@ -14,4 +14,4 @@ docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
 
 clean :
-	rm -f docs.pdf
+	rm -rf docs.pdf joosc target/
