@@ -1,0 +1,125 @@
+# This is a reduced Joos grammar for protyping the parser. It only parses
+# expressions.
+#
+# This file has the following format:
+#
+# 1. Blank lines and lines starting with '#' are ignored.
+# 2. Lines start with a non-terminal and are followed by 0 or more terminals.
+# 3. The set of non-terminals is stored in nonterminals.txt
+# 4. The set of terminals is stored in terminals.txt
+# 5. The root of the syntax tree is Start.
+#
+# The JLS2 grammar has more features and I will explain how to convert them:
+#
+# 1. [x] denotes zero or one occurances of x
+#
+#    Before:
+#
+#      Expression:
+#          Expression1 [AssignmentOperator Expression1]
+#
+#    After:
+#
+#      Expression    Expression1
+#      Expression    Expression1 AssignmentOperator Expression1
+#
+# 2. {x} denotes zero or more occurances of x
+#
+#    Before:
+#
+#      Type:
+#          Identifier { . Identifier } BracketsOpt
+#          BasicType
+#
+#    After:
+#
+#      Type    Identifier Type' BracketsOpt
+#      Type    BasicType
+#      Type'   . Identifier Type'
+#      Type'
+#
+# 3. x|y means one of either x or y
+#
+#    Before:
+#
+#      ClassOrInterfaceDeclaration:
+#          ModifiersOpt ( ClassDeclaration | InterfaceDeclaration )
+#
+#    After:
+#
+#      ClassOrInterfaceDeclaration    ModifiersOpt ClassDeclaration
+#      ClassOrInterfaceDeclaration    ModifiersOpt InterfaceDeclaration
+#
+
+# WARNING: THIS GRAMMAR PROBABABLY ISN'T LR(1)
+
+
+########## Tree Root ##########
+
+Start                   StatementExpression
+StatementExpression     Expression
+
+
+########## Literals and Identifiers ##########
+
+Literal                 IntegerLiteral
+Literal                 BooleanLiteral
+Literal                 NullLiteral
+
+Identifier              IDENTIFIER
+
+IdentifierSuffix        Arguments
+
+Arguments               ( )
+Arguments               ( Expression Arguments' )
+Arguments'              , Expression Arguments'
+Arguments'
+
+
+########## Expressions ##########
+
+Expression              Expression1
+Expression              Expression1 AssignmentOperator Expression1
+
+Expression1             Expression2 Expression1Rest
+Expression1Rest
+Expression1Rest         ? Expression : Expression1
+
+Expression2             Expression3
+Expression2             Expression3 Expression2Rest
+Expression2Rest         Infixop Expression3 Expression2Rest
+Expression2Rest
+
+Expression3             PrefixOp Expression3
+Expression3             Primary Expression3'
+Expression3'            PostfixOp Expression3'
+Expression3'
+
+Primary                 ( Expression )
+Primary                 Literal
+Primary                 Identifier Primary'
+Primary                 Identifier Primary' IdentifierSuffix
+Primary'                . Identifer Primary'
+Primary'
+
+
+########## OPERATORS ##########
+
+AssignmentOperator      =
+AssignmentOperator      +=
+AssignmentOperator      -=
+AssignmentOperator      *=
+AssignmentOperator      /=
+
+Infixop                 +
+Infixop                 -
+Infixop                 *
+Infixop                 /
+Infixop                 %
+
+PrefixOp                ++
+PrefixOp                --
+PrefixOp                !
+
+PostfixOp               ++
+PostfixOp               --
