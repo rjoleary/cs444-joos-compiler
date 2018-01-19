@@ -1,5 +1,5 @@
 # Copied from the Syntax chapter in the JLS2 spec.
-# [x] denotes zero or more occurances of x
+# [x] denotes zero or one occurances of x
 # {x} denotes zero or more occurances of x
 # x|y means one of either x or y
 
