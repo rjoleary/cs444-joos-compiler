@@ -1,0 +1,13 @@
+S
+S ; S
+S ; id := E
+id := E ; id := E
+id := num ; id := E
+id := num ; id := E + E
+id := num ; id := E + ( S , E )
+id := num ; id := E + ( S , E )
+id := num ; id := E + ( id := E , E )
+id := num ; id := E + ( id := E + E , E )
+id := num ; id := E + ( id := E + E , id )
+id := num ; id := E + ( id := num + E , id )
+id := num ; id := E + ( id := num + num , id )

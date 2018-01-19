@@ -1,0 +1,12 @@
+S   S ; S
+S   id := E
+E   E + E
+E   ( S , E )
+E   id
+S   id := E
+E   E + E
+E   num
+E   num
+E   id
+S   id := E
+E   num

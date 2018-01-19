@@ -1,0 +1,12 @@
+The tokens file is written by the lexer and read by the parser. Each line in
+the file has three whitespace separated fields:
+
+        <lexeme> <start_index> <end_index>
+
+The end_index is exclusive so that start_index < end_index.
+
+The start_index and end_index are measured in *bytes* from the beginning of the
+input with the first byte in the file being the zeroth index. "\r\n" line
+separators count as two indices.
+
+For an example, See appel_tokens.txt for the tokenisation of appel_input.txt.
