@@ -21,3 +21,10 @@ impl fmt::Display for Error {
                self.message, self.line, self.col)
     }
 }
+
+impl fmt::Debug for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}, line {}, col {}",
+               self.message, self.line, self.col)
+    }
+}

@@ -3,4 +3,10 @@ name = "joosc"
 version = "0.1.0"
 authors = ["Ryan O'Leary <rj2olear@uwaterloo.ca>", "Xia Liu <x397liu@uwaterloo.ca", "Ahmed Al-Sudani <a2alsuda@uwaterloo.ca>"]
 
+[[bin]]
+name = "parser"
+path = "src/parser.rs"
+version = "0.1.0"
+authors = ["Ryan O'Leary <rj2olear@uwaterloo.ca>", "Xia Liu <x397liu@uwaterloo.ca", "Ahmed Al-Sudani <a2alsuda@uwaterloo.ca>"]
+
 [dependencies]
