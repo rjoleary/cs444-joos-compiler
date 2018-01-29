@@ -17,24 +17,25 @@ struct Grammar {
     // Loaded from test/appel_terminals.txt
     terminals: HashSet<Terminal>,
     // Loaded from test/appel_nonterminals.txt
-    non_terminals: HashSet<NonTerminal>,
+    nonterminals: HashSet<NonTerminal>,
     // Loaded from test/appel_grammar.txt
     productions: Vec<Production>,
 }
 
 
 type ParseState = usize;
+type NonTerminalIdx = usize;
 
 // One token of lookahead
 #[derive(Hash, Eq, PartialEq, Debug)]
 struct ParseTransition(ParseState, TerminalOrNonTerminal);
 
 enum ParseAction {
-    // Error states exist implicitly where the HashMap does not contain an action.
+    // An Error action exists implicitly where the HashMap does not contain an action. Shift action
+    // on a non-terminal is equivalent to a Goto action in the Appel textbook.
     Accept,
-    Goto(ParseState),
     Shift(ParseState),
-    Reduce(ParseState),
+    Reduce(NonTerminalIdx),
 }
 
 // Loaded from test/appel_oracle.txt
@@ -46,13 +47,12 @@ type Tokens = Vec<Terminal>;
 
 
 fn main() {
-    let grammar = read_grammar("test/appel_terminals.txt",
-                               "test/appel_nonterminals.txt",
-                               "test/appel_grammar.txt").unwrap();
-    let table = read_parse_table("test/appel_oracle.txt").unwrap();
+    let (grammar, table) = read_grammar("def/appel.lr1").unwrap();
     let mut tokens = read_tokens("test/appel_tokens.txt").unwrap();
-    tokens.push("$".to_string()); // augment the grammar
-    parse(&grammar, &table, &tokens)
+    let mut augmented = vec!["BOF".to_string()];
+    augmented.append(&mut tokens);
+    augmented.push("EOF".to_string());
+    parse(&grammar, &table, &augmented)
 }
 
 // Parser as defined in Appel. This supports goto transitions and error states.
@@ -62,7 +62,7 @@ fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
     let mut tokens = &tokens[..];
 
     // never reduced, but simplifies the parser
-    stack.push(ParseTransition(1, "".to_string()));
+    stack.push(ParseTransition(0, "".to_string()));
 
     loop {
         let &ParseTransition(state, _) = stack.last().unwrap();
@@ -70,20 +70,20 @@ fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
         //println!("Input: {:?}", tokens);
         match table.get(&ParseTransition(state, tokens[0].clone())) {
             Some(&ParseAction::Shift(state)) => {
-                //println!("Action: shift {}", state);
+                //println!("{}", state);
                 stack.push(ParseTransition(state, tokens[0].clone()));
                 tokens = &tokens[1..];
             },
             Some(&ParseAction::Reduce(production_idx)) => {
-                //println!("Action: reduce {}", state);
-                let production = &grammar.productions[production_idx-1];
-                println!("{:?}", production);
+                //println!("{}", state);
+                let production = &grammar.productions[production_idx];
+                println!("{}", production.join(" "));
                 for _ in 1..production.len() {
                     stack.pop();
                 }
                 let nonterminal = &production[0];
                 let &ParseTransition(state, _) = stack.last().unwrap();
-                if let Some(&ParseAction::Goto(state)) =
+                if let Some(&ParseAction::Shift(state)) =
                         table.get(&ParseTransition(state, nonterminal.to_string())) {
                     stack.push(ParseTransition(state, nonterminal.to_string()));
                 } else {
@@ -93,10 +93,6 @@ fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
             },
             Some(&ParseAction::Accept) => {
                 //println!("Action: accept {}", state);
-                return;
-            },
-            Some(&ParseAction::Goto(_)) => {
-                eprintln!("Error: unexpected goto action");
                 return;
             },
             None => {
@@ -122,31 +118,51 @@ fn read_file(filename: &str) -> Result<String> {
     Ok(unsafe { String::from_utf8_unchecked(contents) })
 }
 
-fn read_grammar(terminals_filename: &str,
-                nonterminals_filename: &str,
-                grammar_filename: &str) -> Result<Grammar> {
-    Ok(Grammar {
+fn read_grammar(filename: &str) -> Result<(Grammar, ParseTable)> {
+    let mut grammar = Grammar{
         start: "S".to_string(),
-        terminals: read_file(terminals_filename)?.lines()
-            .map(|s| s.to_string()).collect(),
-        non_terminals: read_file(nonterminals_filename)?.lines()
-            .map(|s| s.to_string()).collect(),
-        productions: read_file(grammar_filename)?.lines()
-            .map(|line| line.split_whitespace().map(|s| s.to_string()).collect()).collect(),
-    })
-}
-
-fn read_parse_table(filename: &str) -> Result<ParseTable> {
+        terminals: HashSet::new(),
+        nonterminals: HashSet::new(),
+        productions: Vec::new(),
+    };
     let mut table = ParseTable::new();
+    let contents = read_file(filename)?;
+    let mut lines = contents.lines();
 
-    for line in read_file(filename)?.lines() {
-        let line = line.trim();
-        if line.len() == 0 || line.starts_with("#") {
-            continue;
-        }
+    // Parse terminals.
+    let num_terminals: usize = lines.next().unwrap().parse().unwrap();
+    grammar.terminals = HashSet::new();
+    for _ in 0..num_terminals {
+        grammar.terminals.insert(lines.next().unwrap().to_string());
+    }
+
+    // Parse non-terminals.
+    let num_nonterminals: usize = lines.next().unwrap().parse().unwrap();
+    grammar.nonterminals = HashSet::new();
+    for _ in 0..num_nonterminals {
+        grammar.nonterminals.insert(lines.next().unwrap().to_string());
+    }
+
+    // Parse start symbol.
+    grammar.start = lines.next().unwrap().to_string();
+
+    // Parse productions.
+    let num_productions: usize = lines.next().unwrap().parse().unwrap();
+    grammar.productions.reserve_exact(num_productions);
+    for _ in 0..num_productions {
+        grammar.productions.push(lines.next().unwrap().split_whitespace().map(|s| s.to_string()).collect());
+    }
+
+    // Parse states. (ignored)
+    lines.next();
+
+    // Parse transitions.
+    let num_transitions: usize = lines.next().unwrap().parse().unwrap();
+    for _ in 0..num_transitions {
+        let line = lines.next().unwrap();
 
         let tokens: Vec<_> = line.split_whitespace().collect();
-        if tokens.len() < 2 {
+        if tokens.len() != 4 {
             return Err(Error::new("Could not load parse table", 0, 0));
         }
         let transition = ParseTransition(
@@ -154,20 +170,22 @@ fn read_parse_table(filename: &str) -> Result<ParseTable> {
             tokens[1].to_string(),
         );
 
-        if tokens.len() == 3 && tokens[2] == "a" {
-            table.insert(transition, ParseAction::Accept);
-        } else if tokens.len() == 4 && tokens[2] == "g" {
-            table.insert(transition, ParseAction::Goto(tokens[3].parse().unwrap()));
-        } else if tokens.len() == 4 && tokens[2] == "s" {
-            table.insert(transition, ParseAction::Shift(tokens[3].parse().unwrap()));
-        } else if tokens.len() == 4 && tokens[2] == "r" {
-            table.insert(transition, ParseAction::Reduce(tokens[3].parse().unwrap()));
-        } else {
-            return Err(Error::new("Could not load parse table", 0, 0))
-        }
+        table.insert(transition, match tokens[2] {
+            "reduce" => ParseAction::Reduce(tokens[3].parse().unwrap()),
+            "shift" => {
+                if tokens[1] == "EOF" {
+                    ParseAction::Accept
+                } else {
+                    ParseAction::Shift(tokens[3].parse().unwrap())
+                }
+            },
+            _ => {
+                return Err(Error::new("Could not load parse table", 0, 0))
+            }
+        });
     }
 
-    Ok(table)
+    Ok((grammar, table))
 }
 
 fn read_tokens(filename: &str) -> Result<Tokens> {
