@@ -1,0 +1,196 @@
+10
+$
+(
+)
++
+,
+:=
+;
+id
+num
+print
+4
+S'
+S
+E
+L
+S'
+10
+S' S $
+S S ; S
+S id := E
+S print ( L )
+E id
+E num
+E E + E
+E ( S , E )
+L E
+L L , E
+60
+166
+39 ; shift 1
+29 S shift 2
+18 ( shift 3
+53 L shift 4
+20 E shift 5
+30 ; reduce 6
+24 ) reduce 5
+6 ) reduce 8
+12 + reduce 5
+24 + reduce 5
+53 E shift 6
+24 , reduce 5
+6 , reduce 8
+34 $ reduce 7
+12 , reduce 5
+6 + shift 7
+1 id shift 8
+45 num shift 9
+2 ; shift 10
+51 E shift 11
+34 + reduce 7
+25 num shift 9
+26 num shift 12
+12 ; reduce 5
+48 id shift 13
+47 ; shift 10
+22 , reduce 7
+39 $ shift 14
+22 + reduce 7
+22 ) reduce 7
+3 L shift 15
+47 , shift 16
+48 ( shift 17
+3 E shift 6
+29 print shift 18
+38 num shift 19
+54 + shift 20
+20 num shift 19
+3 id shift 21
+54 ) shift 22
+1 print shift 23
+53 num shift 24
+27 ; shift 1
+50 + shift 25
+43 num shift 24
+58 ; reduce 3
+52 , reduce 2
+52 + shift 26
+1 S shift 27
+0 id shift 8
+16 E shift 28
+3 ( shift 29
+50 ; reduce 2
+25 E shift 30
+52 ; reduce 2
+27 $ reduce 1
+51 num shift 19
+5 ) reduce 6
+30 $ reduce 6
+35 ) reduce 9
+58 $ reduce 3
+21 + reduce 4
+5 + shift 20
+21 ) reduce 4
+16 id shift 31
+35 , reduce 9
+35 + shift 7
+21 , reduce 4
+28 + shift 20
+34 ; reduce 7
+10 id shift 32
+7 num shift 24
+46 id shift 32
+16 ( shift 33
+50 $ reduce 2
+28 ) shift 34
+30 + shift 25
+46 print shift 18
+36 ; reduce 7
+40 $ reduce 4
+13 , reduce 4
+13 + reduce 4
+9 + reduce 5
+43 E shift 35
+42 ; shift 10
+59 ) shift 36
+59 + shift 20
+40 + reduce 4
+7 ( shift 29
+36 + reduce 7
+16 num shift 19
+57 num shift 19
+37 , reduce 1
+10 S shift 37
+48 num shift 12
+36 , reduce 7
+42 , shift 38
+0 S shift 39
+9 $ reduce 5
+40 ; reduce 4
+10 print shift 18
+45 id shift 40
+31 + reduce 4
+44 ) reduce 6
+0 print shift 23
+43 id shift 21
+44 , reduce 6
+44 + shift 7
+37 ; shift 10
+15 ) shift 41
+49 + reduce 7
+17 S shift 42
+15 , shift 43
+31 ) reduce 4
+55 + shift 26
+49 ) reduce 7
+25 id shift 40
+7 E shift 44
+43 ( shift 29
+33 print shift 18
+26 id shift 13
+26 ( shift 17
+11 + shift 20
+55 , reduce 6
+8 := shift 45
+45 ( shift 46
+46 S shift 47
+32 := shift 48
+25 ( shift 46
+11 ) shift 49
+55 ; reduce 6
+19 + reduce 5
+19 ) reduce 5
+45 E shift 50
+56 , shift 51
+48 E shift 52
+23 ( shift 53
+29 id shift 32
+57 E shift 54
+38 id shift 31
+26 E shift 55
+20 id shift 31
+56 ; shift 10
+41 ; reduce 3
+33 id shift 32
+17 print shift 18
+38 ( shift 33
+53 ( shift 29
+20 ( shift 33
+33 S shift 56
+14 $ reduce 0
+3 num shift 24
+2 , shift 57
+4 ) shift 58
+41 , reduce 3
+4 , shift 43
+57 ( shift 33
+7 id shift 21
+51 id shift 31
+53 id shift 21
+13 ; reduce 4
+9 ; reduce 5
+57 id shift 31
+38 E shift 59
+51 ( shift 33
+17 id shift 32
