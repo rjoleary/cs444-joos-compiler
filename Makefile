@@ -1,15 +1,27 @@
 # TODO: change to joos at some point
 GRAMMAR := appel
 
+# TODO: move rust source to src/rust/*.rs
 RS_FILES := $(wildcard src/*.rs)
+HS_FILES := $(wildcard src/haskell/*.hs)
 
-.PHONY : all clean docs grammar
+.PHONY : compiler all clean docs grammar
 
-joosc : ${RS_FILES}
+# Only builds the compiler. This is the recipe run by Marmoset.
+compiler : bin bin/parser bin/haskell_main
+
+# Builds everything including the grammar and docs.
+all : compiler grammar docs
+
+bin :
+	mkdir -p bin
+
+bin/parser : ${RS_FILES}
 	cargo build --release
-	ln -sf target/release/joosc .
+	cp target/release/parser bin/parser
 
-all : joosc grammar docs
+bin/haskell_main : ${HS_FILES}
+	ghc -o bin/haskell_main ${HS_FILES}
 
 docs : docs.pdf
 
@@ -25,4 +37,4 @@ docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
 
 clean :
-	rm -rf docs.pdf joosc target/ src/java/jlalr/*.class
+	rm -rf bin/ docs.pdf target/ src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi
