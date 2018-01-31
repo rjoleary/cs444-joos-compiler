@@ -2,13 +2,13 @@
 
 ## Stages
 
-Stages are run serial via a shell script called "joosc". Everything up to and
-including the parser is written in Rust. The weeder and all the following
-stages are written in Haskell.
+Stages are run in sequence via a shell script called "joosc". The parser is
+written in Rust and the parse table generator is written in Java (provided by
+the course website). All other component are written in Haskell.
 
 ### Stage 0: Load file
 
-Rust
+Haskell
 
 Input: filename
 
@@ -19,7 +19,7 @@ Output: string of characters
 
 ### Stage 1: Scanner
 
-Rust
+Haskell
 
 Definitions: list of regular expressions and lexeme ids
 
@@ -66,5 +66,7 @@ Output: Abstract Syntax Tree (AST)
 ## Directory layout
 
 * src: Rust source code
+* src/haskell: Haskell source code
+* src/java: Java source code
 * def: Grammars and other definition files
 * test: Files for testing
