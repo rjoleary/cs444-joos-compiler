@@ -21,8 +21,7 @@ bin :
 	mkdir -p bin
 
 bin/parser : ${RS_FILES}
-	cargo build --release
-	cp target/release/parser bin/parser
+	rustc src/parser.rs -o bin/parser
 
 bin/haskell_main : ${HS_FILES}
 	ghc -o bin/haskell_main ${HS_FILES}
@@ -41,4 +40,4 @@ docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
 
 clean :
-	rm -rf bin/ docs.pdf target/ src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip
+	rm -rf bin/ docs.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip
