@@ -1,8 +1,6 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-# TODO: move rust source to src/rust/*.rs
-RS_FILES := $(wildcard src/*.rs)
 HS_FILES := $(wildcard src/haskell/*.hs)
 
 .PHONY : compiler all zip clean docs grammar
@@ -20,8 +18,8 @@ zip :
 bin :
 	mkdir -p bin
 
-bin/parser : ${RS_FILES}
-	rustc src/parser.rs -o bin/parser
+bin/parser : src/rust/parser.rs
+	rustc src/rust/parser.rs -o bin/parser
 
 bin/haskell_main : ${HS_FILES}
 	ghc -o bin/haskell_main ${HS_FILES}
