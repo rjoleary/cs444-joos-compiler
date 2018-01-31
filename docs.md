@@ -43,6 +43,9 @@ Output: rightmost derivation
 * Bottom-up parse
 * Checks that the input conforms to a Context-Free Grammar (CFG)
 
+Switched from LR(1) to LALR(1). Early measurements showed the LALR grammar is
+4x smallar without affecting the language.
+
 ### Stage 3: Weeder
 
 Haskell
