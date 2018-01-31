@@ -11,14 +11,11 @@ type NonTerminal = String;
 type TerminalOrNonTerminal = String;
 type Production = Vec<String>;
 
+// Loaded from def/joos.lr1
 struct Grammar {
-    // Hard coded to S
     start: NonTerminal,
-    // Loaded from test/appel_terminals.txt
     terminals: HashSet<Terminal>,
-    // Loaded from test/appel_nonterminals.txt
     nonterminals: HashSet<NonTerminal>,
-    // Loaded from test/appel_grammar.txt
     productions: Vec<Production>,
 }
 
@@ -38,7 +35,7 @@ enum ParseAction {
     Reduce(NonTerminalIdx),
 }
 
-// Loaded from test/appel_oracle.txt
+// Loaded from def/joos.lr1
 // The action and goto tables are combined into the parse table.
 type ParseTable = HashMap<ParseTransition, ParseAction>;
 
@@ -47,15 +44,15 @@ type Tokens = Vec<Terminal>;
 
 
 fn main() {
-    let (grammar, table) = read_grammar("def/appel.lr1").unwrap();
-    let mut tokens = read_tokens("test/appel_tokens.txt").unwrap();
+    let (grammar, table) = read_grammar("def/joos.lr1").unwrap();
+    let mut tokens = read_tokens("test/joos_tokens.txt").unwrap();
     let mut augmented = vec!["BOF".to_string()];
     augmented.append(&mut tokens);
     augmented.push("EOF".to_string());
     parse(&grammar, &table, &augmented)
 }
 
-// Parser as defined in Appel. This supports goto transitions and error states.
+// This supports goto transitions and error states.
 fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
     // parser state
     let mut stack = Vec::new();

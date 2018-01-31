@@ -1,13 +1,11 @@
-# This is a reduced Joos grammar for protyping the parser. It only parses
-# expressions.
+# Eventually, this grammar will conform to Joos 1W. The grammar is LALR(1), but
+# requires a hack to solve the dangling-else problem (prefer shift over reduce).
 #
 # This file has the following format:
 #
 # 1. Blank lines and lines starting with '#' are ignored.
-# 2. Lines start with a non-terminal and are followed by 0 or more terminals.
-# 3. The set of non-terminals is stored in nonterminals.txt
-# 4. The set of terminals is stored in terminals.txt
-# 5. The root of the syntax tree is Start.
+# 2. Productions start with a non-terminal and are followed by 0 or more terminals.
+# 3. The root of the syntax tree is S.
 #
 # The JLS2 grammar has more features and I will explain how to convert them:
 #
@@ -50,8 +48,6 @@
 #      ClassOrInterfaceDeclaration    ModifiersOpt ClassDeclaration
 #      ClassOrInterfaceDeclaration    ModifiersOpt InterfaceDeclaration
 #
-
-# WARNING: THIS GRAMMAR PROBABABLY ISN'T LR(1). We'll see what the syntax generator says.
 
 
 ########## Tree Root ##########
