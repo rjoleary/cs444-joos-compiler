@@ -5,13 +5,17 @@ GRAMMAR := appel
 RS_FILES := $(wildcard src/*.rs)
 HS_FILES := $(wildcard src/haskell/*.hs)
 
-.PHONY : compiler all clean docs grammar
+.PHONY : compiler all zip clean docs grammar
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/haskell_main
 
 # Builds everything including the grammar and docs.
 all : compiler grammar docs
+
+zip :
+	rm -f submission.zip
+	zip submission `git ls-files`
 
 bin :
 	mkdir -p bin
@@ -37,4 +41,4 @@ docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
 
 clean :
-	rm -rf bin/ docs.pdf target/ src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi
+	rm -rf bin/ docs.pdf target/ src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip
