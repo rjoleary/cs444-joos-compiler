@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Lexer
+bin/haskell_main "$@"
+if [ "$?" != 0 ]; then
+    exit 42
+fi
+
+# Parser
+bin/parser "$@"
+if [ "$?" != 0 ]; then
+    exit 42
+fi
+
+# TODO: Weeder and AST
