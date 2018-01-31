@@ -30,7 +30,7 @@ docs : docs.pdf
 
 grammar : def/joos.lr1
 
-src/java/jlalr/Jlr1.class : src/java/jlalr/Jlalr1.java
+src/java/jlalr/${GRAMMAR}.class : src/java/jlalr/Jlalr1.java
 	javac src/java/jlalr/Jlalr1.java
 
 # cfg2 is a human-readable format of cfg.
