@@ -1,0 +1,707 @@
+24
+=
+-
+-=
+--
+,
+!
+/
+/=
+.
+(
+)
+*
+*=
+%
++
++=
+++
+BOF
+BooleanLiteral
+EOF
+Identifer
+IDENTIFIER
+IntegerLiteral
+NullLiteral
+19
+Arguments
+Arguments'
+AssignmentOperator
+Expression
+Expression1
+Expression2
+Expression2Rest
+Expression3
+Expression3'
+Identifier
+IdentifierSuffix
+Infixop
+Literal
+PostfixOp
+PrefixOp
+Primary
+Primary'
+S
+StatementExpression
+S
+42
+S BOF StatementExpression EOF
+StatementExpression Expression
+Literal IntegerLiteral
+Literal BooleanLiteral
+Literal NullLiteral
+Identifier IDENTIFIER
+IdentifierSuffix Arguments
+Arguments ( )
+Arguments ( Expression Arguments' )
+Arguments' , Expression Arguments'
+Arguments'
+Expression Expression1
+Expression Expression1 AssignmentOperator Expression1
+Expression1 Expression2
+Expression2 Expression3 Expression2Rest
+Expression2Rest Infixop Expression3 Expression2Rest
+Expression2Rest
+Expression3 PrefixOp Expression3
+Expression3 Primary Expression3'
+Expression3' PostfixOp Expression3'
+Expression3'
+Primary ( Expression )
+Primary Literal
+Primary Identifier Primary'
+Primary Identifier Primary' IdentifierSuffix
+Primary' . Identifer Primary'
+Primary'
+AssignmentOperator =
+AssignmentOperator +=
+AssignmentOperator -=
+AssignmentOperator *=
+AssignmentOperator /=
+Infixop +
+Infixop -
+Infixop *
+Infixop /
+Infixop %
+PrefixOp ++
+PrefixOp --
+PrefixOp !
+PostfixOp ++
+PostfixOp --
+58
+616
+2 -- reduce 5
+5 -= reduce 4
+32 ++ reduce 28
+19 ! reduce 35
+49 *= reduce 16
+30 -- shift 1
+27 -- shift 1
+20 = reduce 22
+9 ! reduce 37
+20 , reduce 22
+20 + reduce 22
+20 * reduce 22
+20 ) reduce 22
+20 / reduce 22
+19 ( reduce 35
+20 - reduce 22
+57 IDENTIFIER shift 2
+32 IntegerLiteral reduce 28
+40 /= shift 3
+33 ! shift 4
+49 += reduce 16
+6 ! shift 4
+42 NullLiteral shift 5
+52 /= reduce 18
+36 -= reduce 13
+19 IDENTIFIER reduce 35
+57 ( shift 6
+14 / reduce 3
+27 IntegerLiteral shift 7
+14 - reduce 3
+14 + reduce 3
+33 IDENTIFIER shift 2
+14 , reduce 3
+14 ) reduce 3
+14 * reduce 3
+14 % reduce 3
+41 = reduce 0
+2 += reduce 5
+27 Primary shift 8
+34 IntegerLiteral reduce 30
+7 /= reduce 2
+33 ( shift 6
+34 ++ reduce 30
+24 / reduce 20
+32 -- reduce 28
+5 /= reduce 4
+1 -- reduce 38
+24 ) reduce 20
+36 *= reduce 13
+27 ++ shift 9
+24 - reduce 20
+24 , reduce 20
+24 + reduce 20
+39 IDENTIFIER shift 2
+24 * reduce 20
+57 StatementExpression shift 10
+16 ++ reduce 34
+24 % reduce 20
+22 /= reduce 8
+14 = reduce 3
+29 EOF reduce 26
+8 % reduce 20
+18 IDENTIFIER reduce 33
+49 -= reduce 16
+37 EOF reduce 16
+40 -= shift 11
+20 % reduce 22
+55 Arguments shift 12
+8 - reduce 20
+36 += reduce 13
+30 IntegerLiteral shift 7
+8 / reduce 20
+8 ) reduce 20
+42 ! shift 4
+3 -- reduce 31
+8 * reduce 20
+8 + reduce 20
+13 /= reduce 15
+7 -- reduce 2
+8 , reduce 20
+2 -= reduce 5
+18 ( reduce 33
+39 ! shift 4
+8 = reduce 20
+18 ! reduce 33
+39 ( shift 6
+49 Expression2Rest shift 13
+24 = reduce 20
+7 -= reduce 2
+53 EOF reduce 41
+34 -- reduce 30
+11 -- reduce 29
+23 = reduce 17
+57 NullLiteral shift 5
+42 IDENTIFIER shift 2
+22 -= reduce 8
+37 = reduce 16
+42 BooleanLiteral shift 14
+29 += reduce 26
+3 IntegerLiteral reduce 31
+16 IntegerLiteral reduce 34
+16 -- reduce 34
+53 += reduce 41
+22 -- reduce 8
+49 EOF reduce 16
+29 ++ reduce 26
+51 /= reduce 19
+11 IntegerLiteral reduce 29
+1 IntegerLiteral reduce 38
+29 *= reduce 26
+31 EOF reduce 1
+53 -= reduce 41
+13 -= reduce 15
+37 % shift 15
+5 *= reduce 4
+23 , reduce 17
+23 - reduce 17
+23 * reduce 17
+37 ) reduce 16
+37 * shift 16
+5 ++ reduce 4
+23 + reduce 17
+37 + shift 17
+37 , reduce 16
+37 - shift 18
+23 / reduce 17
+37 / shift 19
+23 % reduce 17
+53 -- reduce 41
+23 ) reduce 17
+14 EOF reduce 3
+2 ++ reduce 5
+5 += reduce 4
+11 ++ reduce 29
+22 += reduce 8
+36 EOF reduce 13
+29 -= reduce 26
+30 Literal shift 20
+6 ( shift 6
+13 += reduce 15
+33 NullLiteral shift 5
+57 ! shift 4
+22 ++ reduce 8
+2 *= reduce 5
+21 EOF reduce 24
+4 BooleanLiteral reduce 39
+30 Primary shift 8
+9 IDENTIFIER reduce 37
+29 -- reduce 26
+8 EOF reduce 20
+22 *= reduce 8
+6 NullLiteral shift 5
+55 IdentifierSuffix shift 21
+5 -- reduce 4
+13 *= reduce 15
+19 NullLiteral reduce 35
+53 *= reduce 41
+53 ++ reduce 41
+44 ) shift 22
+39 Primary shift 8
+21 -- reduce 24
+27 Expression3 shift 23
+24 PostfixOp shift 24
+6 Expression shift 25
+29 /= reduce 26
+57 BooleanLiteral shift 14
+16 ! reduce 34
+56 += reduce 14
+57 Primary shift 8
+51 += reduce 19
+33 Expression shift 26
+47 % reduce 25
+47 ( reduce 25
+53 % reduce 41
+47 * reduce 25
+33 PrefixOp shift 27
+47 ) reduce 25
+47 , reduce 25
+47 + reduce 25
+16 IDENTIFIER reduce 34
+47 - reduce 25
+47 / reduce 25
+53 - reduce 41
+39 IntegerLiteral shift 7
+16 ( reduce 34
+53 / reduce 41
+20 ++ reduce 22
+53 ) reduce 41
+53 * reduce 41
+53 + reduce 41
+53 , reduce 41
+20 *= reduce 22
+26 Arguments' shift 28
+40 EOF reduce 11
+39 ++ shift 9
+47 = reduce 25
+57 PrefixOp shift 27
+21 -= reduce 24
+5 EOF reduce 4
+17 NullLiteral reduce 32
+33 BooleanLiteral shift 14
+14 *= reduce 3
+21 ++ reduce 24
+30 Identifier shift 29
+6 BooleanLiteral shift 14
+17 IDENTIFIER reduce 32
+4 NullLiteral reduce 39
+56 -= reduce 14
+27 Literal shift 20
+51 -= reduce 19
+15 NullLiteral reduce 36
+21 *= reduce 24
+8 PostfixOp shift 24
+46 BooleanLiteral reduce 27
+19 IntegerLiteral reduce 35
+55 % reduce 23
+55 ( shift 30
+50 /= reduce 40
+39 NullLiteral shift 5
+55 ) reduce 23
+55 * reduce 23
+14 += reduce 3
+55 + reduce 23
+55 , reduce 23
+55 - reduce 23
+57 Expression shift 31
+55 / reduce 23
+15 IDENTIFIER reduce 36
+13 EOF reduce 15
+21 += reduce 24
+14 ++ reduce 3
+55 = reduce 23
+5 / reduce 4
+5 - reduce 4
+30 PrefixOp shift 27
+5 + reduce 4
+1 ++ reduce 38
+19 -- reduce 35
+5 , reduce 4
+45 ) reduce 10
+6 Identifier shift 29
+51 EOF reduce 19
+27 PrefixOp shift 27
+54 = reduce 21
+42 ( shift 6
+5 = reduce 4
+56 /= reduce 14
+40 += shift 32
+45 , shift 33
+9 IntegerLiteral reduce 37
+17 IntegerLiteral reduce 32
+17 ++ reduce 32
+54 , reduce 21
+54 - reduce 21
+49 /= reduce 16
+54 / reduce 21
+54 ) reduce 21
+54 * reduce 21
+54 + reduce 21
+30 BooleanLiteral shift 14
+3 ++ reduce 31
+14 -= reduce 3
+50 -= reduce 40
+20 EOF reduce 22
+2 /= reduce 5
+15 IntegerLiteral reduce 36
+40 *= shift 34
+33 Identifier shift 29
+54 % reduce 21
+14 -- reduce 3
+50 -- reduce 40
+15 ++ reduce 36
+32 ! reduce 28
+50 *= reduce 40
+34 ( reduce 30
+21 /= reduce 24
+19 ++ reduce 35
+27 Identifier shift 29
+18 BooleanLiteral reduce 33
+6 PrefixOp shift 27
+53 = reduce 41
+17 -- reduce 32
+32 ( reduce 28
+23 EOF reduce 17
+26 , shift 33
+26 ) reduce 10
+50 += reduce 40
+14 /= reduce 3
+1 IDENTIFIER reduce 38
+39 -- shift 1
+36 /= reduce 13
+3 IDENTIFIER reduce 31
+34 ! reduce 30
+51 *= reduce 19
+50 ++ reduce 40
+9 NullLiteral reduce 37
+15 -- reduce 36
+46 ( reduce 27
+11 ! reduce 29
+24 /= reduce 20
+39 Identifier shift 29
+22 / reduce 8
+22 = reduce 8
+11 ( reduce 29
+22 % reduce 8
+1 NullLiteral reduce 38
+22 - reduce 8
+13 = reduce 15
+22 , reduce 8
+22 + reduce 8
+46 ! reduce 27
+22 * reduce 8
+22 ) reduce 8
+46 IDENTIFIER reduce 27
+32 BooleanLiteral reduce 28
+13 ) reduce 15
+34 BooleanLiteral reduce 30
+48 = reduce 26
+13 , reduce 15
+8 /= reduce 20
+57 Identifier shift 29
+54 -= reduce 21
+39 Expression1 shift 35
+57 Literal shift 20
+39 Expression2 shift 36
+39 Expression3 shift 37
+48 + reduce 26
+48 , reduce 26
+48 ) reduce 26
+48 * reduce 26
+23 -= reduce 17
+48 / reduce 26
+30 NullLiteral shift 5
+48 - reduce 26
+48 . shift 38
+54 -- reduce 21
+48 ( reduce 26
+48 % reduce 26
+4 ++ reduce 39
+35 , reduce 12
+12 = reduce 6
+23 += reduce 17
+40 AssignmentOperator shift 39
+42 IntegerLiteral shift 7
+47 EOF reduce 25
+11 NullLiteral reduce 29
+55 *= reduce 23
+57 Expression3 shift 37
+57 Expression2 shift 36
+35 ) reduce 12
+57 Expression1 shift 40
+20 /= reduce 22
+52 % reduce 18
+43 = reduce 7
+52 / reduce 18
+10 EOF shift 41
+52 - reduce 18
+23 *= reduce 17
+52 , reduce 18
+52 + reduce 18
+52 * reduce 18
+54 += reduce 21
+52 ) reduce 18
+43 * reduce 7
+12 % reduce 6
+43 + reduce 7
+43 , reduce 7
+43 - reduce 7
+11 IDENTIFIER reduce 29
+12 ) reduce 6
+43 / reduce 7
+56 EOF reduce 14
+5 ) reduce 4
+12 , reduce 6
+49 Infixop shift 42
+5 * reduce 4
+12 - reduce 6
+12 * reduce 6
+52 = reduce 18
+12 + reduce 6
+43 % reduce 7
+5 % reduce 4
+54 ++ reduce 21
+50 EOF reduce 40
+12 / reduce 6
+43 ) reduce 7
+30 ( shift 6
+30 ) shift 43
+4 -- reduce 39
+27 ( shift 6
+6 IntegerLiteral shift 7
+30 ! shift 4
+27 ! shift 4
+7 = reduce 2
+6 Literal shift 20
+54 *= reduce 21
+47 -- reduce 25
+35 EOF reduce 12
+9 -- reduce 37
+20 -= reduce 22
+1 BooleanLiteral reduce 38
+27 BooleanLiteral shift 14
+47 -= reduce 25
+12 EOF reduce 6
+42 PrefixOp shift 27
+45 Arguments' shift 44
+42 ++ shift 9
+33 Literal shift 20
+28 ) reduce 9
+48 EOF reduce 26
+43 EOF reduce 7
+1 ! reduce 38
+47 *= reduce 25
+30 Expression shift 45
+1 ( reduce 38
+27 NullLiteral shift 5
+51 ) reduce 19
+20 += reduce 22
+51 * reduce 19
+40 = shift 46
+3 NullLiteral reduce 31
+51 + reduce 19
+57 IntegerLiteral shift 7
+51 % reduce 19
+16 BooleanLiteral reduce 34
+47 ++ reduce 25
+32 IDENTIFIER reduce 28
+9 ++ reduce 37
+50 = reduce 40
+51 , reduce 19
+48 Primary' shift 47
+51 - reduce 19
+55 EOF reduce 23
+51 / reduce 19
+6 Expression1 shift 40
+7 * reduce 2
+7 ) reduce 2
+6 Expression3 shift 37
+40 , reduce 11
+7 , reduce 2
+6 Expression2 shift 36
+7 + reduce 2
+3 ( reduce 31
+7 % reduce 2
+47 += reduce 25
+33 Primary shift 8
+38 Identifer shift 48
+42 -- shift 1
+33 Expression2 shift 36
+20 -- reduce 22
+33 Expression3 shift 37
+51 = reduce 19
+3 ! reduce 31
+33 Expression1 shift 40
+40 ) reduce 11
+56 *= reduce 14
+54 EOF reduce 21
+23 /= reduce 17
+39 Literal shift 20
+6 Primary shift 8
+34 IDENTIFIER reduce 30
+7 - reduce 2
+4 IntegerLiteral reduce 39
+46 NullLiteral reduce 27
+7 / reduce 2
+12 += reduce 6
+43 -- reduce 7
+30 Expression1 shift 40
+7 EOF reduce 2
+30 Expression2 shift 36
+30 Expression3 shift 37
+52 EOF reduce 18
+57 ++ shift 9
+24 EOF reduce 20
+12 *= reduce 6
+11 BooleanLiteral reduce 29
+42 Expression3 shift 49
+43 += reduce 7
+50 - reduce 40
+50 , reduce 40
+50 + reduce 40
+12 ++ reduce 6
+55 /= reduce 23
+50 / reduce 40
+50 % reduce 40
+50 * reduce 40
+50 ) reduce 40
+4 IDENTIFIER reduce 39
+37 -= reduce 16
+18 ++ reduce 33
+4 ( reduce 39
+18 IntegerLiteral reduce 33
+4 ! reduce 39
+16 NullLiteral reduce 34
+29 = reduce 26
+17 ( reduce 32
+9 BooleanLiteral reduce 37
+48 ++ reduce 26
+3 BooleanLiteral reduce 31
+43 ++ reduce 7
+48 *= reduce 26
+43 *= reduce 7
+39 PrefixOp shift 27
+42 Identifier shift 29
+29 / reduce 26
+29 . shift 38
+29 - reduce 26
+29 , reduce 26
+29 + reduce 26
+29 * reduce 26
+57 -- shift 1
+29 ) reduce 26
+29 ( reduce 26
+8 *= reduce 20
+17 ! reduce 32
+29 % reduce 26
+8 ++ shift 50
+46 IntegerLiteral reduce 27
+2 EOF reduce 5
+18 NullLiteral reduce 33
+47 /= reduce 25
+22 EOF reduce 8
+24 *= reduce 20
+15 ( reduce 36
+53 /= reduce 41
+48 += reduce 26
+24 Expression3' shift 51
+37 /= reduce 16
+19 BooleanLiteral reduce 35
+15 ! reduce 36
+8 Expression3' shift 52
+21 * reduce 24
+21 ) reduce 24
+33 IntegerLiteral shift 7
+21 , reduce 24
+2 % reduce 5
+48 -- reduce 26
+21 + reduce 24
+24 += reduce 20
+21 - reduce 24
+2 ( reduce 5
+2 ) reduce 5
+2 , reduce 5
+2 - reduce 5
+2 * reduce 5
+2 + reduce 5
+21 % reduce 24
+24 ++ shift 50
+30 IDENTIFIER shift 2
+52 *= reduce 18
+46 -- reduce 27
+34 NullLiteral reduce 30
+8 -- shift 53
+7 *= reduce 2
+37 *= reduce 16
+55 ++ reduce 23
+17 BooleanLiteral reduce 32
+25 ) shift 54
+33 -- shift 1
+36 = reduce 13
+6 -- shift 1
+7 ++ reduce 2
+42 Primary shift 8
+37 Infixop shift 42
+32 NullLiteral reduce 28
+55 += reduce 23
+36 ) reduce 13
+43 /= reduce 7
+8 += reduce 20
+48 -= reduce 26
+52 += reduce 18
+36 , reduce 13
+21 = reduce 24
+7 += reduce 2
+29 Primary' shift 55
+21 / reduce 24
+37 Expression2Rest shift 56
+12 /= reduce 6
+24 -= reduce 20
+6 IDENTIFIER shift 2
+15 BooleanLiteral reduce 36
+30 ++ shift 9
+56 , reduce 14
+42 Literal shift 20
+56 ) reduce 14
+24 -- shift 53
+46 ++ reduce 27
+39 BooleanLiteral shift 14
+49 / shift 19
+55 -- reduce 23
+9 ( reduce 37
+49 - shift 18
+54 /= reduce 21
+33 ++ shift 9
+56 = reduce 14
+6 ++ shift 9
+52 -= reduce 18
+49 % shift 15
+8 -= reduce 20
+49 + shift 17
+12 -- reduce 6
+49 , reduce 16
+49 ) reduce 16
+49 * shift 16
+55 -= reduce 23
+2 . reduce 5
+49 = reduce 16
+27 IDENTIFIER shift 2
+2 / reduce 5
+43 -= reduce 7
+48 /= reduce 26
+18 -- reduce 33
+0 BOF shift 57
+37 += reduce 16
+12 -= reduce 6
+2 = reduce 5

@@ -1,5 +1,5 @@
-# TODO: change to joos at some point
-GRAMMAR := appel
+# Can be Jlr1 or Jlalr1
+GRAMMAR  := Jlalr1
 
 # TODO: move rust source to src/rust/*.rs
 RS_FILES := $(wildcard src/*.rs)
@@ -28,13 +28,24 @@ bin/haskell_main : ${HS_FILES}
 
 docs : docs.pdf
 
-grammar : def/${GRAMMAR}.lr1
+grammar : def/joos.lr1
 
 src/java/jlalr/Jlr1.class : src/java/jlalr/Jlalr1.java
 	javac src/java/jlalr/Jlalr1.java
 
-def/${GRAMMAR}.lr1 : src/java/jlalr/Jlr1.class def/${GRAMMAR}.cfg
-	java -classpath src/java jlalr.Jlr1 < def/${GRAMMAR}.cfg > def/${GRAMMAR}.lr1
+# cfg2 is a human-readable format of cfg.
+bin/joos.cfg : bin def/joos.cfg2
+	sed -e '/^#/d' -e '/^\s*$$/d' < def/joos.cfg2 > bin/productions.txt
+	sed 's/\s\s*/\n/g' bin/productions.txt | sort -u > bin/symbols.txt
+	cut -d' ' -f1 bin/productions.txt | sort -u > bin/nonterminals.txt
+	comm -23 bin/symbols.txt bin/nonterminals.txt > bin/terminals.txt
+	bash -c "cat <(wc -l < bin/terminals.txt) bin/terminals.txt  \
+		<(wc -l < bin/nonterminals.txt) bin/nonterminals.txt     \
+		<(echo S)                                                \
+		<(wc -l < bin/productions.txt) bin/productions.txt" > bin/joos.cfg
+
+def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
+	java -classpath src/java jlalr.${GRAMMAR} < bin/joos.cfg > def/joos.lr1
 
 docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<

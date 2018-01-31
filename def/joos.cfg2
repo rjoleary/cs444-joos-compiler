@@ -51,12 +51,12 @@
 #      ClassOrInterfaceDeclaration    ModifiersOpt InterfaceDeclaration
 #
 
-# WARNING: THIS GRAMMAR PROBABABLY ISN'T LR(1)
+# WARNING: THIS GRAMMAR PROBABABLY ISN'T LR(1). We'll see what the syntax generator says.
 
 
 ########## Tree Root ##########
 
-Start                   StatementExpression
+S                       BOF StatementExpression EOF
 StatementExpression     Expression
 
 
@@ -81,11 +81,8 @@ Arguments'
 Expression              Expression1
 Expression              Expression1 AssignmentOperator Expression1
 
-Expression1             Expression2 Expression1Rest
-Expression1Rest
-Expression1Rest         ? Expression : Expression1
+Expression1             Expression2
 
-Expression2             Expression3
 Expression2             Expression3 Expression2Rest
 Expression2Rest         Infixop Expression3 Expression2Rest
 Expression2Rest
