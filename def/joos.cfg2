@@ -1,5 +1,4 @@
-# Eventually, this grammar will conform to Joos 1W. The grammar is LALR(1), but
-# requires a hack to solve the dangling-else problem (prefer shift over reduce).
+# This grammar will conform to Joos 1W and is LALR(1).
 #
 # This file has the following format:
 #
@@ -49,70 +48,559 @@
 #      ClassOrInterfaceDeclaration    ModifiersOpt InterfaceDeclaration
 #
 
+########## Tree Root
+# The JLS2 calls this the "goal symbol".
 
-########## Tree Root ##########
-
-S                       BOF StatementExpression EOF
-StatementExpression     Expression
+S                       BOF CompilationUnit EOF
 
 
-########## Literals and Identifiers ##########
+########## 4.1: The Kinds of Types and Values
+# Joos 1W does not support float, long, octal and hex literals.
 
 Literal                 IntegerLiteral
 Literal                 BooleanLiteral
+Literal                 CharacterLiteral
+Literal                 StringLiteral
 Literal                 NullLiteral
 
-Identifier              IDENTIFIER
 
-IdentifierSuffix        Arguments
+########## 4.1: The Kinds of Types and Values
 
-Arguments               ( )
-Arguments               ( Expression Arguments' )
-Arguments'              , Expression Arguments'
-Arguments'
+Type                    PrimitiveType
+Type                    ReferenceType
 
 
-########## Expressions ##########
+########## 4.2: Primitive Types and Values
+# JLS 1W only has: boolean, int, char, byte and short
 
-Expression              Expression1
-Expression              Expression1 AssignmentOperator Expression1
+PrimitiveType           NumericType
+PrimitiveType           boolean
 
-Expression1             Expression2
+NumericType             IntegralType
 
-Expression2             Expression3 Expression2Rest
-Expression2Rest         Infixop Expression3 Expression2Rest
-Expression2Rest
-
-Expression3             PrefixOp Expression3
-Expression3             Primary Expression3'
-Expression3'            PostfixOp Expression3'
-Expression3'
-
-Primary                 ( Expression )
-Primary                 Literal
-Primary                 Identifier Primary'
-Primary                 Identifier Primary' IdentifierSuffix
-Primary'                . Identifer Primary'
-Primary'
+IntegralType            byte
+IntegralType            short
+IntegralType            int
+IntegralType            char
 
 
-########## OPERATORS ##########
+########## 4.3: Reference Types and Values
+# The JLS2 spec had some ambiguity for ClassOrInterfaceType. It has been
+# simplified to Name.
+
+ReferenceType           ClassOrInterfaceType
+ReferenceType           ArrayType
+
+ClassOrInterfaceType    Name
+
+ClassType               Name
+
+InterfaceType           Name
+
+ArrayType               Type [ ]
+
+
+########## 6.5: Determining the Meaning of a Name
+# Name can be a PackageName, TypeName, ExpressionName, MethodName or
+# AmbiguousName. Determing which one during parse leads to too many
+# ambiguities, so they are are all under one umbrella production called Name.
+
+Name                    Identifier
+Name                    Name . Identifier
+
+
+########## 7.3: Compilation Units
+
+CompilationUnit
+CompilationUnit         PackageDeclaration
+CompilationUnit         PackageDeclaration ImportDeclarations
+CompilationUnit         PackageDeclaration ImportDeclarations TypeDeclarations
+CompilationUnit         PackageDeclaration TypeDeclarations
+CompilationUnit         ImportDeclarations
+CompilationUnit         ImportDeclarations TypeDeclarations
+CompilationUnit         TypeDeclarations
+
+ImportDeclarations      ImportDeclaration
+ImportDeclarations      ImportDeclarations ImportDeclaration
+
+TypeDeclarations        TypeDeclaration
+TypeDeclarations        TypeDeclarations    TypeDeclarations
+
+
+########## 7.4.1: Named Packages
+
+PackageDeclaration      package Name ;
+
+
+########## 7.5: Import Declarations
+
+ImportDeclaration       SingleTypeImportDeclaration
+ImportDeclaration       TypeImportOnDemandDeclaration
+
+SingleTypeImportDeclaration     import Name ;
+
+TypeImportOnDemandDeclaration   import Name . * ;
+
+
+########## 7.6: Top Level Type Declarations
+
+TypeDeclaration         ClassDeclaration
+TypeDeclaration         InterfaceDeclaration
+TypeDeclaration         ;
+
+
+########## 8.1: Class Declaration
+# Joos 1W classes cannot be package private
+
+ClassDeclaration        ClassModifiers class Identifier ClassBody
+ClassDeclaration        ClassModifiers class Identifier Super ClassBody
+ClassDeclaration        ClassModifiers class Identifier Super Interfaces ClassBody
+ClassDeclaration        ClassModifiers class Identifier Interfaces ClassBody
+
+
+########## 8.1.1: Class Modifiers
+# Joos 1W only has public, abstract, static and final classes.
+# TODO: Does joos really have static classes?
+
+ClassModifiers          ClassModifier
+ClassModifiers          ClassModifiers ClassModifier
+
+ClassModifier           public
+ClassModifier           abstract
+ClassModifier           static
+ClassModifier           final
+
+
+########## 8.1.3: Superclasses and Subclasses
+
+Super                   extends ClassType
+
+
+########## 8.1.4: Superinterfaces
+
+Interfaces              implements InterfaceTypeList
+
+InterfaceTypeList       InterfaceType
+InterfaceTypeList       InterfaceTypeList , InterfaceType
+
+
+########## 8.1.5: Class Body and Member Declarations
+
+ClassBody               { }
+ClassBody               { ClassBodyDeclarations }
+
+ClassBodyDeclarations   ClassBodyDeclaration
+ClassBodyDeclarations   ClassBodyDeclarations ClassBodyDeclaration
+
+ClassBodyDeclaration    ClassMemberDeclaration
+ClassBodyDeclaration    ConstructorDeclaration
+
+ClassMemberDeclaration  FieldDeclaration
+ClassMemberDeclaration  MethodDeclaration
+ClassMemberDeclaration  ;
+
+
+########## 8.3: Field Declarations
+# Joos 1W does not support array data.
+
+FieldDeclaration        Type VariableDeclarators ;
+# TODO: FieldModifiers should come before the type, but that is not LR(1).
+FieldDeclaration        Type VariableDeclarators FieldModifiers ;
+
+VariableDeclarators     VariableDeclarator
+VariableDeclarators     VariableDeclarators , VariableDeclarator
+
+VariableDeclarator      VariableDeclaratorId
+VariableDeclarator      VariableDeclaratorId = VariableInitializer
+
+VariableDeclaratorId    Identifier
+VariableDeclaratorId    VariableDeclaratorId [ ]
+
+VariableInitializer     Expression
+
+
+########## 8.3.1: Field Modifiers
+# Joos 1W only supports: public, protected and static fields.
+
+FieldModifiers          FieldModifier
+FieldModifiers          FieldModifiers FieldModifier
+
+FieldModifier           public
+FieldModifier           protected
+FieldModifier           static
+
+
+########## 8.4: Method Declarations
+
+MethodDeclaration       MethodHeader MethodBody
+
+MethodHeader            ResultType MethodDeclarator
+# TODO: MethodModifiers should come before ResultType, but that is not LR(1).
+MethodHeader            ResultType MethodDeclarator MethodModifiers
+
+ResultType              Type
+ResultType              void
+
+MethodDeclarator        Identifier ( )
+MethodDeclarator        Identifier ( FormalParameterList )
+
+
+########## 8.4.1: Formal Parameters
+# Joos 1W does not support final formal parameters.
+
+FormalParameterList     FormalParameter
+FormalParameterList     FormalParameterList , FormalParameter
+
+FormalParameter         Type VariableDeclaratorId
+
+
+########## 8.4.3: Method Modifiers
+# Joos 1W only supports: public, protected, final, abstract and static methods.
+
+MethodModifiers         MethodModifier
+MethodModifiers         MethodModifiers MethodModifier
+
+MethodModifier          public
+MethodModifier          protected
+MethodModifier          final
+MethodModifier          abstract
+MethodModifier          static
+
+
+########## 8.4.5: Method Body
+
+MethodBody              Block
+MethodBody              ;
+
+
+########## 8.8: Constructor Declaration
+
+# TODO: ConstructorModifiers should come before ConstructorDeclarator, but that is not LR(1).
+ConstructorDeclaration  ConstructorDeclarator ConstructorModifiers ConstructorBody
+
+ConstructorDeclarator   SimpleTypeName ( )
+ConstructorDeclarator   SimpleTypeName ( FormalParameterList )
+
+
+########## 8.8.3: Constructor Modifiers
+# Joos 1W only supports public and protected constructors.
+
+ConstructorModifiers    ConstructorModifier
+ConstructorModifiers    ConstructorModifiers ConstructorModifier
+
+ConstructorModifier     public
+ConstructorModifier     protected
+
+
+########## 8.8.5: Constructor Body
+# Joos 1W does not support constructor this or super call.
+
+ConstructorBody         { }
+ConstructorBody         { BlockStatements }
+
+
+########## 9.1: Interface Declarations
+
+InterfaceDeclaration    interface Identifier InterfaceBody
+InterfaceDeclaration    interface Identifier ExtendsInterfaces InterfaceBody
+InterfaceDeclaration    InterfaceModifiers interface Identifier InterfaceBody
+InterfaceDeclaration    InterfaceModifiers interface Identifier ExtendsInterfaces InterfaceBody
+
+
+########## 9.1.1: Interface Modifiers
+# Joos 1W only supports public and abstract interfaces.
+
+InterfaceModifiers      InterfaceModifier
+InterfaceModifiers      InterfaceModifiers InterfaceModifier
+
+InterfaceModifier       public abstract
+
+
+########## 9.1.2: Superinterfaces and Subinterfaces
+
+ExtendsInterfaces       extends InterfaceType
+ExtendsInterfaces       ExtendsInterfaces , InterfaceType
+
+
+########## 9.1.3: Interface Body and Member Declarations
+# Joos 1W does not have interface constants.
+
+InterfaceBody           { }
+InterfaceBody           { InterfaceMemberDeclarations }
+
+InterfaceMemberDeclarations     InterfaceMemberDeclaration
+InterfaceMemberDeclarations     InterfaceMemberDeclarations InterfaceMemberDeclaration
+
+InterfaceMemberDeclaration      AbstractMethodDeclaration
+InterfaceMemberDeclaration      ;
+
+
+########## 9.4: Abstract Method Declarations
+
+AbstractMethodDeclaration       ResultType MethodDeclarator ;
+AbstractMethodDeclaration       AbstractMethodModifiers ResultType MethodDeclarator ;
+
+AbstractMethodModifiers         AbstractMethodModifier
+AbstractMethodModifiers         AbstractMethodModifiers AbstractMethodModifier
+
+AbstractMethodModifier          public
+AbstractMethodModifier          abstract
+
+
+########## 14.2. Blocks
+# Joos 1W does not support local class declarations.
+
+Block                   { }
+Block                   { BlockStatements }
+
+BlockStatements         BlockStatement
+BlockStatements         BlockStatements BlockStatement
+
+BlockStatement          LocalVariableDeclarationStatement
+BlockStatement          Statement
+
+
+########## 14.4: Local Variable Declaration Statements
+# Joos 1W does not support local finals.
+
+LocalVariableDeclarationStatement   LocalVariableDeclaration
+LocalVariableDeclaration            Type VariableDeclarators
+
+
+########## 14.5: Statements
+# Joos 1W does not support:
+# * do-while
+# * break
+# * continue
+# * switch
+# * labeled statements
+# * synchronized statement
+
+Statement               StatementWithoutTrailingSubstatement
+Statement               IfThenStatement
+Statement               IfThenElseStatement
+Statement               WhileStatement
+Statement               ForStatement
+
+StatementWithoutTrailingSubstatement    Block
+StatementWithoutTrailingSubstatement    EmptyStatement
+StatementWithoutTrailingSubstatement    ExpressionStatement
+StatementWithoutTrailingSubstatement    ReturnStatement
+
+StatementNoShortIf      StatementWithoutTrailingSubstatement
+StatementNoShortIf      IfThenElseStatementNoShortIf
+StatementNoShortIf      WhileStatementNoShortIf
+StatementNoShortIf      ForStatementNoShortIf
+
+
+########## 14.6: The Empty Statement
+
+EmptyStatement          ;
+
+
+########## 14.8: Expression Statements
+# Joos 1W does not support:
+# * {pre,post}{increment,decrement}
+
+ExpressionStatement     StatementExpression ;
+
+StatementExpression     Assignment
+StatementExpression     MethodInvocation
+StatementExpression     ClassInstanceCreationExpression
+
+
+########## 14.9: The if Statement
+# This solves the dangling else problem.
+
+IfThenStatement                 if ( Expression ) Statement
+IfThenElseStatement             if ( Expression ) StatementNoShortIf else Statement
+IfThenElseStatementNoShortIf    if ( Expression ) StatementNoShortIf else StatementNoShortIf
+
+
+########## 14.11: The while Statement
+
+WhileStatement          while ( Expression ) Statement
+
+WhileStatementNoShortIf while ( Expression ) StatementNoShortIf
+
+
+########## 14.13: The for Statement
+# Joos 1W only support for loops without expression lists.
+
+ForStatement            for ( ; ; ) Statement
+ForStatement            for ( ForInit ; ; ) Statement
+ForStatement            for ( ; Expression ; ) Statement
+ForStatement            for ( ForInit ; Expression ; ) Statement
+ForStatement            for ( ; ; ForUpdate ) Statement
+ForStatement            for ( ForInit ; ; ForUpdate ) Statement
+ForStatement            for ( ; Expression ; ForUpdate ) Statement
+ForStatement            for ( ForInit ; Expression ; ForUpdate ) Statement
+
+ForStatementNoShortIf   for ( ; ; ) StatementNoShortIf
+ForStatementNoShortIf   for ( ForInit ; ; ) StatementNoShortIf
+ForStatementNoShortIf   for ( ; Expression ; ) StatementNoShortIf
+ForStatementNoShortIf   for ( ForInit ; Expression ; ) StatementNoShortIf
+ForStatementNoShortIf   for ( ; ; ForUpdate ) StatementNoShortIf
+ForStatementNoShortIf   for ( ForInit ; ; ForUpdate ) StatementNoShortIf
+ForStatementNoShortIf   for ( ; Expression ; ForUpdate ) StatementNoShortIf
+ForStatementNoShortIf   for ( ForInit ; Expression ; ForUpdate ) StatementNoShortIf
+
+ForInit                 StatementExpression
+ForInit                 LocalVariableDeclaration
+
+ForUpdate               StatementExpression
+
+
+########## 14.16: The return Statement
+
+ReturnStatement         return ;
+ReturnStatement         return Expression ;
+
+
+########## 15.8: Primary Expressions
+# Joos 1W does not support:
+# * array data
+# * class literals
+# * bitwise operations
+# * assignment operations
+# * unary plus
+# * choice
+# * bit shift
+
+Primary                 PrimaryNoNewArray
+
+PrimaryNoNewArray       Literal
+PrimaryNoNewArray       this
+PrimaryNoNewArray       ClassName . this
+PrimaryNoNewArray       ( Expression )
+PrimaryNoNewArray       ClassInstanceCreationExpression
+PrimaryNoNewArray       FieldAccess
+PrimaryNoNewArray       MethodInvocation
+PrimaryNoNewArray       ArrayAccess
+
+
+########## 15.9: Class Instance Creation Expressions
+# Joos 1W does not have nested types.
+
+ClassInstanceCreationExpression     new ClassOrInterfaceType ( )
+ClassInstanceCreationExpression     new ClassOrInterfaceType ( ArgumentList )
+
+ArgumentList            Expression
+ArgumentList            ArgumentList , Expression
+
+
+########## 15.11: Field Access Expressions
+# Joos 1W does not have super field access.
+
+FieldAccess             Primary . Identifier
+
+
+########## 15.12: Method Invocation Expressions
+
+MethodInvocation        Name ( )
+MethodInvocation        Name ( ArgumentList )
+MethodInvocation        Primary . Identifier ( )
+MethodInvocation        Primary . Identifier ( ArgumentList )
+
+
+########## 15.13: Array Access Expressions
+
+ArrayAccess             Name [ Expression ]
+ArrayAccess             PrimaryNoNewArray [ Expression ]
+
+
+########## 15.15: Unary Operators
+# Joos 1W does not support unary plus or {pre,post}{increment,decrement}.
+
+UnaryExpression         - UnaryExpression
+UnaryExpression         UnaryExpressionNotPlusMinus
+
+UnaryExpressionNotPlusMinus     ! UnaryExpression
+UnaryExpressionNotPlusMinus     CastExpression
+
+
+########## 15.16: Cast Expressions
+
+CastExpression          ( PrimitiveType ) UnaryExpression
+CastExpression          ( PrimitiveType Dims ) UnaryExpression
+CastExpression          ( ReferenceType ) UnaryExpressionNotPlusMinus
+
+
+########## 15.17: Multiplicative Operators
+
+MultiplicativeExpression       UnaryExpression
+MultiplicativeExpression       MultiplicativeExpression * UnaryExpression
+MultiplicativeExpression       MultiplicativeExpression / UnaryExpression
+MultiplicativeExpression       MultiplicativeExpression % UnaryExpression
+
+
+########## 15.18: Additive Operators
+
+AdditiveExpression      MultiplicativeExpression
+AdditiveExpression      AdditiveExpression + MultiplicativeExpression
+AdditiveExpression      AdditiveExpression - MultiplicativeExpression
+
+
+########## 15.20: Relational Operators
+
+RelationalExpression    AdditiveExpression
+RelationalExpression    RelationalExpression < AdditiveExpression
+RelationalExpression    RelationalExpression > AdditiveExpression
+RelationalExpression    RelationalExpression <= AdditiveExpression
+RelationalExpression    RelationalExpression >= AdditiveExpression
+RelationalExpression    RelationalExpression instanceof AdditiveExpression
+
+
+########## 15.21: Equality Operators
+
+EqualityExpression      RelationalExpression
+EqualityExpression      EqualityExpression == RelationalExpression
+EqualityExpression      EqualityExpression != RelationalExpression
+
+
+########## 15.22: Bitwise and Logical Operators
+
+AndExpression           EqualityExpression
+AndExpression           AndExpression & EqualityExpression
+
+ExclusiveOrExpression   AndExpression
+ExclusiveOrExpression   ExclusiveOrExpression ^ AndExpression
+
+InclusiveOrExpression   ExclusiveOrExpression
+InclusiveOrExpression   InclusiveOrExpression | ExclusiveOrExpression
+
+
+########## 15.23: Conditional-And Operator &&
+
+ConditionalAndExpression    InclusiveOrExpression
+ConditionalAndExpression    ConditionalAndExpression && InclusiveOrExpression
+
+
+########## 15.24: Conditional-Or Operator ||
+
+ConditionalOrExpression     ConditionalAndExpression
+ConditionalOrExpression     ConditionalOrExpression || ConditionalAndExpression
+
+
+########## 15.26: Assignment Operators
+
+AssignmentExpression    ConditionalOrExpression
+AssignmentExpression    Assignment
+
+Assignment              LeftHandSide AssignmentOperator AssignmentExpression
+
+LeftHandSide            Name
+LeftHandSide            FieldAccess
+LeftHandSide            ArrayAccess
 
 AssignmentOperator      =
-AssignmentOperator      +=
-AssignmentOperator      -=
-AssignmentOperator      *=
-AssignmentOperator      /=
 
-Infixop                 +
-Infixop                 -
-Infixop                 *
-Infixop                 /
-Infixop                 %
 
-PrefixOp                ++
-PrefixOp                --
-PrefixOp                !
+########## 15.27: Expression
 
-PostfixOp               ++
-PostfixOp               --
+Expression              AssignmentExpression
+
+
+########## 15.28: Constant Expression
+
+ConstantExpression      Expression
