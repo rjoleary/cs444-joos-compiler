@@ -124,7 +124,7 @@ ImportDeclarations      ImportDeclaration
 ImportDeclarations      ImportDeclarations ImportDeclaration
 
 TypeDeclarations        TypeDeclaration
-TypeDeclarations        TypeDeclarations    TypeDeclarations
+TypeDeclarations        TypeDeclarations TypeDeclarations
 
 
 ########## 7.4.1: Named Packages
@@ -204,8 +204,7 @@ ClassMemberDeclaration  ;
 # Joos 1W does not support array data.
 
 FieldDeclaration        Type VariableDeclarators ;
-# TODO: FieldModifiers should come before the type, but that is not LR(1).
-FieldDeclaration        Type VariableDeclarators FieldModifiers ;
+FieldDeclaration        Modifiers Type VariableDeclarators ;
 
 VariableDeclarators     VariableDeclarator
 VariableDeclarators     VariableDeclarators , VariableDeclarator
@@ -220,14 +219,24 @@ VariableInitializer     Expression
 
 
 ########## 8.3.1: Field Modifiers
-# Joos 1W only supports: public, protected and static fields.
+# While generating an LR(1) grammar, Joos 1W causes a reduce-reduce conflict on
+# the rules FieldModifiers, MethodModifiers and ConstructorModifiers. To
+# resolve this conflict, all three rules have been merged into Modifiers and
+# additional checking is done in the weeder.
+#
+# The following must be checked by the weeder:
+# * Fields support: public, protected and static
+# * Methods support: public, protected, final, abstract and static
+# * Constructors support: public and protected
 
-FieldModifiers          FieldModifier
-FieldModifiers          FieldModifiers FieldModifier
+Modifiers               Modifier
+Modifiers               Modifiers Modifier
 
-FieldModifier           public
-FieldModifier           protected
-FieldModifier           static
+Modifier               public
+Modifier               protected
+Modifier               final
+Modifier               abstract
+Modifier               static
 
 
 ########## 8.4: Method Declarations
@@ -235,8 +244,7 @@ FieldModifier           static
 MethodDeclaration       MethodHeader MethodBody
 
 MethodHeader            ResultType MethodDeclarator
-# TODO: MethodModifiers should come before ResultType, but that is not LR(1).
-MethodHeader            ResultType MethodDeclarator MethodModifiers
+MethodHeader            Modifiers ResultType MethodDeclarator
 
 ResultType              Type
 ResultType              void
@@ -255,16 +263,7 @@ FormalParameter         Type VariableDeclaratorId
 
 
 ########## 8.4.3: Method Modifiers
-# Joos 1W only supports: public, protected, final, abstract and static methods.
-
-MethodModifiers         MethodModifier
-MethodModifiers         MethodModifiers MethodModifier
-
-MethodModifier          public
-MethodModifier          protected
-MethodModifier          final
-MethodModifier          abstract
-MethodModifier          static
+# See 8.3.1: Field Modifiers
 
 
 ########## 8.4.5: Method Body
@@ -275,21 +274,14 @@ MethodBody              ;
 
 ########## 8.8: Constructor Declaration
 
-# TODO: ConstructorModifiers should come before ConstructorDeclarator, but that is not LR(1).
-ConstructorDeclaration  ConstructorDeclarator ConstructorModifiers ConstructorBody
+ConstructorDeclaration  Modifiers ConstructorDeclarator ConstructorBody
 
 ConstructorDeclarator   SimpleTypeName ( )
 ConstructorDeclarator   SimpleTypeName ( FormalParameterList )
 
 
 ########## 8.8.3: Constructor Modifiers
-# Joos 1W only supports public and protected constructors.
-
-ConstructorModifiers    ConstructorModifier
-ConstructorModifiers    ConstructorModifiers ConstructorModifier
-
-ConstructorModifier     public
-ConstructorModifier     protected
+# See 8.3.1: Field Modifiers
 
 
 ########## 8.8.5: Constructor Body
