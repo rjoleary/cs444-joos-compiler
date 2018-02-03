@@ -1,1 +1,3 @@
-IDENTIFIER = -- IntegerLiteral * ( IntegerLiteral + IntegerLiteral ) + ! ( NullLiteral )
+public class A {
+    protected static int x ;
+}
