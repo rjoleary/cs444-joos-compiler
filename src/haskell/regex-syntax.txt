@@ -1,0 +1,12 @@
+REGEX SYNTAX
+============
+
+- ab matches ab
+- ab* matches a or ab or abb ...
+- ab\* matches ab*
+- [ab] matches a or b
+- [a-zA-Z] matches letters a-z or A-Z
+- [ab]* matches '' or a or b or ab or ba, .... 
+- (ab)* matches '' or ab or abab or ababab or .... 
+- [ab*] is invalid
+- [[ab]*] is invalid
