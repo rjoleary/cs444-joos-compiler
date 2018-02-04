@@ -21,7 +21,7 @@ bin :
 	mkdir -p bin
 
 bin/lexer : bin src/haskell/lexer.hs
-	${GHC} -o bin/lexer src/haskell/lexer.hs
+	${GHC} -o bin/lexer ${HS_FILES}
 
 bin/parser : bin src/rust/parser.rs
 	rustc src/rust/parser.rs -o bin/parser
