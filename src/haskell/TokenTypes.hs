@@ -1,3 +1,5 @@
+module TokenTypes where
+
 data Recognizer = Recognizer String String deriving (Show)
 
 tokenTypes = [
@@ -19,7 +21,7 @@ tokenTypes = [
   -- seperator
   Recognizer "comma" ",",
   Recognizer "semicolon" ";",
-  
+
   -- operator
   Recognizer "equals" "=",
 
@@ -30,7 +32,7 @@ tokenTypes = [
   -- whitespace
   Recognizer "space" "",
   Recognizer "newline" "",
-    Recognizer "tab" ""
+  Recognizer "tab" ""
   ]
 
 keywords = []

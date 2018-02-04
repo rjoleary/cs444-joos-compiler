@@ -1,12 +1,14 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
+GHC = ghc -Wall
+
 HS_FILES := $(wildcard src/haskell/*.hs)
 
 .PHONY : compiler all zip clean docs grammar
 
 # Only builds the compiler. This is the recipe run by Marmoset.
-compiler : bin bin/parser bin/haskell_main
+compiler : bin bin/lexer bin/parser bin/haskell_main
 
 # Builds everything including the grammar and docs.
 all : compiler grammar docs
@@ -18,11 +20,14 @@ zip :
 bin :
 	mkdir -p bin
 
-bin/parser : src/rust/parser.rs
+bin/lexer : bin src/haskell/lexer.hs
+	${GHC} -o bin/lexer src/haskell/lexer.hs
+
+bin/parser : bin src/rust/parser.rs
 	rustc src/rust/parser.rs -o bin/parser
 
 bin/haskell_main : ${HS_FILES}
-	ghc -o bin/haskell_main ${HS_FILES}
+	${GHC} -o bin/haskell_main ${HS_FILES}
 
 docs : docs.pdf
 
