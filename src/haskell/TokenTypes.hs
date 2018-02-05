@@ -53,6 +53,6 @@ tokenTypes = [
              , Recognizer "whitespace" "[ \t\n]*"
              ]
 
-keywords = []
+keywords = ["abstract", "boolean", "break", "byte","case", "catch", "char", "class", "const", "continue", "default", "do", "else", "extends", "final", "finally", "for","goto", "if", "implements","import","instanceof", "int", "interface", "native", "new", "package","private","protected","public", "return", "short", "static", "strictfp","super","switch", "synchronized", "this", "throw", "transient", "try", "void","volatile", "while"]
 
 invalidOperators = []
