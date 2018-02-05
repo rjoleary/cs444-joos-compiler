@@ -1,23 +1,25 @@
 import Data.Char
+import System.Exit
+import Control.Monad
+import TokenTypes
 
-data Token = Token String String
+data NfaState = NfaState { transition :: (Char -> NfaState)
+                         , accepting :: Bool
+                         }
+
+data Nfa = Nfa { allStates :: [NfaState]
+               , currentState :: [NfaState]
+               }
 
 main :: IO ()
 main = do
-  -- Something is broken yere
-  contents <- throwIfNotAscii getContents
-  let tokens = tokenize contents
-  mapM_ putTokens tokens
+  contents <- getContents
+  let nonAscii = any (not . isAscii) contents
+  when (nonAscii) (exitError "Invalid non-ascii characters")
 
-tokenize :: String -> [Token]
-tokenize x = map (const Token "id" "lexeme") (splitWhen isSpace x)
+regexToNfa :: Recognizer -> Nfa
+regexToNfa r = Nfa [] []
 
-putTokens :: Token -> IO ()
-putTokens (Token id lexeme) = putStrLn (id ++ " " ++ lexeme)
-
--- This needs to be implemented
-splitWhen :: (a -> Bool) -> [a] -> [[a]]
-splitWhen pred x = [x]
-
--- This needs to be implemented
-throwIfNotAscii x = x
+exitError e = do
+  putStrLn e
+  exitWith $ ExitFailure 42

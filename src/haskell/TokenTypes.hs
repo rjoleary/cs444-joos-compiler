@@ -1,3 +1,5 @@
+module TokenTypes where
+
 data Recognizer = Recognizer String String deriving (Show)
 
 tokenTypes = [
@@ -12,7 +14,6 @@ tokenTypes = [
   Recognizer "strliteral" "",
   Recognizer "nullliteral" "[]",
   -- Recognizer "charliteral" "[~!@#$%^&*()_\"+,-./':;<=>?A-Za-z0-9[]_`{}|]",
-  Recognizer "compoundnames" "[]",
   Recognizer "thisprimaryexpression" "[]",
   Recognizer "characterescapes" "[]",
 
@@ -51,7 +52,7 @@ tokenTypes = [
   -- whitespace
   Recognizer "space" "[ ]*",
   Recognizer "newline" "",
-    Recognizer "tab" ""
+  Recognizer "tab" ""
   ]
 
 keywords = []

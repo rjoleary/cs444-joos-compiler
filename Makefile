@@ -1,6 +1,8 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
+GHC = ghc -Wall
+
 HS_FILES := $(wildcard src/haskell/*.hs)
 
 .PHONY : compiler all zip clean docs grammar
@@ -18,11 +20,14 @@ zip :
 bin :
 	mkdir -p bin
 
-bin/parser : src/rust/parser.rs
+bin/lexer : bin src/haskell/lexer.hs
+	${GHC} -o bin/lexer ${HS_FILES}
+
+bin/parser : bin src/rust/parser.rs
 	rustc src/rust/parser.rs -o bin/parser
 
 bin/haskell_main : ${HS_FILES}
-	ghc -o bin/haskell_main ${HS_FILES}
+	${GHC} -o bin/haskell_main ${HS_FILES}
 
 docs : docs.pdf
 
