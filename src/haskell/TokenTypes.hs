@@ -50,9 +50,7 @@ tokenTypes = [
 
 
                -- whitespace
-             , Recognizer "space" "[ ]*"
-             , Recognizer "newline"
-             , Recognizer "tab"
+             , Recognizer "whitespace" "[ \t\n]*"
              ]
 
 keywords = []
