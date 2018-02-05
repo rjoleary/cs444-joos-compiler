@@ -2,9 +2,8 @@ module TokenTypes where
 
 data Recognizer = Recognizer String String deriving (Show)
 
-tokenTypes = [
-             -- command
-             , Recognizer "commandstar" ""
+             -- comments
+tokenTypes = [ Recognizer "commandstar" ""
              , Recognizer "commandslash" ""
              , Recognizer "javadoccommand" ""
 
