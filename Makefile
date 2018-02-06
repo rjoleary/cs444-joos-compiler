@@ -8,7 +8,7 @@ HS_FILES := $(wildcard src/haskell/*.hs)
 .PHONY : compiler all zip clean docs grammar
 
 # Only builds the compiler. This is the recipe run by Marmoset.
-compiler : bin bin/parser bin/haskell_main
+compiler : bin bin/parser bin/haskell_main bin/weeder
 
 # Builds everything including the grammar and docs.
 all : compiler grammar docs
@@ -28,6 +28,9 @@ bin/parser : bin src/rust/parser.rs
 
 bin/haskell_main : ${HS_FILES}
 	${GHC} -o bin/haskell_main ${HS_FILES}
+
+bin/weeder : src/weeder/weeder.hs
+	ghc -o bin/weeder src/weeder/weeder.hs
 
 docs : docs.pdf
 
