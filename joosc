@@ -1,15 +1,21 @@
 #!/bin/sh
 
 # Lexer
-bin/haskell_main "$@"
+bin/lexer > test/joos_tokens.txt
 if [ "$?" != 0 ]; then
     exit 42
 fi
 
 # Parser
-bin/parser "$@"
+bin/parser > test/joos_tree.txt
 if [ "$?" != 0 ]; then
     exit 42
 fi
 
-# TODO: Weeder and AST
+# Weeder
+bin/weeder
+if [ "$?" != 0 ]; then
+    exit 42
+fi
+
+# TODO: AST
