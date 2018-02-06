@@ -4,7 +4,7 @@ data Recognizer = Recognizer String String deriving (Show)
 
 tokenTypes = [
              -- command
-             , Recognizer "commandstar" ""
+               Recognizer "commandstar" ""
              , Recognizer "commandslash" ""
              , Recognizer "javadoccommand" ""
 
