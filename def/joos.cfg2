@@ -124,7 +124,7 @@ ImportDeclarations      ImportDeclaration
 ImportDeclarations      ImportDeclarations ImportDeclaration
 
 TypeDeclarations        TypeDeclaration
-TypeDeclarations        TypeDeclarations TypeDeclarations
+TypeDeclarations        TypeDeclarations TypeDeclaration
 
 
 ########## 7.4.1: Named Packages
@@ -229,8 +229,8 @@ VariableInitializer     Expression
 # * Methods support: public, protected, final, abstract and static
 # * Constructors support: public and protected
 
-Modifiers               Modifier
-Modifiers               Modifiers Modifier
+Modifiers              Modifier
+Modifiers              Modifiers Modifier
 
 Modifier               public
 Modifier               protected

@@ -1,22 +1,22 @@
-49 ClassModifier public
-47 ClassModifiers ClassModifier
-78 Modifier protected
-75 Modifiers Modifier
-81 Modifier static
-76 Modifiers Modifiers Modifier
-13 IntegralType int
-10 NumericType IntegralType
-8 PrimitiveType NumericType
-6 Type PrimitiveType
-72 VariableDeclaratorId Identifier
-70 VariableDeclarator VariableDeclaratorId
-68 VariableDeclarators VariableDeclarator
-67 FieldDeclaration Modifiers Type VariableDeclarators ;
-63 ClassMemberDeclaration FieldDeclaration
-61 ClassBodyDeclaration ClassMemberDeclaration
-59 ClassBodyDeclarations ClassBodyDeclaration
-58 ClassBody { ClassBodyDeclarations }
-43 ClassDeclaration ClassModifiers class Identifier ClassBody
-40 TypeDeclaration ClassDeclaration
-33 TypeDeclarations TypeDeclaration
-30 CompilationUnit TypeDeclarations
+ClassModifier public
+ClassModifiers ClassModifier
+Modifier protected
+Modifiers Modifier
+Modifier static
+Modifiers Modifiers Modifier
+IntegralType int
+NumericType IntegralType
+PrimitiveType NumericType
+Type PrimitiveType
+VariableDeclaratorId Identifier
+VariableDeclarator VariableDeclaratorId
+VariableDeclarators VariableDeclarator
+FieldDeclaration Modifiers Type VariableDeclarators ;
+ClassMemberDeclaration FieldDeclaration
+ClassBodyDeclaration ClassMemberDeclaration
+ClassBodyDeclarations ClassBodyDeclaration
+ClassBody { ClassBodyDeclarations }
+ClassDeclaration ClassModifiers class Identifier ClassBody
+TypeDeclaration ClassDeclaration
+TypeDeclarations TypeDeclaration
+CompilationUnit TypeDeclarations
