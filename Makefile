@@ -23,7 +23,7 @@ zip :
 bin :
 	mkdir -p bin
 
-bin/lexer : bin src/haskell/lexer.hs
+bin/lexer : bin ${HS_FILES}
 	${GHC} -o bin/lexer ${HS_FILES}
 
 bin/parser : bin src/rust/parser.rs
