@@ -94,7 +94,7 @@ fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
                 return;
             },
             None => {
-                eprintln!("Error: parse error");
+                eprintln!("Error: parse error on token {}", tokens[0]);
                 exit(42)
             }
         }
