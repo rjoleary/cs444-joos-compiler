@@ -118,6 +118,5 @@ multiLineComment = do
 singleLineComment :: Parser Token
 singleLineComment = do
   string "//"
-  notString "j"
-  string "//"
+  many $ satisfy $ not . (==) '\n'
   return Comment
