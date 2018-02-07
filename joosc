@@ -12,13 +12,11 @@ esac
 # Parser
 bin/parser > test/joos_tree.txt
 ret="$?"
-echo $ret
 case "$ret" in
     0) ;;
     42) exit 42; ;;
     *) echo "Exiting due to parser error"; exit $ret; ;;
 esac
-echo $ret
 
 # Weeder
 bin/weeder
