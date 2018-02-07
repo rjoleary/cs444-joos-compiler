@@ -1,4 +1,0 @@
-public class A {
-    protected static int x;
-    protected static int y;
-}

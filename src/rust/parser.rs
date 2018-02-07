@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Read;
+use std::process::exit;
 use std::vec::Vec;
 
 mod error;
@@ -85,7 +86,7 @@ fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
                     stack.push(ParseTransition(state, nonterminal.to_string()));
                 } else {
                     eprintln!("Error: could not find goto action");
-                    return;
+                    exit(1)
                 }
             },
             Some(&ParseAction::Accept) => {
@@ -94,7 +95,7 @@ fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
             },
             None => {
                 eprintln!("Error: parse error");
-                return;
+                exit(42)
             }
         }
         //println!();
