@@ -1,12 +1,12 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-TESTS_POSITIVE := $(wildcard test/positive/*.joos)
-TESTS_NEGATIVE := $(wildcard test/negative/*.joos)
+TESTS_POSITIVE := $(sort $(wildcard test/positive/*.joos))
+TESTS_NEGATIVE := $(sort $(wildcard test/negative/*.joos))
 
 GHC = ghc -Wall
 
-HS_FILES := $(wildcard src/haskell/*.hs)
+HS_FILES := $(sort $(wildcard src/haskell/*.hs))
 
 .PHONY : compiler all zip clean docs grammar test.positive
 
