@@ -7,6 +7,8 @@ import Control.Applicative
 import Control.Exception
 import Data.Maybe
 
+asLexeme :: Token -> Maybe String
+
 asLexeme (CharLiteral _)     = Just "Identifier"
 asLexeme (StringLiteral _)   = Just "Identifier"
 asLexeme (IntLiteral _)      = Just "Identifier"
@@ -42,12 +44,7 @@ asLexeme (InvalidOperator _) = Nothing
 asLexeme Space               = Nothing
 asLexeme Comment             = Nothing
 
-asLexeme (Identifier "public")    = Just "public"
-asLexeme (Identifier "protected") = Just "protected"
-asLexeme (Identifier "static")    = Just "static"
-asLexeme (Identifier "int")       = Just "int"
-asLexeme (Identifier "class")     = Just "class"
-asLexeme (Identifier x)           = Just x
+asLexeme (Identifier x)      = Just (if x `elem` keywords then x else "Identifier")
 
 
 data NoData = NoData deriving (Show)
