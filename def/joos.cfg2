@@ -91,7 +91,7 @@ IntegralType            char
 ReferenceType           ClassOrInterfaceType
 ReferenceType           ArrayType
 
-# TODO: ClassOrInterfaceType    Name
+# TODO(causes conflict): ClassOrInterfaceType    Name
 
 ClassType               Name
 
@@ -448,7 +448,6 @@ Primary                 PrimaryNoNewArray
 
 PrimaryNoNewArray       Literal
 PrimaryNoNewArray       this
-PrimaryNoNewArray       ClassName . this
 PrimaryNoNewArray       ( Expression )
 PrimaryNoNewArray       ClassInstanceCreationExpression
 PrimaryNoNewArray       FieldAccess
@@ -492,6 +491,8 @@ ArrayAccess             PrimaryNoNewArray [ Expression ]
 UnaryExpression         - UnaryExpression
 UnaryExpression         UnaryExpressionNotPlusMinus
 
+# TODO(causes conflict): UnaryExpressionNotPlusMinus     Primary
+# TODO(causes conflict): UnaryExpressionNotPlusMinus     ExpressionName
 UnaryExpressionNotPlusMinus     ! UnaryExpression
 UnaryExpressionNotPlusMinus     CastExpression
 
@@ -501,7 +502,7 @@ UnaryExpressionNotPlusMinus     CastExpression
 
 CastExpression          ( PrimitiveType ) UnaryExpression
 CastExpression          ( PrimitiveType Dims ) UnaryExpression
-#TODO: CastExpression          ( ReferenceType ) UnaryExpressionNotPlusMinus
+# TODO(causes conflict): CastExpression          ( ReferenceType ) UnaryExpressionNotPlusMinus
 
 
 ########## 15.17: Multiplicative Operators
@@ -549,14 +550,12 @@ InclusiveOrExpression   InclusiveOrExpression | ExclusiveOrExpression
 
 
 ########## 15.23: Conditional-And Operator &&
-# TODO: this doesn't seem to be used anywhere
 
 ConditionalAndExpression    InclusiveOrExpression
 ConditionalAndExpression    ConditionalAndExpression && InclusiveOrExpression
 
 
 ########## 15.24: Conditional-Or Operator ||
-# TODO: this doesn't seem to be used anywhere
 
 ConditionalOrExpression     ConditionalAndExpression
 ConditionalOrExpression     ConditionalOrExpression || ConditionalAndExpression
@@ -565,21 +564,13 @@ ConditionalOrExpression     ConditionalOrExpression || ConditionalAndExpression
 ########## 15.26: Assignment Operators
 
 AssignmentExpression    Assignment
+AssignmentExpression    ConditionalOrExpression
 
-Assignment              LeftHandSide AssignmentOperator AssignmentExpression
-
-LeftHandSide            Name
-LeftHandSide            FieldAccess
-LeftHandSide            ArrayAccess
-
-AssignmentOperator      =
+Assignment              Name = AssignmentExpression
+Assignment              FieldAccess = AssignmentExpression
+Assignment              ArrayAccess = AssignmentExpression
 
 
 ########## 15.27: Expression
 
 Expression              AssignmentExpression
-
-
-########## 15.28: Constant Expression
-
-ConstantExpression      Expression
