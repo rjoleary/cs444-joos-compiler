@@ -91,7 +91,7 @@ IntegralType            char
 ReferenceType           ClassOrInterfaceType
 ReferenceType           ArrayType
 
-ClassOrInterfaceType    Name
+# TODO: ClassOrInterfaceType    Name
 
 ClassType               Name
 
@@ -152,23 +152,14 @@ TypeDeclaration         ;
 ########## 8.1: Class Declaration
 # Joos 1W classes cannot be package private
 
-ClassDeclaration        ClassModifiers class Identifier ClassBody
-ClassDeclaration        ClassModifiers class Identifier Super ClassBody
-ClassDeclaration        ClassModifiers class Identifier Super Interfaces ClassBody
-ClassDeclaration        ClassModifiers class Identifier Interfaces ClassBody
+ClassDeclaration        Modifiers class Identifier ClassBody
+ClassDeclaration        Modifiers class Identifier Super ClassBody
+ClassDeclaration        Modifiers class Identifier Super Interfaces ClassBody
+ClassDeclaration        Modifiers class Identifier Interfaces ClassBody
 
 
 ########## 8.1.1: Class Modifiers
-# Joos 1W only has public, abstract, static and final classes.
-# TODO: Does joos really have static classes?
-
-ClassModifiers          ClassModifier
-ClassModifiers          ClassModifiers ClassModifier
-
-ClassModifier           public
-ClassModifier           abstract
-ClassModifier           static
-ClassModifier           final
+# See 8.3.1: Field Modifiers
 
 
 ########## 8.1.3: Superclasses and Subclasses
@@ -202,12 +193,10 @@ ClassMemberDeclaration  ;
 
 ########## 8.3: Field Declarations
 # Joos 1W does not support array data.
+# Joos 1W does not support multiple variables per declaration.
 
-FieldDeclaration        Type VariableDeclarators ;
-FieldDeclaration        Modifiers Type VariableDeclarators ;
-
-VariableDeclarators     VariableDeclarator
-VariableDeclarators     VariableDeclarators , VariableDeclarator
+FieldDeclaration        Type VariableDeclarator ;
+FieldDeclaration        Modifiers Type VariableDeclarator ;
 
 VariableDeclarator      VariableDeclaratorId
 VariableDeclarator      VariableDeclaratorId = VariableInitializer
@@ -228,6 +217,12 @@ VariableInitializer     Expression
 # * Fields support: public, protected and static
 # * Methods support: public, protected, final, abstract and static
 # * Constructors support: public and protected
+#
+# Similarly, there is a reduce-reduce conflict on the rules ClassModifiers and
+# InterfaceModifiers. The following must be checked by the weeder:
+# * Class support: public, abstract, static and final
+#   TODO: Does joos really have static classes?
+# * Interace support: public and abstract
 
 Modifiers              Modifier
 Modifiers              Modifiers Modifier
@@ -243,11 +238,11 @@ Modifier               static
 
 MethodDeclaration       MethodHeader MethodBody
 
-MethodHeader            ResultType MethodDeclarator
-MethodHeader            Modifiers ResultType MethodDeclarator
+MethodHeader            Type MethodDeclarator
+MethodHeader            Modifiers Type MethodDeclarator
 
-ResultType              Type
-ResultType              void
+# TODO: The weeder must check that void only appears in function returns.
+Type                    void
 
 MethodDeclarator        Identifier ( )
 MethodDeclarator        Identifier ( FormalParameterList )
@@ -296,17 +291,12 @@ ConstructorBody         { BlockStatements }
 
 InterfaceDeclaration    interface Identifier InterfaceBody
 InterfaceDeclaration    interface Identifier ExtendsInterfaces InterfaceBody
-InterfaceDeclaration    InterfaceModifiers interface Identifier InterfaceBody
-InterfaceDeclaration    InterfaceModifiers interface Identifier ExtendsInterfaces InterfaceBody
+InterfaceDeclaration    Modifiers interface Identifier InterfaceBody
+InterfaceDeclaration    Modifiers interface Identifier ExtendsInterfaces InterfaceBody
 
 
 ########## 9.1.1: Interface Modifiers
-# Joos 1W only supports public and abstract interfaces.
-
-InterfaceModifiers      InterfaceModifier
-InterfaceModifiers      InterfaceModifiers InterfaceModifier
-
-InterfaceModifier       public abstract
+# See 8.3.1: Field Modifiers
 
 
 ########## 9.1.2: Superinterfaces and Subinterfaces
@@ -330,14 +320,8 @@ InterfaceMemberDeclaration      ;
 
 ########## 9.4: Abstract Method Declarations
 
-AbstractMethodDeclaration       ResultType MethodDeclarator ;
-AbstractMethodDeclaration       AbstractMethodModifiers ResultType MethodDeclarator ;
-
-AbstractMethodModifiers         AbstractMethodModifier
-AbstractMethodModifiers         AbstractMethodModifiers AbstractMethodModifier
-
-AbstractMethodModifier          public
-AbstractMethodModifier          abstract
+AbstractMethodDeclaration       Type MethodDeclarator ;
+AbstractMethodDeclaration       Modifiers Type MethodDeclarator ;
 
 
 ########## 14.2. Blocks
@@ -357,7 +341,7 @@ BlockStatement          Statement
 # Joos 1W does not support local finals.
 
 LocalVariableDeclarationStatement   LocalVariableDeclaration
-LocalVariableDeclaration            Type VariableDeclarators
+LocalVariableDeclaration            Type VariableDeclarator
 
 
 ########## 14.5: Statements
@@ -513,10 +497,11 @@ UnaryExpressionNotPlusMinus     CastExpression
 
 
 ########## 15.16: Cast Expressions
+# TODO: what is Dims?
 
 CastExpression          ( PrimitiveType ) UnaryExpression
 CastExpression          ( PrimitiveType Dims ) UnaryExpression
-CastExpression          ( ReferenceType ) UnaryExpressionNotPlusMinus
+#TODO: CastExpression          ( ReferenceType ) UnaryExpressionNotPlusMinus
 
 
 ########## 15.17: Multiplicative Operators
@@ -564,12 +549,14 @@ InclusiveOrExpression   InclusiveOrExpression | ExclusiveOrExpression
 
 
 ########## 15.23: Conditional-And Operator &&
+# TODO: this doesn't seem to be used anywhere
 
 ConditionalAndExpression    InclusiveOrExpression
 ConditionalAndExpression    ConditionalAndExpression && InclusiveOrExpression
 
 
 ########## 15.24: Conditional-Or Operator ||
+# TODO: this doesn't seem to be used anywhere
 
 ConditionalOrExpression     ConditionalAndExpression
 ConditionalOrExpression     ConditionalOrExpression || ConditionalAndExpression
@@ -577,7 +564,6 @@ ConditionalOrExpression     ConditionalOrExpression || ConditionalAndExpression
 
 ########## 15.26: Assignment Operators
 
-AssignmentExpression    ConditionalOrExpression
 AssignmentExpression    Assignment
 
 Assignment              LeftHandSide AssignmentOperator AssignmentExpression
