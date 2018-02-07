@@ -273,11 +273,12 @@ MethodBody              ;
 
 
 ########## 8.8: Constructor Declaration
+# TODO: The weeder must check that Identifier is the name of the class.
 
 ConstructorDeclaration  Modifiers ConstructorDeclarator ConstructorBody
 
-ConstructorDeclarator   SimpleTypeName ( )
-ConstructorDeclarator   SimpleTypeName ( FormalParameterList )
+ConstructorDeclarator   Identifier ( )
+ConstructorDeclarator   Identifier ( FormalParameterList )
 
 
 ########## 8.8.3: Constructor Modifiers
