@@ -112,8 +112,7 @@ comment = singleLineComment <|> multiLineComment
 multiLineComment :: Parser Token
 multiLineComment = do
   string "/*"
-  notString "*/"
-  string "*/"
+  manyTill anyChar (string "*/")
   return Comment
 
 singleLineComment :: Parser Token

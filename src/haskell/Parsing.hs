@@ -43,6 +43,9 @@ string (c:cs) = (:) <$> char c <*> string cs
 notChar :: Char -> Parser Char
 notChar = satisfy . (\x -> not . (== x))
 
+manyTill :: Parser Char -> Parser String -> Parser String
+manyTill p end = end <|> do {c <- p; cs <- manyTill p end; return (c:cs)}
+
 -- TODO Broken. This only works if the string we're parsing is
 --      at least as long as c:cs
 notString :: String -> Parser String
