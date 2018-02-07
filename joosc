@@ -2,20 +2,31 @@
 
 # Lexer
 bin/lexer > test/joos_tokens.txt
-if [ "$?" != 0 ]; then
-    exit 42
-fi
+ret="$?"
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to lexer error"; exit $ret; ;;
+esac
 
 # Parser
 bin/parser > test/joos_tree.txt
-if [ "$?" != 0 ]; then
-    exit 42
-fi
+ret="$?"
+echo $ret
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to parser error"; exit $ret; ;;
+esac
+echo $ret
 
 # Weeder
 bin/weeder
-if [ "$?" != 0 ]; then
-    exit 42
-fi
+ret="$?"
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to weeder error"; exit $ret; ;;
+esac
 
 # TODO: AST
