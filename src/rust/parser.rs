@@ -95,6 +95,10 @@ fn parse(grammar: &Grammar, table: &ParseTable, tokens: &Tokens) {
             },
             None => {
                 eprintln!("Error: parse error on token {}", tokens[0]);
+                let expected: Vec<String> = grammar.terminals.iter().filter(
+                        |&t| table.contains_key(&ParseTransition(state, t.clone())))
+                        .map(|s| s.clone()).collect();
+                eprintln!("Expected one of: {}", expected.join(", "));
                 exit(42)
             }
         }
