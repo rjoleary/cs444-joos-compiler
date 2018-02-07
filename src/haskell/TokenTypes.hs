@@ -1,7 +1,7 @@
 module TokenTypes where
 
 import Control.Applicative
-import Data.Char(isAscii, isDigit, isLetter, isSpace)
+import Data.Char(isDigit, isLetter, isSpace)
 import Parsing
 
 data Recognizer = Recognizer String String deriving (Show)
@@ -9,11 +9,18 @@ data Recognizer = Recognizer String String deriving (Show)
 data Token = CharLiteral String
            | StringLiteral String
            | IntLiteral String
+
            | Identifier String
+
+           | InvalidOperator String
+
+           | Assign
            | Add
            | Subtract
            | Multiply
            | Divide
+           | Negate
+
            | Greater
            | Less
            | GreaterEqual
@@ -22,10 +29,9 @@ data Token = CharLiteral String
            | Inequal
            | BitwiseAnd
            | BitwiseOr
-           | Negate
            | LogicalAnd
            | LogicalOr
-           | Assign
+
            | Period
            | Comma
            | Semicolon
@@ -35,6 +41,7 @@ data Token = CharLiteral String
            | RightParen
            | LeftSquare
            | RightSquare
+
            | Space
            | Comment
            deriving(Show)
@@ -254,8 +261,7 @@ singleLineComment = do
   many $ satisfy $ not . (==) '\n'
   return Comment
 
-
-
+invalidOperators = map (\x -> do {s <- string x; return $ InvalidOperator s})
 
 keywords = ["abstract", "boolean", "break", "byte","case", "catch", "char",
             "class", "const", "continue", "default", "do", "else", "extends", "final",
@@ -265,7 +271,8 @@ keywords = ["abstract", "boolean", "break", "byte","case", "catch", "char",
             "this", "throw", "transient", "try", "void","volatile", "while"]
 
 invalidkeywords = ["long", "double", "float"]
-invalidOperators = ["+=", "-=", "*=", "/=", "~", "?", ":", "++", "--",
+
+invalidOperatorList = ["+=", "-=", "*=", "/=", "~", "?", ":", "++", "--",
                     "^", "%", "<<", ">>", ">>>", "+=","-=","*=","/=",
                     "&=", "|=","^=","%=","<<=",">>=",">>>="]
 

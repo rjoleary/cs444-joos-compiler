@@ -7,20 +7,47 @@ import Control.Applicative
 import Control.Exception
 import Data.Maybe
 
-asLexeme (CharLiteral _)  = Just "Identifier"
-asLexeme Comma          = Just ","
-asLexeme LeftBrace      = Just "{"
-asLexeme RightBrace     = Just "}"
-asLexeme Semicolon      = Just ";"
-asLexeme Space          = Nothing
-asLexeme Comment        = Nothing
+asLexeme (CharLiteral _)     = Just "Identifier"
+asLexeme (StringLiteral _)   = Just "Identifier"
+asLexeme (IntLiteral _)      = Just "Identifier"
+
+asLexeme Assign              = Just "="
+asLexeme Add                 = Just "+"
+asLexeme Subtract            = Just "-"
+asLexeme Multiply            = Just "+"
+asLexeme Divide              = Just "/"
+asLexeme Negate              = Just "!"
+
+asLexeme Greater             = Just ">"
+asLexeme Less                = Just "<"
+asLexeme GreaterEqual        = Just ">="
+asLexeme Equal               = Just "=="
+asLexeme LessEqual           = Just "<="
+asLexeme Inequal             = Just "!="
+asLexeme BitwiseAnd          = Just "&"
+asLexeme BitwiseOr           = Just "|"
+asLexeme LogicalAnd          = Just "&&"
+asLexeme LogicalOr           = Just "||"
+
+asLexeme Period              = Just "."
+asLexeme Comma               = Just ","
+asLexeme Semicolon           = Just ";"
+asLexeme LeftBrace           = Just "{"
+asLexeme RightBrace          = Just "}"
+asLexeme LeftParen           = Just "("
+asLexeme RightParen          = Just ")"
+asLexeme LeftSquare          = Just "["
+asLexeme RightSquare         = Just "]"
+asLexeme (InvalidOperator _) = Nothing
+asLexeme Space               = Nothing
+asLexeme Comment             = Nothing
 
 asLexeme (Identifier "public")    = Just "public"
 asLexeme (Identifier "protected") = Just "protected"
 asLexeme (Identifier "static")    = Just "static"
 asLexeme (Identifier "int")       = Just "int"
 asLexeme (Identifier "class")     = Just "class"
-asLexeme (Identifier x)           = Just "Identifier"
+asLexeme (Identifier _)           = Just "Identifier"
 
 
 data NoData = NoData deriving (Show)
@@ -48,6 +75,7 @@ main = do
 
   -- TODO: also need start and end index
   putStr . unlines . map (++" 0 0") . catMaybes . map asLexeme $ tokens
+  -- print tokens
 
 test = runParser token "9 i //\nok,,ok,hi"
 
@@ -55,5 +83,3 @@ token :: Parser [Token]
 token = many (whitespace <|> joosToken)
 
 joosToken = literal <|> separator <|> operator <|> identifier
-
-ignored = space <|> comment
