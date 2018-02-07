@@ -1,8 +1,8 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-TESTS_POSITIVE := $(sort $(wildcard test/positive/*.joos))
-TESTS_NEGATIVE := $(sort $(wildcard test/negative/*.joos))
+TESTS_POSITIVE ?= $(sort $(wildcard test/positive/*.joos))
+TESTS_NEGATIVE ?= $(sort $(wildcard test/negative/*.joos))
 
 GHC = ghc -Wall
 
