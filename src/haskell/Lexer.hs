@@ -47,7 +47,7 @@ asLexeme (Identifier "protected") = Just "protected"
 asLexeme (Identifier "static")    = Just "static"
 asLexeme (Identifier "int")       = Just "int"
 asLexeme (Identifier "class")     = Just "class"
-asLexeme (Identifier _)           = Just "Identifier"
+asLexeme (Identifier x)           = Just x
 
 
 data NoData = NoData deriving (Show)
