@@ -70,14 +70,15 @@ escapeCharacters = "btnfr01234567'\\\""
 
 backslashed :: Parser Char -> [Char] -> Parser String
 backslashed c e = scan where
-  scan = do {char '\\'; c <- oneOfChar e; return $ "\\" ++ e} <|> do {c <- anyChar; return [c]}
+  scan = do {char '\\'; c <- oneOfChar e; return  ['\\', c]} <|>
+         do {c <- anyChar; return [c]}
 
 
 charLiteral :: Parser Token
 charLiteral = do
-  string "'"
+  char '\''
   s <- backslashed anyChar escapeCharacters
-  string "'"
+  char '\''
   return $ CharLiteral s
 
 stringLiteral :: Parser Token
@@ -148,7 +149,6 @@ equal = do
   string "=="
   return Equal
 
-
 lessEqual :: Parser Token
 lessEqual = do
   string "<="
@@ -189,9 +189,13 @@ assignment = do
   string "="
   return Assign
 
-operator = addition <|> subtraction <|> multiplies <|> divides <|> modulus <|> greater <|>
-  less <|> greaterEqual <|> equal <|> lessEqual <|> inequal <|> bitwiseAnd <|>
-  bitwiseOr <|> negation <|> logicalAnd <|> logicalOr <|> assignment
+operator = doubleCharOperator <|> singleCharOperator
+
+doubleCharOperator = lessEqual <|> greaterEqual <|> equal <|> inequal
+
+singleCharOperator = logicalAnd <|> logicalOr <|> addition <|> subtraction <|>
+                     multiplies <|> divides <|> modulus <|> greater <|> less <|>
+                     bitwiseAnd <|> bitwiseOr <|> negation <|> assignment
 
 -- separator
 
@@ -266,6 +270,9 @@ singleLineComment = do
   string "//"
   many $ satisfy $ not . (==) '\n'
   return Comment
+
+-- TODO
+-- invalidOperator
 
 invalidOperators = map (\x -> do {s <- string x; return $ InvalidOperator s})
 

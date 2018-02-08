@@ -9,9 +9,9 @@ import Data.Maybe
 
 asLexeme :: Token -> Maybe String
 
-asLexeme (CharLiteral _)     = Just "Identifier"
-asLexeme (StringLiteral _)   = Just "Identifier"
-asLexeme (IntLiteral _)      = Just "Identifier"
+asLexeme (CharLiteral _)     = Just "CharacterLiteral"
+asLexeme (StringLiteral _)   = Just "StringLiteral"
+asLexeme (IntLiteral _)      = Just "IntLiteral"
 
 asLexeme Assign              = Just "="
 asLexeme Add                 = Just "+"
@@ -45,7 +45,10 @@ asLexeme (InvalidOperator _) = Nothing
 asLexeme Space               = Nothing
 asLexeme Comment             = Nothing
 
-asLexeme (Identifier x)      = Just (if x `elem` keywords then x else "Identifier")
+asLexeme (Identifier x)
+  | x `elem` ["true", "false"] = Just "BooleanLiteral"
+  | x `elem` keywords          = Just x
+  | otherwise                  = Just "Identifier"
 
 
 data NoData = NoData deriving (Show)

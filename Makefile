@@ -56,7 +56,7 @@ def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
 docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
 
-test.positive :
+test.positive : compiler
 	@run=0; \
 	passed=0; \
 	failed=0; \
