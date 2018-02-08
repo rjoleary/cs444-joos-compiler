@@ -91,7 +91,7 @@ IntegralType            char
 ReferenceType           ClassOrInterfaceType
 ReferenceType           ArrayType
 
-# TODO(causes conflict): ClassOrInterfaceType    Name
+ClassOrInterfaceType    Name
 
 ClassType               Name
 
@@ -232,6 +232,7 @@ Modifier               protected
 Modifier               final
 Modifier               abstract
 Modifier               static
+Modifier               native
 
 
 ########## 8.4: Method Declarations
@@ -241,7 +242,6 @@ MethodDeclaration       MethodHeader MethodBody
 MethodHeader            Type MethodDeclarator
 MethodHeader            Modifiers Type MethodDeclarator
 
-# TODO: The weeder must check that void only appears in function returns.
 Type                    void
 
 MethodDeclarator        Identifier ( )
@@ -444,19 +444,18 @@ ReturnStatement         return Expression ;
 # * choice
 # * bit shift
 
-Primary                 PrimaryNoNewArray
-
-PrimaryNoNewArray       Literal
-PrimaryNoNewArray       this
-PrimaryNoNewArray       ( Expression )
-PrimaryNoNewArray       ClassInstanceCreationExpression
-PrimaryNoNewArray       FieldAccess
-PrimaryNoNewArray       MethodInvocation
-PrimaryNoNewArray       ArrayAccess
+Primary                 Literal
+Primary                 this
+Primary                 ( Expression )
+Primary                 ClassInstanceCreationExpression
+Primary                 FieldAccess
+# TODO(causes conflict): Primary                 MethodInvocation
+Primary                 ArrayAccess
 
 
 ########## 15.9: Class Instance Creation Expressions
 # Joos 1W does not have nested types.
+# TODO: be able to create new arrays.
 
 ClassInstanceCreationExpression     new ClassOrInterfaceType ( )
 ClassInstanceCreationExpression     new ClassOrInterfaceType ( ArgumentList )
@@ -481,8 +480,8 @@ MethodInvocation        Primary . Identifier ( ArgumentList )
 
 ########## 15.13: Array Access Expressions
 
-ArrayAccess             Name [ Expression ]
-ArrayAccess             PrimaryNoNewArray [ Expression ]
+# TODO(causes conflict): ArrayAccess             Name [ Expression ]
+ArrayAccess             Primary [ Expression ]
 
 
 ########## 15.15: Unary Operators
@@ -491,8 +490,8 @@ ArrayAccess             PrimaryNoNewArray [ Expression ]
 UnaryExpression         - UnaryExpression
 UnaryExpression         UnaryExpressionNotPlusMinus
 
-# TODO(causes conflict): UnaryExpressionNotPlusMinus     Primary
-# TODO(causes conflict): UnaryExpressionNotPlusMinus     ExpressionName
+UnaryExpressionNotPlusMinus     Primary
+UnaryExpressionNotPlusMinus     Name
 UnaryExpressionNotPlusMinus     ! UnaryExpression
 UnaryExpressionNotPlusMinus     CastExpression
 
