@@ -19,6 +19,7 @@ data Token = CharLiteral String
            | Subtract
            | Multiply
            | Divide
+           | Modulus
            | Negate
 
            | Greater
@@ -122,6 +123,11 @@ divides = do
   string "/"
   return Divide
 
+modulus :: Parser Token
+modulus = do
+  string "%"
+  return Modulus
+
 greater :: Parser Token
 greater = do
   string ">"
@@ -183,7 +189,7 @@ assignment = do
   string "="
   return Assign
 
-operator = addition <|> subtraction <|> multiplies <|> divides <|> greater <|>
+operator = addition <|> subtraction <|> multiplies <|> divides <|> modulus <|> greater <|>
   less <|> greaterEqual <|> equal <|> lessEqual <|> inequal <|> bitwiseAnd <|>
   bitwiseOr <|> negation <|> logicalAnd <|> logicalOr <|> assignment
 
