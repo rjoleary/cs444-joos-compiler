@@ -1,10 +1,10 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-TESTS_POSITIVE ?= $(sort $(wildcard test/positive/*.joos))
-TESTS_NEGATIVE ?= $(sort $(wildcard test/negative/*.joos))
+TESTS_POSITIVE := $(sort $(wildcard test/positive/*.joos))
+TESTS_NEGATIVE := $(sort $(wildcard test/negative/*.joos))
 
-GHC = ghc -Wall
+GHC = ghc -O2 -Wall
 
 HS_FILES := $(sort $(wildcard src/haskell/*.hs))
 
@@ -27,7 +27,7 @@ bin/lexer : bin ${HS_FILES}
 	${GHC} -o bin/lexer ${HS_FILES}
 
 bin/parser : bin src/rust/parser.rs
-	rustc src/rust/parser.rs -o bin/parser
+	rustc --codegen opt-level=2 src/rust/parser.rs -o bin/parser
 
 bin/weeder : src/weeder/weeder.hs
 	ghc -o bin/weeder src/weeder/weeder.hs
