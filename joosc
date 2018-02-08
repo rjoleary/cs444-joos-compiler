@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Put the input file into position.
+cp "$@" test/joos_input.txt
+
 # Lexer
 bin/lexer > test/joos_tokens.txt
 ret="$?"
