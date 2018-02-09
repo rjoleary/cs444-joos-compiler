@@ -51,6 +51,11 @@ manyTill p end = scan where
   scan = do {end; return []} <|>
          do {c <- p; cs <- manyTill p end; return (c:cs)}
 
+manyTill1 :: Parser String -> Parser String -> Parser String
+manyTill1 p end = scan where
+  scan = do {end; return []} <|>
+         do {s1 <- p; s2 <- manyTill1 p end; return $ s1 ++ s2}
+
 -- TODO Broken. This only works if the string we're parsing is
 --      at least as long as c:cs
 notString :: String -> Parser String

@@ -63,13 +63,13 @@ test.positive : compiler
 	error=0; \
 	for file in ${TESTS_POSITIVE} ; do \
 		run=$$((run+1)) ; \
-		echo -n "$$run: $$file... "; \
+		counter="$$run: $$file... "; \
 		rm -f test/joos_{input,tokens,tree}.txt; \
 		./joosc "$$file" > /dev/null; \
 		case $$? in \
-			0) passed=$$((passed+1)); echo PASSED ;; \
-			42) failed=$$((failed+1)); echo FAILED ;; \
-			*) error=$$((error+1)); echo ERROR ;; \
+			0) passed=$$((passed+1)) ;; \
+			42) failed=$$((failed+1)); echo "$$counter" FAILED ;; \
+			*) error=$$((error+1)); echo "$$counter" ERROR ;; \
 		esac; \
 	done; \
 	echo; \

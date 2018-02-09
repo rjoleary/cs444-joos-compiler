@@ -77,14 +77,14 @@ backslashed c e = scan where
 charLiteral :: Parser Token
 charLiteral = do
   char '\''
-  s <- backslashed (satisfy $ (/=) '\'') escapeCharacters
+  s <- backslashed anyChar escapeCharacters
   char '\''
   return $ CharLiteral s
 
 stringLiteral :: Parser Token
 stringLiteral = do
   char '"'
-  s <- manyTill (satisfy $ (/=) '"') (string "\"")
+  s <- manyTill1 (backslashed anyChar escapeCharacters) (string "\"")
   return $ StringLiteral $ s
 
 -- identifier
