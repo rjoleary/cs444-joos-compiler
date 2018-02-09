@@ -1,14 +1,11 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-TESTS_POSITIVE := $(sort $(wildcard test/positive/*.joos))
-TESTS_NEGATIVE := $(sort $(wildcard test/negative/*.joos))
-
 GHC = ghc -O2 -Wall
 
 HS_FILES := $(sort $(wildcard src/haskell/*.hs))
 
-.PHONY : compiler all zip clean docs grammar test.positive
+.PHONY : compiler all zip clean docs grammar test.positive test.negative test
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder
@@ -56,27 +53,14 @@ def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
 docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
 
-test.positive : compiler
-	@run=0; \
-	passed=0; \
-	failed=0; \
-	error=0; \
-	for file in ${TESTS_POSITIVE} ; do \
-		run=$$((run+1)) ; \
-		counter="$$run: $$file... "; \
-		rm -f test/joos_{input,tokens,tree}.txt; \
-		./joosc "$$file" > /dev/null; \
-		case $$? in \
-			0) passed=$$((passed+1)) ;; \
-			42) failed=$$((failed+1)); echo "$$counter" FAILED ;; \
-			*) error=$$((error+1)); echo "$$counter" ERROR ;; \
-		esac; \
-	done; \
-	echo; \
-	echo "SUMMARY:"; \
-	echo "  Passed: $$passed/$$run"; \
-	echo "  Failed: $$failed/$$run"; \
-	echo "  Error: $$error/$$run"
+test.positive :
+	@./testrunner.sh positive
+
+test.negative :
+	@./testrunner.sh negative
+
+test :
+	@./testrunner.sh all
 
 clean :
 	rm -rf bin/ docs.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip
