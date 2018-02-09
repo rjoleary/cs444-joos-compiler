@@ -1,11 +1,12 @@
-import Data.Char(isAscii, isDigit, isLetter, isSpace)
-import System.Exit
-import Control.Monad
-import Parsing
-import TokenTypes
 import Control.Applicative
 import Control.Exception
+import Control.Monad
+import Data.Char(isAscii, isDigit, isLetter, isSpace)
 import Data.Maybe
+import Parsing
+import System.Exit
+import System.IO
+import TokenTypes
 
 asLexeme :: Token -> Maybe String
 
@@ -41,7 +42,7 @@ asLexeme LeftParen           = Just "("
 asLexeme RightParen          = Just ")"
 asLexeme LeftSquare          = Just "["
 asLexeme RightSquare         = Just "]"
-asLexeme (InvalidOperator _) = Nothing
+asLexeme InvalidOperator     = Just "DAMMIT"
 asLexeme Space               = Nothing
 asLexeme Comment             = Nothing
 
@@ -54,7 +55,7 @@ data NoData = NoData deriving (Show)
 instance Exception NoData
 
 exitError e = do
-  putStrLn e
+  hPutStrLn stderr e
   exitWith $ ExitFailure 42
 
 
@@ -62,25 +63,20 @@ maybeToIO :: Maybe a -> IO a
 maybeToIO Nothing = throwIO NoData
 maybeToIO (Just x) = return x
 
+-- TODO: also need start and end index
 main :: IO ()
 main = do
-  -- contents <- getContents
   contents <- readFile "test/joos_input.txt"
 
   let nonAscii = any (not . isAscii) contents
   when (nonAscii) (exitError "Invalid non-ascii characters")
 
-  -- (tokens, s) <- maybeToIO test
   (tokens, s) <- maybeToIO (runParser token contents)
 
-  -- TODO: also need start and end index
-  if (s == []) then
-    putStr . unlines . map (++" 0 0") . catMaybes . map asLexeme $ tokens
-    else
+  if (s /= [] || any ((==) InvalidOperator) tokens) then
     exitError "Could not scan"
-  -- print tokens
-
-test = runParser token "9 i //\nok,,ok,hi"
+    else
+    putStr . unlines . map (++" 0 0") . catMaybes . map asLexeme $ tokens
 
 token :: Parser [Token]
 token = many (whitespace <|> joosToken)

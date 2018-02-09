@@ -12,7 +12,7 @@ data Token = CharLiteral String
 
            | Identifier String
 
-           | InvalidOperator String
+           | InvalidOperator
 
            | Assign
            | Add
@@ -45,7 +45,7 @@ data Token = CharLiteral String
 
            | Space
            | Comment
-           deriving(Show)
+           deriving(Eq, Show)
 
 -- literal
 
@@ -188,7 +188,7 @@ assignment = do
   string "="
   return Assign
 
-operator = doubleCharOperator <|> singleCharOperator
+operator = invalidOperator <|> doubleCharOperator <|> singleCharOperator
 
 doubleCharOperator = lessEqual <|> greaterEqual <|> equal <|> inequal
 
@@ -273,7 +273,11 @@ singleLineComment = do
 -- TODO
 -- invalidOperator
 
-invalidOperators = map (\x -> do {s <- string x; return $ InvalidOperator s})
+invalidOperator :: Parser Token
+invalidOperator = (foldr (<|>) empty invalidOperators)
+
+invalidOperators :: [(Parser Token)]
+invalidOperators = map (\x -> do {s <- string x; return $ InvalidOperator}) invalidOperatorList
 
 keywords = ["abstract", "boolean", "break", "byte","case", "catch", "char",
             "class", "const", "continue", "default", "do", "else", "extends", "final",
@@ -285,7 +289,7 @@ keywords = ["abstract", "boolean", "break", "byte","case", "catch", "char",
 invalidkeywords = ["long", "double", "float"]
 
 invalidOperatorList = ["+=", "-=", "*=", "/=", "~", "?", ":", "++", "--",
-                    "^", "%", "<<", ">>", ">>>", "+=","-=","*=","/=",
+                    "^", ">>>", "<<", ">>", "+=","-=","*=","/=",
                     "&=", "|=","^=","%=","<<=",">>=",">>>="]
 
 -- Obsolete. Will delete once we don't need it any longer
