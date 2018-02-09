@@ -84,9 +84,8 @@ charLiteral = do
 stringLiteral :: Parser Token
 stringLiteral = do
   char '"'
-  ss <- many $ backslashed anyChar escapeCharacters
-  char '"'
-  return $ StringLiteral $ mconcat ss
+  s <- manyTill anyChar (string "\"")
+  return $ StringLiteral $ ss
 
 -- identifier
 

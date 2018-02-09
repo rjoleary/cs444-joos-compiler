@@ -47,7 +47,9 @@ oneOfChar :: [Char] -> Parser Char
 oneOfChar l = satisfy (\x -> any (== x) l)
 
 manyTill :: Parser Char -> Parser String -> Parser String
-manyTill p end = end <|> do {c <- p; cs <- manyTill p end; return (c:cs)}
+manyTill p end = scan where
+  scan = do {end; return []} <|>
+         do {c <- p; cs <- manyTill p end; return (c:cs)}
 
 -- TODO Broken. This only works if the string we're parsing is
 --      at least as long as c:cs
