@@ -85,7 +85,7 @@ stringLiteral :: Parser Token
 stringLiteral = do
   char '"'
   s <- manyTill anyChar (string "\"")
-  return $ StringLiteral $ ss
+  return $ StringLiteral $ s
 
 -- identifier
 
