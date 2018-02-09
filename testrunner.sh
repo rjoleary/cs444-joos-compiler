@@ -4,6 +4,7 @@ RUN=0
 PASSED=0
 FAILED=0
 ERROR=0
+IGNORED=0
 
 # runtests <PASS_CODE> <FAIL_CODE> <FILES>
 runtests() {
@@ -12,6 +13,12 @@ runtests() {
     shift 2
 
     for file in "$@" ; do
+        if echo "$file" | grep IGNORE > /dev/null; then
+            echo "IGNORED $file"
+            IGNORED=$((IGNORED+1))
+            continue
+        fi
+
         RUN=$((RUN+1))
         echo -n "$RUN: $file... "
         rm -f test/joos_{input,tokens,tree}.txt
@@ -56,3 +63,4 @@ echo "SUMMARY:"
 echo "  Passed: $PASSED/$RUN"
 echo "  Failed: $FAILED/$RUN"
 echo "  Error: $ERROR/$RUN"
+echo "  Ignored: $IGNORED"
