@@ -71,10 +71,13 @@ main = do
   when (nonAscii) (exitError "Invalid non-ascii characters")
 
   -- (tokens, s) <- maybeToIO test
-  (tokens, _) <- maybeToIO (runParser token contents)
+  (tokens, s) <- maybeToIO (runParser token contents)
 
   -- TODO: also need start and end index
-  putStr . unlines . map (++" 0 0") . catMaybes . map asLexeme $ tokens
+  if (s == []) then
+    putStr . unlines . map (++" 0 0") . catMaybes . map asLexeme $ tokens
+    else
+    exitError "Could not scan"
   -- print tokens
 
 test = runParser token "9 i //\nok,,ok,hi"
