@@ -1,3 +1,4 @@
+import Test.Hspec
 import Test.HUnit
 import TokenTypesTest
 

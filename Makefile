@@ -58,10 +58,10 @@ docs.pdf : docs.md
 test.unit :
 	runghc -i"${HS_SRC}:${HS_TEST}" test/haskell/UnitTest.hs
 
-test.positive :
+test.positive : compiler
 	@./testrunner.sh positive
 
-test.negative :
+test.negative : compiler
 	@./testrunner.sh negative
 
 test :

@@ -77,8 +77,3 @@ main = do
     exitError "Could not scan"
     else
     putStr . unlines . map (++" 0 0") . catMaybes . map asLexeme $ tokens
-
-token :: Parser [Token]
-token = many (whitespace <|> joosToken)
-
-joosToken = literal <|> separator <|> operator <|> identifier

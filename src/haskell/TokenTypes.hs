@@ -47,6 +47,11 @@ data Token = CharLiteral String
            | Comment
            deriving(Eq, Show)
 
+token :: Parser [Token]
+token = many (whitespace <|> joosToken)
+
+joosToken = literal <|> separator <|> operator <|> identifier
+
 -- literal
 
 literal :: Parser Token
@@ -291,56 +296,3 @@ invalidkeywords = ["long", "double", "float"]
 invalidOperatorList = ["+=", "-=", "*=", "/=", "~", "?", ":", "++", "--",
                     "^", ">>>", "<<", ">>", "+=","-=","*=","/=",
                     "&=", "|=","^=","%=","<<=",">>=",">>>="]
-
--- Obsolete. Will delete once we don't need it any longer
-
-             -- comments
-tokenTypes = [ Recognizer "commandstar" ""
-             , Recognizer "commandslash" ""
-             , Recognizer "javadoccommand" ""
-
-             -- literal
-             , Recognizer "zeroliteral" "0"
-             , Recognizer "pintliteral" "[1-9][0-9]*"
-             , Recognizer "strliteral" ""
-             , Recognizer "nullliteral" "[]"
-             , Recognizer "boolliteral" "[]"
-             , Recognizer "charliteral" "'.*'"
-             , Recognizer "characterescapes" "[]"
-
-               -- seperator
-             , Recognizer "comma" ","
-             , Recognizer "period" "."
-             , Recognizer "semicolon" ";"
-             , Recognizer "lparenthese" "("
-             , Recognizer "rparenthese" ")"
-             , Recognizer "lcurlybracket" "{"
-             , Recognizer "rcurlybracket" "}"
-             , Recognizer "lsquarebracket" "["
-             , Recognizer "rsquarebracket" "]"
-
-               -- operator
-             , Recognizer "addition" "+"
-             , Recognizer "subtract" "-"
-             , Recognizer "multiplies" "*"
-             , Recognizer "divides" "/"
-             , Recognizer "greater" ">"
-             , Recognizer "less" "<"
-             , Recognizer "greater_equal" ">="
-             , Recognizer "less_equal" "<="
-             , Recognizer "equal" "=="
-             , Recognizer "inequal" "!="
-             , Recognizer "bitwise_and" "&"
-             , Recognizer "bitwise_or" "|"
-             , Recognizer "negate" "!"
-             , Recognizer "logical_and" "&&"
-             , Recognizer "logical_or" "||"
-             , Recognizer "assignment" "="
-
-               -- identifier
-             , Recognizer "identifier" "[a-zA-Z_][0-9a-zA-Z_]*"
-
-
-               -- whitespace
-             , Recognizer "whitespace" "[ \t\n]*"
-             ]
