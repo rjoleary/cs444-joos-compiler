@@ -3,7 +3,9 @@ GRAMMAR  := Jlalr1
 
 GHC = ghc -O2 -Wall
 
-HS_FILES := $(sort $(wildcard src/haskell/*.hs))
+HS_SRC  := src/haskell
+HS_TEST := test/haskell
+HS_FILES := $(sort $(wildcard ${HS_SRC}/*.hs))
 
 .PHONY : compiler all zip clean docs grammar test.positive test.negative test
 
@@ -52,6 +54,9 @@ def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
 
 docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
+
+test.unit :
+	runghc -i"${HS_SRC}:${HS_TEST}" test/haskell/UnitTest.hs
 
 test.positive :
 	@./testrunner.sh positive
