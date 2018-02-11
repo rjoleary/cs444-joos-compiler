@@ -82,20 +82,16 @@ PrimitiveType           short
 
 ########## 4.3: Reference Types and Values
 # JLS 1W does not support multidimensional arrays.
-# The JLS2 spec had some ambiguity for ClassOrInterfaceType. It has been
-# simplified to Name.
 
-ReferenceType           ClassOrInterfaceType
+ReferenceType           Name
 ReferenceType           ArrayType
-
-ClassOrInterfaceType    Name
 
 ClassType               Name
 
 InterfaceType           Name
 
 ArrayType               PrimitiveType [ ]
-ArrayType               ClassOrInterfaceType [ ]
+ArrayType               Name [ ]
 
 
 ########## 6.5: Determining the Meaning of a Name
@@ -443,6 +439,7 @@ Primary                 Literal
 Primary                 this
 Primary                 ( Expression )
 Primary                 ClassInstanceCreationExpression
+Primary                 ArrayCreationExpression
 Primary                 FieldAccess
 # TODO(causes conflict): Primary                 MethodInvocation
 Primary                 ArrayAccess
@@ -450,13 +447,22 @@ Primary                 ArrayAccess
 
 ########## 15.9: Class Instance Creation Expressions
 # Joos 1W does not have nested types.
-# TODO: be able to create new arrays.
 
-ClassInstanceCreationExpression     new ClassOrInterfaceType ( )
-ClassInstanceCreationExpression     new ClassOrInterfaceType ( ArgumentList )
+ClassInstanceCreationExpression     new Name ( )
+ClassInstanceCreationExpression     new Name ( ArgumentList )
 
 ArgumentList            Expression
 ArgumentList            ArgumentList , Expression
+
+
+########## 15.10: Array Creation Expressions
+# Joos 1W does not support array data.
+# Joos 1W does not support multidimensional arrays.
+
+ArrayCreationExpression new Name [ ]
+ArrayCreationExpression new Name [ Expression ]
+ArrayCreationExpression new PrimitiveType [ ]
+ArrayCreationExpression new PrimitiveType [ Expression ]
 
 
 ########## 15.11: Field Access Expressions
@@ -492,10 +498,9 @@ UnaryExpressionNotPlusMinus     CastExpression
 
 
 ########## 15.16: Cast Expressions
-# TODO: what is Dims?
 
 CastExpression          ( PrimitiveType ) UnaryExpression
-CastExpression          ( PrimitiveType Dims ) UnaryExpression
+CastExpression          ( PrimitiveType [ ] ) UnaryExpression
 # TODO(causes conflict): CastExpression          ( ReferenceType ) UnaryExpressionNotPlusMinus
 
 
