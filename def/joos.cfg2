@@ -191,10 +191,10 @@ ClassMemberDeclaration  ;
 
 ########## 8.3: Field Declarations
 # Joos 1W does not support array data.
+# Joos 1W does not support package private fields.
 # Joos 1W does not support multiple variables per declaration.
 # Joos 1W does not support array declaration after variable name.
 
-FieldDeclaration        Type VariableDeclarator ;
 FieldDeclaration        Modifiers Type VariableDeclarator ;
 
 VariableDeclarator      Identifier
