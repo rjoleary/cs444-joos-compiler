@@ -76,7 +76,7 @@ escapeCharacters = "btnfr01234567'\\\""
 backslashed :: Parser Char -> [Char] -> Parser String
 backslashed c e = scan where
   scan = do {char '\\'; c <- oneOfChar e; return  ['\\', c]} <|>
-         do {c <- anyChar; return [c]}
+         do {c <- satisfy $ not . (== '\\'); return [c]}
 
 
 charLiteral :: Parser Token
