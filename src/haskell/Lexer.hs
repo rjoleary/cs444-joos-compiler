@@ -1,11 +1,9 @@
 import Control.Applicative
-import Control.Exception
 import Control.Monad
 import Data.Char(isAscii, isDigit, isLetter, isSpace)
 import Data.Maybe
 import Parsing
 import System.Exit
-import System.IO
 import TokenTypes
 
 asLexeme :: Token -> Maybe String
@@ -51,17 +49,10 @@ asLexeme (Identifier x)
   | otherwise                  = Just "Identifier"
 
 
-data NoData = NoData deriving (Show)
-instance Exception NoData
-
 exitError e = do
   hPutStrLn stderr e
   exitWith $ ExitFailure 42
 
-
-maybeToIO :: Maybe a -> IO a
-maybeToIO Nothing = throwIO NoData
-maybeToIO (Just x) = return x
 
 -- TODO: also need start and end index
 main :: IO ()

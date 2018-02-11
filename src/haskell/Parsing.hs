@@ -8,9 +8,14 @@
 module Parsing where
 
 import Control.Applicative
+import Control.Exception
 import Control.Monad.Trans.State.Strict
 import Control.Monad
 import Data.Char (isSpace, isDigit, ord)
+import System.IO
+
+data NoData = NoData deriving (Show)
+instance Exception NoData
 
 newtype Parser a = Parser (StateT String Maybe a) deriving (Functor, Applicative, Alternative)
 
@@ -64,3 +69,7 @@ notString (c:cs) = (:) <$> notChar c <*> notString cs
 
 apply :: Parser a -> String -> Maybe (a, String)
 apply p = runParser p
+
+maybeToIO :: Maybe a -> IO a
+maybeToIO Nothing = throwIO NoData
+maybeToIO (Just x) = return x
