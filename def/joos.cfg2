@@ -327,7 +327,7 @@ BlockStatement          Statement
 ########## 14.4: Local Variable Declaration Statements
 # Joos 1W does not support local finals.
 
-LocalVariableDeclarationStatement   LocalVariableDeclaration
+LocalVariableDeclarationStatement   LocalVariableDeclaration ;
 LocalVariableDeclaration            Type VariableDeclarator
 
 
@@ -439,7 +439,7 @@ PrimaryNoNewArray       this
 PrimaryNoNewArray       ( Expression )
 PrimaryNoNewArray       ClassInstanceCreationExpression
 PrimaryNoNewArray       FieldAccess
-#TODO: PrimaryNoNewArray       MethodInvocation
+PrimaryNoNewArray       MethodInvocation
 PrimaryNoNewArray       ArrayAccess
 
 
@@ -496,10 +496,12 @@ UnaryExpressionNotPlusMinus     CastExpression
 
 
 ########## 15.16: Cast Expressions
+# TODO: In the weeder check that Expression is a single Name.
 
 CastExpression          ( PrimitiveType ) UnaryExpression
-CastExpression          ( ArrayType ) UnaryExpression
-# TODO(causes conflict) CastExpression          ( Name ) UnaryExpressionNotPlusMinus
+CastExpression          ( PrimitiveType [ ] ) UnaryExpression
+CastExpression          ( Expression ) UnaryExpressionNotPlusMinus
+CastExpression          ( Name [ ] ) UnaryExpressionNotPlusMinus
 
 
 ########## 15.17: Multiplicative Operators
