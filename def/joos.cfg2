@@ -435,14 +435,16 @@ ReturnStatement         return Expression ;
 # * choice
 # * bit shift
 
-Primary                 Literal
-Primary                 this
-Primary                 ( Expression )
-Primary                 ClassInstanceCreationExpression
+Primary                 PrimaryNoNewArray
 Primary                 ArrayCreationExpression
-Primary                 FieldAccess
-# TODO(causes conflict): Primary                 MethodInvocation
-Primary                 ArrayAccess
+
+PrimaryNoNewArray       Literal
+PrimaryNoNewArray       this
+PrimaryNoNewArray       ( Expression )
+PrimaryNoNewArray       ClassInstanceCreationExpression
+PrimaryNoNewArray       FieldAccess
+#TODO: PrimaryNoNewArray       MethodInvocation
+PrimaryNoNewArray       ArrayAccess
 
 
 ########## 15.9: Class Instance Creation Expressions
@@ -482,7 +484,7 @@ MethodInvocation        Primary . Identifier ( ArgumentList )
 ########## 15.13: Array Access Expressions
 
 # TODO(causes conflict): ArrayAccess             Name [ Expression ]
-ArrayAccess             Primary [ Expression ]
+ArrayAccess             PrimaryNoNewArray [ Expression ]
 
 
 ########## 15.15: Unary Operators
