@@ -64,10 +64,10 @@ test.positive : compiler
 test.negative : compiler
 	@./testrunner.sh negative
 
-test.java :
+test.java : compiler
 	@COMPILER=javac ./testrunner.sh positive
 
-test :
+test : compiler
 	@./testrunner.sh all
 
 clean :

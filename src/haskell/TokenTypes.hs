@@ -1,51 +1,49 @@
 module TokenTypes where
 
-import Control.Applicative
-import Data.Char(isDigit, isLetter, isSpace)
-import Parsing
+import           Control.Applicative
+import           Data.Char           (isDigit, isLetter, isSpace)
+import           Parsing
 
-data Recognizer = Recognizer String String deriving (Show)
+data Recognizer =
+  Recognizer String
+             String
+  deriving (Show)
 
-data Token = CharLiteral String
-           | StringLiteral String
-           | IntLiteral String
-
-           | Identifier String
-
-           | InvalidOperator
-
-           | Assign
-           | Add
-           | Subtract
-           | Multiply
-           | Divide
-           | Modulus
-           | Negate
-
-           | Greater
-           | Less
-           | GreaterEqual
-           | Equal
-           | LessEqual
-           | Inequal
-           | BitwiseAnd
-           | BitwiseOr
-           | LogicalAnd
-           | LogicalOr
-
-           | Period
-           | Comma
-           | Semicolon
-           | LeftBrace
-           | RightBrace
-           | LeftParen
-           | RightParen
-           | LeftSquare
-           | RightSquare
-
-           | Space
-           | Comment
-           deriving(Eq, Show)
+data Token
+  = CharLiteral String
+  | StringLiteral String
+  | IntLiteral String
+  | Identifier String
+  | InvalidOperator
+  | Assign
+  | Add
+  | Subtract
+  | Multiply
+  | Divide
+  | Modulus
+  | Negate
+  | Greater
+  | Less
+  | GreaterEqual
+  | Equal
+  | LessEqual
+  | Inequal
+  | BitwiseAnd
+  | BitwiseOr
+  | LogicalAnd
+  | LogicalOr
+  | Period
+  | Comma
+  | Semicolon
+  | LeftBrace
+  | RightBrace
+  | LeftParen
+  | RightParen
+  | LeftSquare
+  | RightSquare
+  | Space
+  | Comment
+  deriving (Eq, Show)
 
 token :: Parser [Token]
 token = many (whitespace <|> joosToken)
@@ -53,7 +51,6 @@ token = many (whitespace <|> joosToken)
 joosToken = literal <|> separator <|> operator <|> identifier
 
 -- literal
-
 literal :: Parser Token
 literal = intLiteral <|> charLiteral <|> stringLiteral
 
@@ -69,15 +66,20 @@ intPositiveInt :: Parser Token
 intPositiveInt = do
   c <- satisfy (\x -> x > '0' && x <= '9')
   cs <- many $ satisfy isDigit
-  return $ IntLiteral $ c:cs
+  return $ IntLiteral $ c : cs
 
 escapeCharacters = "btnfr01234567'\\\""
 
 backslashed :: Parser Char -> [Char] -> Parser String
-backslashed c e = scan where
-  scan = do {char '\\'; c <- oneOfChar e; return  ['\\', c]} <|>
-         do {c <- satisfy $ not . (== '\\'); return [c]}
-
+backslashed c e = scan
+  where
+    scan =
+      do char '\\'
+         c <- oneOfChar e
+         return ['\\', c]
+     <|> do
+        c <- satisfy $ not . (== '\\')
+        return [c]
 
 charLiteral :: Parser Token
 charLiteral = do
@@ -93,7 +95,6 @@ stringLiteral = do
   return $ StringLiteral $ s
 
 -- identifier
-
 isJoosLetter :: Char -> Bool
 isJoosLetter x = isLetter x || x == '_'
 
@@ -104,10 +105,9 @@ identifier :: Parser Token
 identifier = do
   c <- satisfy isJoosLetter
   cs <- many $ satisfy isJoosAlphaNum
-  return $ Identifier (c:cs)
+  return $ Identifier (c : cs)
 
 -- operator
-
 addition :: Parser Token
 addition = do
   string "+"
@@ -197,14 +197,24 @@ operator = invalidOperator <|> doubleCharOperator <|> singleCharOperator
 
 doubleCharOperator = lessEqual <|> greaterEqual <|> equal <|> inequal
 
-singleCharOperator = logicalAnd <|> logicalOr <|> addition <|> subtraction <|>
-                     multiplies <|> divides <|> modulus <|> greater <|> less <|>
-                     bitwiseAnd <|> bitwiseOr <|> negation <|> assignment
+singleCharOperator =
+  logicalAnd <|> logicalOr <|> addition <|> subtraction <|> multiplies <|>
+  divides <|>
+  modulus <|>
+  greater <|>
+  less <|>
+  bitwiseAnd <|>
+  bitwiseOr <|>
+  negation <|>
+  assignment
 
 -- separator
-
 separator :: Parser Token
-separator = comma <|> period <|> semicolon <|> leftBrace <|> rightBrace <|> leftParen <|> rightParen <|> leftSquare <|> rightSquare
+separator =
+  comma <|> period <|> semicolon <|> leftBrace <|> rightBrace <|> leftParen <|>
+  rightParen <|>
+  leftSquare <|>
+  rightSquare
 
 comma :: Parser Token
 comma = do
@@ -252,7 +262,6 @@ rightSquare = do
   return RightSquare
 
 -- Whitespace
-
 whitespace = space <|> comment
 
 space :: Parser Token
@@ -277,22 +286,89 @@ singleLineComment = do
 
 -- TODO
 -- invalidOperator
-
 invalidOperator :: Parser Token
 invalidOperator = (foldr (<|>) empty invalidOperators)
 
 invalidOperators :: [(Parser Token)]
-invalidOperators = map (\x -> do {s <- string x; return $ InvalidOperator}) invalidOperatorList
+invalidOperators =
+  map
+    (\x -> do
+       s <- string x
+       return $ InvalidOperator)
+    invalidOperatorList
 
-keywords = ["abstract", "boolean", "break", "byte","case", "catch", "char",
-            "class", "const", "continue", "default", "do", "else", "extends", "final",
-            "finally", "for","goto", "if", "implements","import","instanceof", "int",
-            "interface", "native", "new", "package","private","protected","public",
-            "return", "short", "static", "strictfp","super","switch", "synchronized",
-            "this", "throw", "transient", "try", "void","volatile", "while"]
+keywords =
+  [ "abstract"
+  , "boolean"
+  , "break"
+  , "byte"
+  , "case"
+  , "catch"
+  , "char"
+  , "class"
+  , "const"
+  , "continue"
+  , "default"
+  , "do"
+  , "else"
+  , "extends"
+  , "final"
+  , "finally"
+  , "for"
+  , "goto"
+  , "if"
+  , "implements"
+  , "import"
+  , "instanceof"
+  , "int"
+  , "interface"
+  , "native"
+  , "new"
+  , "package"
+  , "private"
+  , "protected"
+  , "public"
+  , "return"
+  , "short"
+  , "static"
+  , "strictfp"
+  , "super"
+  , "switch"
+  , "synchronized"
+  , "this"
+  , "throw"
+  , "transient"
+  , "try"
+  , "void"
+  , "volatile"
+  , "while"
+  ]
 
 invalidkeywords = ["long", "double", "float"]
 
-invalidOperatorList = ["+=", "-=", "*=", "/=", "~", "?", ":", "++", "--",
-                    "^", ">>>", "<<", ">>", "+=","-=","*=","/=",
-                    "&=", "|=","^=","%=","<<=",">>=",">>>="]
+invalidOperatorList =
+  [ "+="
+  , "-="
+  , "*="
+  , "/="
+  , "~"
+  , "?"
+  , ":"
+  , "++"
+  , "--"
+  , "^"
+  , ">>>"
+  , "<<"
+  , ">>"
+  , "+="
+  , "-="
+  , "*="
+  , "/="
+  , "&="
+  , "|="
+  , "^="
+  , "%="
+  , "<<="
+  , ">>="
+  , ">>>="
+  ]
