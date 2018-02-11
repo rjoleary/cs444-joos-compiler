@@ -86,10 +86,6 @@ PrimitiveType           short
 ReferenceType           Name
 ReferenceType           ArrayType
 
-ClassType               Name
-
-InterfaceType           Name
-
 ArrayType               PrimitiveType [ ]
 ArrayType               Name [ ]
 
@@ -160,15 +156,15 @@ ClassDeclaration        Modifiers class Identifier Interfaces ClassBody
 
 ########## 8.1.3: Superclasses and Subclasses
 
-Super                   extends ClassType
+Super                   extends Name
 
 
 ########## 8.1.4: Superinterfaces
 
 Interfaces              implements InterfaceTypeList
 
-InterfaceTypeList       InterfaceType
-InterfaceTypeList       InterfaceTypeList , InterfaceType
+InterfaceTypeList       Name
+InterfaceTypeList       InterfaceTypeList , Name
 
 
 ########## 8.1.5: Class Body and Member Declarations
@@ -292,8 +288,8 @@ InterfaceDeclaration    Modifiers interface Identifier ExtendsInterfaces Interfa
 
 ########## 9.1.2: Superinterfaces and Subinterfaces
 
-ExtendsInterfaces       extends InterfaceType
-ExtendsInterfaces       ExtendsInterfaces , InterfaceType
+ExtendsInterfaces       extends Name
+ExtendsInterfaces       ExtendsInterfaces , Name
 
 
 ########## 9.1.3: Interface Body and Member Declarations
@@ -502,8 +498,8 @@ UnaryExpressionNotPlusMinus     CastExpression
 ########## 15.16: Cast Expressions
 
 CastExpression          ( PrimitiveType ) UnaryExpression
-CastExpression          ( PrimitiveType [ ] ) UnaryExpression
-# TODO(causes conflict): CastExpression          ( ReferenceType ) UnaryExpressionNotPlusMinus
+CastExpression          ( ArrayType ) UnaryExpression
+# TODO(causes conflict) CastExpression          ( Name ) UnaryExpressionNotPlusMinus
 
 
 ########## 15.17: Multiplicative Operators
