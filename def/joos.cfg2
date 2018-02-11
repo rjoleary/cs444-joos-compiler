@@ -141,10 +141,14 @@ TypeImportOnDemandDeclaration   import Name . * ;
 
 
 ########## 7.6: Top Level Type Declarations
+# Joos 1W only supports one type per file, but this does not preclude an
+# arbitrary number of semicolons.
 
-TypeDeclaration         ClassDeclaration
-TypeDeclaration         InterfaceDeclaration
-TypeDeclaration         ;
+TypeDeclaration         Semicolons ClassDeclaration Semicolons
+TypeDeclaration         Semicolons InterfaceDeclaration Semicolons
+
+Semicolons
+Semicolons              Semicolons ;
 
 
 ########## 8.1: Class Declaration
