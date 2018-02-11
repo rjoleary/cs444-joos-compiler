@@ -148,7 +148,7 @@ TypeDeclaration         ;
 
 
 ########## 8.1: Class Declaration
-# Joos 1W classes cannot be package private
+# Joos 1W classes cannot be package private.
 
 ClassDeclaration        Modifiers class Identifier ClassBody
 ClassDeclaration        Modifiers class Identifier Super ClassBody
@@ -286,9 +286,8 @@ ConstructorBody         { BlockStatements }
 
 
 ########## 9.1: Interface Declarations
+# Joos 1W interfaces cannot be package private.
 
-InterfaceDeclaration    interface Identifier InterfaceBody
-InterfaceDeclaration    interface Identifier ExtendsInterfaces InterfaceBody
 InterfaceDeclaration    Modifiers interface Identifier InterfaceBody
 InterfaceDeclaration    Modifiers interface Identifier ExtendsInterfaces InterfaceBody
 
