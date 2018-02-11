@@ -7,7 +7,7 @@ HS_SRC  := src/haskell
 HS_TEST := test/haskell
 HS_FILES := $(sort $(wildcard ${HS_SRC}/*.hs))
 
-.PHONY : compiler all zip clean docs grammar test.positive test.negative test
+.PHONY : compiler all zip clean docs grammar test.positive test.negative test test.unit
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder
@@ -56,7 +56,7 @@ docs.pdf : docs.md
 	pandoc -V geometry:margin=1in -o $@ $<
 
 test.unit :
-	runghc -i"${HS_SRC}:${HS_TEST}" test/haskell/UnitTest.hs
+	stack exec runghc -- -i"${HS_SRC}:${HS_TEST}" test/haskell/UnitTest.hs
 
 test.positive : compiler
 	@./testrunner.sh positive
