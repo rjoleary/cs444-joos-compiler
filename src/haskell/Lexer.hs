@@ -4,6 +4,7 @@ import Data.Char(isAscii, isDigit, isLetter, isSpace)
 import Data.Maybe
 import Parsing
 import System.Exit
+import System.IO
 import TokenTypes
 
 asLexeme :: Token -> Maybe String
