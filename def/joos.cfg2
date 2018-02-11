@@ -71,20 +71,17 @@ Type                    ReferenceType
 
 
 ########## 4.2: Primitive Types and Values
-# JLS 1W only has: boolean, int, char, byte and short
+# JLS 1W only has 5 types.
 
-PrimitiveType           NumericType
 PrimitiveType           boolean
-
-NumericType             IntegralType
-
-IntegralType            byte
-IntegralType            short
-IntegralType            int
-IntegralType            char
+PrimitiveType           byte
+PrimitiveType           char
+PrimitiveType           int
+PrimitiveType           short
 
 
 ########## 4.3: Reference Types and Values
+# JLS 1W does not support multidimensional arrays.
 # The JLS2 spec had some ambiguity for ClassOrInterfaceType. It has been
 # simplified to Name.
 
@@ -97,7 +94,8 @@ ClassType               Name
 
 InterfaceType           Name
 
-ArrayType               Type [ ]
+ArrayType               PrimitiveType [ ]
+ArrayType               ClassOrInterfaceType [ ]
 
 
 ########## 6.5: Determining the Meaning of a Name
