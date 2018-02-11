@@ -192,17 +192,13 @@ ClassMemberDeclaration  ;
 ########## 8.3: Field Declarations
 # Joos 1W does not support array data.
 # Joos 1W does not support multiple variables per declaration.
+# Joos 1W does not support array declaration after variable name.
 
 FieldDeclaration        Type VariableDeclarator ;
 FieldDeclaration        Modifiers Type VariableDeclarator ;
 
-VariableDeclarator      VariableDeclaratorId
-VariableDeclarator      VariableDeclaratorId = VariableInitializer
-
-VariableDeclaratorId    Identifier
-VariableDeclaratorId    VariableDeclaratorId [ ]
-
-VariableInitializer     Expression
+VariableDeclarator      Identifier
+VariableDeclarator      Identifier = Expression
 
 
 ########## 8.3.1: Field Modifiers
@@ -252,7 +248,7 @@ MethodDeclarator        Identifier ( FormalParameterList )
 FormalParameterList     FormalParameter
 FormalParameterList     FormalParameterList , FormalParameter
 
-FormalParameter         Type VariableDeclaratorId
+FormalParameter         Type Identifier
 
 
 ########## 8.4.3: Method Modifiers
