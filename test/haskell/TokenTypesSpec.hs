@@ -124,7 +124,7 @@ spec = do
       describe "lessequal" $ do
         it "parses recognized lessequal" $ do
           (tokens, _) <- runJoosParser "<="
-          tokens `shouldBe` [LessEqaul]
+          tokens `shouldBe` [LessEqual]
 
       describe "inequal" $ do
         it "parses recognized inequal" $ do
@@ -156,7 +156,7 @@ spec = do
           (tokens, _) <- runJoosParser "||"
           tokens `shouldBe` [LogicalOr]
 
-    describe "seperator"
+    describe "seperator" $ do
       describe "comma" $ do
         it "parsers recognized comma" $ do
           (tokens, _) <- runJoosParser ","
@@ -196,13 +196,49 @@ spec = do
           (tokens, _) <- runJoosParser "]"
           tokens `shouldBe` [RightSquare]
 
-    describe "whitespace"
+    describe "whitespace" $ do
       describe "space" $ do
         it "parsers recognized space" $ do
           (tokens, _) <- runJoosParser " "
           tokens `shouldBe` [Space]
 
+      describe "carriage return" $ do
+        it "parsers recognized carriage return" $ do
+          (tokens, _) <- runJoosParser "\r"
+          tokens `shouldBe` [Space]
+
+      describe "newline" $ do
+        it "parsers recognized newline" $ do
+          (tokens, _) <- runJoosParser "\n"
+          tokens `shouldBe` [Space]
+          
+        it "parsers recognized space as well" $ do
+          (tokens, _) <- runJoosParser "\b"
+          tokens `shouldBe` [Space]
+          
+        it "parsers recognized tab" $ do
+          (tokens, _) <- runJoosParser "\t"
+          tokens `shouldBe` [Space]
+
+        it "parsers recognized formfeed" $ do
+          (tokens, _) <- runJoosParser "\f"
+          tokens `shouldBe` [Space]
+
+        it "parsers recognized the format that return followed by newline" $ do
+          (tokens, _) <- runJoosParser "\r\n"
+          tokens `shouldBe` [Space]
+
       describe "comment" $ do
         it "parsers recognized comment" $ do
-          (tokens, _) <- runJoosParser "/*//"
+          (tokens, _) <- runJoosParser "///*"
           tokens `shouldBe` [Comment]
+
+        it "parsers recognizede comment starts with //" $ do
+          (tokens, _) <- runJoosParser "//"
+          tokens `shouldBe` [Comment]
+
+    describe "invalidkeyword" $ do
+      it "parsers recognized invaild keyword" $ do
+        (tokens, _) <- runJoosParser "long"
+        tokens `shouldBe` []
+
