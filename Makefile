@@ -64,6 +64,9 @@ test.positive : compiler
 test.negative : compiler
 	@./testrunner.sh negative
 
+test.java :
+	@COMPILER=javac ./testrunner.sh positive
+
 test :
 	@./testrunner.sh all
 

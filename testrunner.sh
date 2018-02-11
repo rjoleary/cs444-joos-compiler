@@ -1,5 +1,7 @@
 #!/bin/bash
 
+COMPILER=${COMPILER-./joosc}
+
 RUN=0
 PASSED=0
 FAILED=0
@@ -22,7 +24,7 @@ runtests() {
         RUN=$((RUN+1))
         echo -n "$RUN: $file... "
         rm -f test/joos_{input,tokens,tree}.txt
-        ./joosc "$file" > /dev/null
+        $COMPILER "$file" > /dev/null
         case $? in
             $PASS_CODE)
                 PASSED=$((PASSED+1))
@@ -43,14 +45,14 @@ runtests() {
 
 case "$1" in
     positive)
-        runtests 0 42 $(ls test/positive/*.joos)
+        runtests 0 42 $(ls test/positive/*.java)
         ;;
     negative)
-        runtests 42 0 $(ls test/negative/*.joos)
+        runtests 42 0 $(ls test/negative/*.java)
         ;;
     all)
-        runtests 0 42 $(ls test/positive/*.joos)
-        runtests 42 0 $(ls test/negative/*.joos)
+        runtests 0 42 $(ls test/positive/*.java)
+        runtests 42 0 $(ls test/negative/*.java)
         ;;
     *)
         echo "Error: Argument 0 must be positive, negative or all" >&2
