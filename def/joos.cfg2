@@ -110,21 +110,19 @@ Name                    Name . Identifier
 
 
 ########## 7.3: Compilation Units
+# Joos 1W supports only one type per file.
 
 CompilationUnit
 CompilationUnit         PackageDeclaration
 CompilationUnit         PackageDeclaration ImportDeclarations
-CompilationUnit         PackageDeclaration ImportDeclarations TypeDeclarations
-CompilationUnit         PackageDeclaration TypeDeclarations
+CompilationUnit         PackageDeclaration ImportDeclarations TypeDeclaration
+CompilationUnit         PackageDeclaration TypeDeclaration
 CompilationUnit         ImportDeclarations
-CompilationUnit         ImportDeclarations TypeDeclarations
-CompilationUnit         TypeDeclarations
+CompilationUnit         ImportDeclarations TypeDeclaration
+CompilationUnit         TypeDeclaration
 
 ImportDeclarations      ImportDeclaration
 ImportDeclarations      ImportDeclarations ImportDeclaration
-
-TypeDeclarations        TypeDeclaration
-TypeDeclarations        TypeDeclarations TypeDeclaration
 
 
 ########## 7.4.1: Named Packages
