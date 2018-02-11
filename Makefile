@@ -10,7 +10,7 @@ HS_FILES := $(sort $(wildcard ${HS_SRC}/*.hs))
 .PHONY : compiler all zip clean docs grammar test.positive test.negative test test.unit
 
 # Only builds the compiler. This is the recipe run by Marmoset.
-compiler : bin bin/parser bin/lexer bin/weeder
+compiler : bin bin/parser bin/lexer bin/weeder bin/ast
 
 # Builds everything including the grammar and docs.
 all : compiler grammar docs
@@ -30,6 +30,9 @@ bin/parser : bin src/rust/parser.rs
 
 bin/weeder : src/weeder/weeder.hs
 	ghc -o bin/weeder src/weeder/weeder.hs
+
+bin/ast : $(wildcard src/ast/*.hs)
+	${GHC} -o bin/ast $^
 
 docs : docs.pdf
 
