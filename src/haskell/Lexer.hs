@@ -55,6 +55,18 @@ main = do
   let nonAscii = any (not . isAscii) contents
   when (nonAscii) (exitError "Invalid non-ascii characters")
   (tokens, s) <- maybeToIO (runParser token contents)
+  when (hasTwoConsecutiveInts tokens) $ exitError "Invalid IntLiteral"
   if (s /= [] || any ((==) InvalidOperator) tokens)
     then exitError "Could not scan"
     else putStr . unlines . map (++ " 0 0") . catMaybes . map asLexeme $ tokens
+
+hasTwoConsecutiveInts :: [Token] -> Bool
+hasTwoConsecutiveInts l
+  | (length l) > 1 = if (bothIntLiteral (head l) (l !! 1))
+    then True
+    else hasTwoConsecutiveInts $ tail l
+  | otherwise = False
+
+bothIntLiteral :: Token -> Token -> Bool
+bothIntLiteral (IntLiteral _) (IntLiteral _) = True
+bothIntLiteral _ _ = False

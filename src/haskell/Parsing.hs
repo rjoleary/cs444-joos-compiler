@@ -81,12 +81,6 @@ manyTill1 p end = scan
         s2 <- manyTill1 p end
         return $ s1 ++ s2
 
--- TODO Broken. This only works if the string we're parsing is
---      at least as long as c:cs
-notString :: String -> Parser String
-notString []     = pure []
-notString (c:cs) = (:) <$> notChar c <*> notString cs
-
 apply :: Parser a -> String -> Maybe (a, String)
 apply p = runParser p
 
