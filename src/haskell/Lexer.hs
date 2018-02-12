@@ -56,6 +56,7 @@ main = do
   when (nonAscii) (exitError "Invalid non-ascii characters")
   (tokens, s) <- maybeToIO (runParser token contents)
   when (hasTwoConsecutiveInts tokens) $ exitError "Invalid IntLiteral"
+  when (hasInvalidKeywords tokens) $ exitError "Invalid keywords"
   if (s /= [] || any ((==) InvalidOperator) tokens)
     then exitError "Could not scan"
     else putStr . unlines . map (++ " 0 0") . catMaybes . map asLexeme $ tokens
@@ -70,3 +71,18 @@ hasTwoConsecutiveInts l
 bothIntLiteral :: Token -> Token -> Bool
 bothIntLiteral (IntLiteral _) (IntLiteral _) = True
 bothIntLiteral _ _ = False
+
+hasInvalidKeywords :: [Token] -> Bool
+hasInvalidKeywords l
+  | (length l) > 0 = if (isInvalidKeywords (head l))
+    then True
+    else hasInvalidKeywords $ tail l
+  | otherwise = False
+
+
+isInvalidKeywords :: Token -> Bool
+isInvalidKeywords (Identifier x)
+  | x `elem` invalidkeywords = True
+  | otherwise = False
+isInvalidKeywords _ = False
+
