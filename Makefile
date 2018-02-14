@@ -29,7 +29,7 @@ bin/parser : bin src/rust/parser.rs
 	rustc --codegen opt-level=2 src/rust/parser.rs -o bin/parser
 
 bin/weeder : src/weeder/weeder.hs
-	ghc -o bin/weeder src/weeder/weeder.hs
+	${GHC} -o bin/weeder src/weeder/weeder.hs
 
 bin/ast : $(wildcard src/ast/*.hs)
 	${GHC} -o bin/ast $^
