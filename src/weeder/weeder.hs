@@ -19,6 +19,9 @@ pam lf x = map g lf where
 
 kClassDeclaration :: String
 kClassDeclaration = "ClassDeclaration"
+kInterfaceDeclaration :: String
+kInterfaceDeclaration = "InterfaceDeclaration"
+
 kAbstract :: String
 kAbstract = "abstract"
 kFinal :: String
@@ -27,6 +30,8 @@ kBlock :: String
 kBlock = "Block"
 kStatic :: String
 kStatic = "static"
+kFieldDeclaration :: String
+kFieldDeclaration = "FieldDeclaration"
 kMethodBody :: String
 kMethodBody = "MethodBody"
 kMethodDeclaration :: String
@@ -79,6 +84,13 @@ hasModifier :: String -> ParseTree -> Bool
 hasModifier modifier tree
   | rootLabel tree == modifier = True
   | otherwise = any (hasModifier modifier) $ subForest tree
+
+hasMethodsWithModifiers :: [String] -> ParseTree -> Bool
+hasMethodsWithModifiers modifiers tree
+  | (rootLabel tree) == kMethodDeclaration =
+    any (\x -> hasModifier x tree) modifiers
+  | otherwise = any (hasMethodsWithModifiers modifiers) $ subForest tree
+
 
 findChildren :: String -> ParseTree -> [ParseTree]
 findChildren childName tree
@@ -136,23 +148,29 @@ voidTypeOnlyUsedAsMethodReturn tree
   where
     declarator = head $ findChildren kMethodDeclarator tree
 
-
+-- TODO
 classnameSameAsFilename :: ParseTree -> Bool
 classnameSameAsFilename tree =
   True
 
 interfaceMethodNotStaticFinalOrNative :: ParseTree -> Bool
-interfaceMethodNotStaticFinalOrNative tree =
-  True
+interfaceMethodNotStaticFinalOrNative tree
+  | (rootLabel tree) == kInterfaceDeclaration =
+    hasMethodsWithModifiers [kStatic, kFinal, kNative] tree
+  | otherwise = any interfaceMethodNotStaticFinalOrNative $ subForest tree
 
+-- TODO
 classAtLeastOneConstructor :: ParseTree -> Bool
 classAtLeastOneConstructor tree =
   True
 
 noFinalField :: ParseTree -> Bool
-noFinalField tree =
-  True
+noFinalField tree
+  | (rootLabel tree) == kFieldDeclaration =
+    not $ hasModifier kFinal tree
+  | otherwise = any noFinalField $ subForest tree
 
+-- TODO
 integerWithinRange :: ParseTree -> Bool
 integerWithinRange tree =
   True
