@@ -7,13 +7,13 @@ HS_SRC  := src/haskell
 HS_TEST := test/haskell
 HS_FILES := $(sort $(wildcard ${HS_SRC}/*.hs))
 
-.PHONY : compiler all zip clean docs grammar test.positive test.negative test test.unit
+.PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder bin/ast
 
-# Builds everything including the grammar and docs.
-all : compiler grammar docs
+# Builds everything including the grammar and report.
+all : compiler grammar report
 
 zip :
 	rm -f submission.zip
@@ -34,7 +34,10 @@ bin/weeder : bin src/weeder/weeder.hs
 bin/ast : $(wildcard src/ast/*.hs)
 	${GHC} -o bin/ast $^
 
-docs : docs.pdf
+report : report.pdf
+
+report.pdf : README.md
+	pandoc -V geometry:margin=1in -o $@ $<
 
 grammar : def/joos.lr1
 
@@ -55,9 +58,6 @@ bin/joos.cfg : bin def/joos.cfg2
 def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
 	java -classpath src/java jlalr.${GRAMMAR} < bin/joos.cfg > def/joos.lr1
 
-docs.pdf : docs.md
-	pandoc -V geometry:margin=1in -o $@ $<
-
 test.unit :
 	stack exec runghc -- -i"${HS_SRC}:${HS_TEST}" test/haskell/UnitTest.hs
 
@@ -74,4 +74,4 @@ test : compiler
 	@./testrunner.sh all
 
 clean :
-	rm -rf bin/ docs.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip
+	rm -rf bin/ report.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip
