@@ -1,4 +1,4 @@
 public class NativeStaticMethod {
     public NativeStaticMethod() {}
-    public native static f();
+    public native static void f();
 }
