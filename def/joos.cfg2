@@ -225,13 +225,12 @@ Modifier               native
 
 
 ########## 8.4: Method Declarations
+# Joos 1W does not support package private methods.
 
 MethodDeclaration       MethodHeader MethodBody
 
-MethodHeader            Type MethodDeclarator
 MethodHeader            Modifiers Type MethodDeclarator
-
-Type                    void
+MethodHeader            Modifiers void MethodDeclarator
 
 MethodDeclarator        Identifier ( )
 MethodDeclarator        Identifier ( FormalParameterList )
@@ -307,9 +306,10 @@ InterfaceMemberDeclaration      ;
 
 
 ########## 9.4: Abstract Method Declarations
+# Joos 1W does not support package private methods.
 
-AbstractMethodDeclaration       Type MethodDeclarator ;
 AbstractMethodDeclaration       Modifiers Type MethodDeclarator ;
+AbstractMethodDeclaration       Modifiers void MethodDeclarator ;
 
 
 ########## 14.2. Blocks
