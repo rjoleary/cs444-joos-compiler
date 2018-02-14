@@ -1,9 +1,9 @@
 
-public class A {
-  public A() {}
+public class feature_nonthisfieldaccess {
+  public feature_nonthisfieldaccess() {}
   public int x;
   public void m() {
-    new A().x = 42;
+    new feature_nonthisfieldaccess().x = 42;
   }
 }
 

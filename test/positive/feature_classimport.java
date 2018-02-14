@@ -1,8 +1,8 @@
 
 import java.util.Vector;
 
-public class A {
-  public A() {}
+public class feature_classimport {
+  public feature_classimport() {}
   protected Vector c;
 }
 

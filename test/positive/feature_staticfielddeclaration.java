@@ -1,5 +1,5 @@
 
-public class A {
+public class feature_staticfielddeclaration {
   protected static int x;
 }
 

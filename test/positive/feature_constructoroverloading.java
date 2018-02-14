@@ -1,6 +1,6 @@
 
-public class A {
-  public A() {}
-  public A(int x) {}
+public class feature_constructoroverloading {
+  public feature_constructoroverloading() {}
+  public feature_constructoroverloading(int x) {}
 }
 

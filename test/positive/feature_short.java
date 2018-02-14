@@ -1,6 +1,6 @@
 
-public class A {
-  public A() {}
+public class feature_short {
+  public feature_short() {}
   protected short x;
 }
 

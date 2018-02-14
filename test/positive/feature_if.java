@@ -1,6 +1,6 @@
 
-public class A {
-  public A() {}
+public class feature_if {
+  public feature_if() {}
   public int m(int x) {
     int y = 0;
     if (x==0) y=42;

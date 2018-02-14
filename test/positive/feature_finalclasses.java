@@ -1,5 +1,5 @@
 
-  public final class A {
-    public A() {}
+  public final class feature_finalclasses {
+    public feature_finalclasses() {}
   }
 

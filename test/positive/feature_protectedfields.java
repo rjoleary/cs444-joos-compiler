@@ -1,6 +1,6 @@
 
-public class A {
-  public A() {}
+public class feature_protectedfields {
+  public feature_protectedfields() {}
   protected int x;
 }
 

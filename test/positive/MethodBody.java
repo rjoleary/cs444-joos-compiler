@@ -1,4 +1,6 @@
 public class MethodBody {
+    public MethodBody() {}
+
     public void f() {
     }
 

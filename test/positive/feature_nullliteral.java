@@ -1,6 +1,6 @@
 
-public class A {
-  public A() {}
-  protected A x = null;
+public class feature_nullliteral {
+  public feature_nullliteral() {}
+  protected feature_nullliteral x = null;
 }
 

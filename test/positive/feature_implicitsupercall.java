@@ -1,5 +1,5 @@
 
-public class A {
-  public A() { /* super(); */}
+public class feature_implicitsupercall {
+  public feature_implicitsupercall() { /* super(); */}
 }
 

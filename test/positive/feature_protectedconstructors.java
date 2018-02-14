@@ -1,5 +1,5 @@
 
-public class A {
-  protected A() {}
+public class feature_protectedconstructors {
+  protected feature_protectedconstructors() {}
 }
 

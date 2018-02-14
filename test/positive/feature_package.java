@@ -1,8 +1,8 @@
 
 package dovs.joos.features;
 
-public class A {
-  public A() {}
+public class feature_package {
+  public feature_package() {}
   protected int x;
 }
 
