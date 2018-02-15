@@ -2,9 +2,9 @@ import           Control.Applicative
 import           Control.Monad
 import           Data.Char           (isAscii, isDigit, isLetter, isSpace)
 import           Data.Maybe
+import           JoosCompiler.Exit
 import           Parsing
 import           TokenTypes
-import           JoosCompiler.Exit
 
 asLexeme :: Token -> Maybe String
 asLexeme (CharLiteral _) = Just "Identifier"
@@ -58,22 +58,23 @@ main = do
 
 hasTwoConsecutiveInts :: [Token] -> Bool
 hasTwoConsecutiveInts l
-  | (length l) > 1 = if (bothIntLiteral (head l) (l !! 1))
-    then True
-    else hasTwoConsecutiveInts $ tail l
+  | (length l) > 1 =
+    if (bothIntLiteral (head l) (l !! 1))
+      then True
+      else hasTwoConsecutiveInts $ tail l
   | otherwise = False
 
 bothIntLiteral :: Token -> Token -> Bool
 bothIntLiteral (IntLiteral _) (IntLiteral _) = True
-bothIntLiteral _ _ = False
+bothIntLiteral _ _                           = False
 
 hasInvalidKeywords :: [Token] -> Bool
 hasInvalidKeywords l
-  | (length l) > 0 = if (isInvalidKeywords (head l))
-    then True
-    else hasInvalidKeywords $ tail l
+  | (length l) > 0 =
+    if (isInvalidKeywords (head l))
+      then True
+      else hasInvalidKeywords $ tail l
   | otherwise = False
-
 
 isInvalidKeywords :: Token -> Bool
 isInvalidKeywords (Identifier x)

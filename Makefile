@@ -8,12 +8,16 @@ LEXER_SRC  := src/haskell
 LEXER_FILES := $(sort $(wildcard ${LEXER_SRC}/*.hs))
 LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
 
+WEEDER_SRC  := src/weeder
+WEEDER_FILES := $(sort $(wildcard ${WEEDER_SRC}/*.hs))
+
+ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES}
+
 HS_TEST := test/haskell
 
 GHC = ghc -O2 -Wall -i"${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
 
-
-.PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit
+.PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit hfmt
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder bin/ast
@@ -64,6 +68,10 @@ bin/joos.cfg : bin def/joos.cfg2
 def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
 	java -classpath src/java jlalr.${GRAMMAR} < bin/joos.cfg > def/joos.lr1
 
+# Format haskell code
+hfmt :
+	hfmt -w ${ALL_HS_FILES}
+
 test.unit :
 	stack exec runghc -- -i"${HS_SRC}:${HS_TEST}" test/haskell/UnitTest.hs
 
@@ -78,6 +86,7 @@ test.java : compiler
 
 test : compiler
 	@./testrunner.sh all
+
 
 clean :
 	rm -rf bin/ report.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip

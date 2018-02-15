@@ -327,7 +327,8 @@ keywords =
   , "while"
   ]
 
-invalidkeywords = ["long"
+invalidkeywords =
+  [ "long"
   , "double"
   , "float"
   , "synchronized"

@@ -1,8 +1,8 @@
+import           Control.Monad
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
-import           Control.Monad
-import JoosCompiler.Exit
+import           JoosCompiler.Exit
 
 type ParseTree = Tree String
 
@@ -112,7 +112,6 @@ findChildren childName tree
 
 -- Weeder rules
 -- Return true if check fails
-
 -- 1 A class cannot be both abstract and final
 notAbstractFinal :: ParseTree -> Bool
 notAbstractFinal tree =
