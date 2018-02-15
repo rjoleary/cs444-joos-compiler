@@ -3,9 +3,8 @@ import           Control.Monad
 import           Data.Char           (isAscii, isDigit, isLetter, isSpace)
 import           Data.Maybe
 import           Parsing
-import           System.Exit
-import           System.IO
 import           TokenTypes
+import           JoosCompiler.Exit
 
 asLexeme :: Token -> Maybe String
 asLexeme (CharLiteral _) = Just "Identifier"
@@ -44,10 +43,6 @@ asLexeme (Identifier x)
   | x `elem` keywords = Just x
   | otherwise = Just "Identifier"
 
-exitError e = do
-  hPutStrLn stderr e
-  exitWith $ ExitFailure 42
-
 -- TODO: also need start and end index
 main :: IO ()
 main = do
@@ -85,4 +80,3 @@ isInvalidKeywords (Identifier x)
   | x `elem` invalidkeywords = True
   | otherwise = False
 isInvalidKeywords _ = False
-

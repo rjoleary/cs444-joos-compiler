@@ -1,11 +1,17 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-GHC = ghc -O2 -Wall
+HS_LIB   := src/lib/haskell
+HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs))
 
-HS_SRC  := src/haskell
+LEXER_SRC  := src/haskell
+LEXER_FILES := $(sort $(wildcard ${LEXER_SRC}/*.hs))
+LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
+
 HS_TEST := test/haskell
-HS_FILES := $(sort $(wildcard ${HS_SRC}/*.hs))
+
+GHC = ghc -O2 -Wall -i"${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
+
 
 .PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit
 
@@ -22,13 +28,13 @@ zip :
 bin :
 	mkdir -p bin
 
-bin/lexer : bin ${HS_FILES}
-	${GHC} -o bin/lexer ${HS_FILES}
+bin/lexer : bin ${LEXER_FILES} ${HS_LIB_FILES}
+	${GHC} ${LEXER_MAIN} -o bin/lexer
 
 bin/parser : bin src/rust/parser.rs
 	rustc --codegen opt-level=2 src/rust/parser.rs -o bin/parser
 
-bin/weeder : bin src/weeder/weeder.hs
+bin/weeder : bin src/weeder/weeder.hs ${HS_LIB_FILES}
 	${GHC} -o bin/weeder src/weeder/weeder.hs
 
 bin/ast : $(wildcard src/ast/*.hs)
