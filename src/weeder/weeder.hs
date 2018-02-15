@@ -1,6 +1,8 @@
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           Control.Monad
+import JoosCompiler.Exit
 
 type ParseTree = Tree String
 
@@ -110,20 +112,24 @@ findChildren childName tree
 
 -- Weeder rules
 -- Return true if check fails
+
+-- 1 A class cannot be both abstract and final
 notAbstractFinal :: ParseTree -> Bool
 notAbstractFinal tree =
   if (rootLabel tree) == kClassDeclaration
     then (hasModifier kAbstract tree) && (hasModifier kFinal tree)
     else any id $ map notAbstractFinal $ subForest tree
 
-bodyIfNotAbstractOrNative :: ParseTree -> Bool
-bodyIfNotAbstractOrNative tree
+-- 2 A method has a body if and only if it is neither abstract nor native.
+bodyIffNotAbstractOrNative :: ParseTree -> Bool
+bodyIffNotAbstractOrNative tree
   | (rootLabel tree) == kMethodDeclaration =
     if (hasModifier kAbstract tree) || (hasModifier kNative tree)
-      then False
+      then hasMethodBody tree
       else not . hasMethodBody $ tree
-  | otherwise = any bodyIfNotAbstractOrNative $ subForest tree
+  | otherwise = any bodyIffNotAbstractOrNative $ subForest tree
 
+-- 3 An abstract method cannot be static or final.
 abstractMethodNotStaticOrFinal :: ParseTree -> Bool
 abstractMethodNotStaticOrFinal tree
   | (rootLabel tree) == kMethodDeclaration =
@@ -132,6 +138,7 @@ abstractMethodNotStaticOrFinal tree
       else False
   | otherwise = any abstractMethodNotStaticOrFinal $ subForest tree
 
+-- 4 A static method cannot be final.
 staticMethodNotFinal :: ParseTree -> Bool
 staticMethodNotFinal tree
   | (rootLabel tree) == kMethodDeclaration =
@@ -140,6 +147,7 @@ staticMethodNotFinal tree
       else False
   | otherwise = any staticMethodNotFinal $ subForest tree
 
+-- 5 A native method must be static.
 nativeMethodStatic :: ParseTree -> Bool
 nativeMethodStatic tree
   | (rootLabel tree) == kMethodDeclaration =
@@ -148,6 +156,7 @@ nativeMethodStatic tree
       else False
   | otherwise = any nativeMethodStatic $ subForest tree
 
+-- 6 The type void may only be used as the return type of a method.
 voidTypeOnlyUsedAsMethodReturn :: ParseTree -> Bool
 voidTypeOnlyUsedAsMethodReturn tree
   | (rootLabel tree) == kVoid = True
@@ -159,9 +168,11 @@ voidTypeOnlyUsedAsMethodReturn tree
     declarator = head $ findChildren kMethodDeclarator tree
 
 -- TODO
+-- 8 A class/interface must be declared in a .java file with the same base name as the class/interface.
 classnameSameAsFilename :: ParseTree -> Bool
 classnameSameAsFilename tree = True
 
+-- 10 An interface method cannot be static, final, or native.
 interfaceMethodNotStaticFinalOrNative :: ParseTree -> Bool
 interfaceMethodNotStaticFinalOrNative tree
   | (rootLabel tree) == kInterfaceDeclaration =
@@ -169,12 +180,14 @@ interfaceMethodNotStaticFinalOrNative tree
   | otherwise = any interfaceMethodNotStaticFinalOrNative $ subForest tree
 
 -- TODO
+-- 12 Every class must contain at least one explicit constructor.
 classAtLeastOneConstructor :: ParseTree -> Bool
 classAtLeastOneConstructor tree = True
 
+-- 13 No field can be final.
 noFinalField :: ParseTree -> Bool
 noFinalField tree
-  | (rootLabel tree) == kFieldDeclaration = not $ hasModifier kFinal tree
+  | (rootLabel tree) == kFieldDeclaration = hasModifier kFinal tree
   | otherwise = any noFinalField $ subForest tree
 
 -- TODO
@@ -183,7 +196,7 @@ integerWithinRange tree = True
 
 weederRules =
   [ notAbstractFinal
-  , bodyIfNotAbstractOrNative
+  , bodyIffNotAbstractOrNative
   , abstractMethodNotStaticOrFinal
   , staticMethodNotFinal
   , nativeMethodStatic
@@ -197,5 +210,5 @@ weed tree = any id (pam weederRules tree)
 main = do
   contents <- readFile "test/joos_tree.txt"
   let tree = treeify contents
-  print $ weed tree
-  putStrLn $ drawTree tree
+  when (weed tree) $ exitError "Bad weed"
+  return ()
