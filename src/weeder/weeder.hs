@@ -14,37 +14,48 @@ rhs (Node _ x) = x
 
 -- Reverse map http://snipplr.com/view/18351/reverse-map/
 pam :: [a -> b] -> a -> [b]
-pam lf x = map g lf where
-  g f = f x
+pam lf x = map g lf
+  where
+    g f = f x
 
 kClassDeclaration :: String
 kClassDeclaration = "ClassDeclaration"
+
 kInterfaceDeclaration :: String
 kInterfaceDeclaration = "InterfaceDeclaration"
 
 kAbstract :: String
 kAbstract = "abstract"
+
 kFinal :: String
 kFinal = "final"
+
 kBlock :: String
 kBlock = "Block"
+
 kStatic :: String
 kStatic = "static"
+
 kFieldDeclaration :: String
 kFieldDeclaration = "FieldDeclaration"
+
 kMethodBody :: String
 kMethodBody = "MethodBody"
+
 kMethodDeclaration :: String
 kMethodDeclaration = "MethodDeclaration"
+
 kMethodDeclarator :: String
 kMethodDeclarator = "MethodDeclarator"
+
 kMethodHeader :: String
 kMethodHeader = "MethodHeader"
+
 kNative :: String
 kNative = "native"
+
 kVoid :: String
 kVoid = "void"
-
 
 -- Parse a single production rule into a tree with a single parent node.
 parseProduction :: String -> ParseTree
@@ -71,9 +82,10 @@ treeify' forest rule = rule' : forest'
     forest' = deleteFirstsBy lhsEq forest (rhs rule)
 
 hasChild :: String -> ParseTree -> Bool
-hasChild s tree = if (rootLabel tree) == s
-                  then True
-                  else any (hasChild s) $ subForest tree
+hasChild s tree =
+  if (rootLabel tree) == s
+    then True
+    else any (hasChild s) $ subForest tree
 
 hasMethodBody :: ParseTree -> Bool
 hasMethodBody tree
@@ -91,7 +103,6 @@ hasMethodsWithModifiers modifiers tree
     any (\x -> hasModifier x tree) modifiers
   | otherwise = any (hasMethodsWithModifiers modifiers) $ subForest tree
 
-
 findChildren :: String -> ParseTree -> [ParseTree]
 findChildren childName tree
   | (rootLabel tree) == childName = [tree]
@@ -99,59 +110,57 @@ findChildren childName tree
 
 -- Weeder rules
 -- Return true if check fails
-
 notAbstractFinal :: ParseTree -> Bool
 notAbstractFinal tree =
   if (rootLabel tree) == kClassDeclaration
-  then (hasModifier kAbstract tree) && (hasModifier kFinal tree)
-  else any id $ map notAbstractFinal $ subForest tree
+    then (hasModifier kAbstract tree) && (hasModifier kFinal tree)
+    else any id $ map notAbstractFinal $ subForest tree
 
 bodyIfNotAbstractOrNative :: ParseTree -> Bool
 bodyIfNotAbstractOrNative tree
   | (rootLabel tree) == kMethodDeclaration =
     if (hasModifier kAbstract tree) || (hasModifier kNative tree)
-    then False
-    else not . hasMethodBody $ tree
+      then False
+      else not . hasMethodBody $ tree
   | otherwise = any bodyIfNotAbstractOrNative $ subForest tree
 
 abstractMethodNotStaticOrFinal :: ParseTree -> Bool
 abstractMethodNotStaticOrFinal tree
   | (rootLabel tree) == kMethodDeclaration =
     if (hasModifier kAbstract tree)
-    then (hasModifier kStatic tree) || (hasModifier kFinal tree)
-    else False
+      then (hasModifier kStatic tree) || (hasModifier kFinal tree)
+      else False
   | otherwise = any abstractMethodNotStaticOrFinal $ subForest tree
 
 staticMethodNotFinal :: ParseTree -> Bool
 staticMethodNotFinal tree
   | (rootLabel tree) == kMethodDeclaration =
     if (hasModifier kStatic tree)
-    then hasModifier kFinal tree
-    else False
+      then hasModifier kFinal tree
+      else False
   | otherwise = any staticMethodNotFinal $ subForest tree
 
 nativeMethodStatic :: ParseTree -> Bool
 nativeMethodStatic tree
   | (rootLabel tree) == kMethodDeclaration =
     if (hasModifier kNative tree)
-    then not $ hasModifier kStatic tree
-    else False
+      then not $ hasModifier kStatic tree
+      else False
   | otherwise = any nativeMethodStatic $ subForest tree
 
 voidTypeOnlyUsedAsMethodReturn :: ParseTree -> Bool
 voidTypeOnlyUsedAsMethodReturn tree
   | (rootLabel tree) == kVoid = True
-  | (rootLabel tree) == kMethodHeader =
+  | (rootLabel tree) == kMethodHeader
     -- We want to skip the return type of the method -- so check the declarator
-    hasChild kVoid declarator
+   = hasChild kVoid declarator
   | otherwise = any voidTypeOnlyUsedAsMethodReturn $ subForest tree
   where
     declarator = head $ findChildren kMethodDeclarator tree
 
 -- TODO
 classnameSameAsFilename :: ParseTree -> Bool
-classnameSameAsFilename tree =
-  True
+classnameSameAsFilename tree = True
 
 interfaceMethodNotStaticFinalOrNative :: ParseTree -> Bool
 interfaceMethodNotStaticFinalOrNative tree
@@ -161,24 +170,29 @@ interfaceMethodNotStaticFinalOrNative tree
 
 -- TODO
 classAtLeastOneConstructor :: ParseTree -> Bool
-classAtLeastOneConstructor tree =
-  True
+classAtLeastOneConstructor tree = True
 
 noFinalField :: ParseTree -> Bool
 noFinalField tree
-  | (rootLabel tree) == kFieldDeclaration =
-    not $ hasModifier kFinal tree
+  | (rootLabel tree) == kFieldDeclaration = not $ hasModifier kFinal tree
   | otherwise = any noFinalField $ subForest tree
 
 -- TODO
 integerWithinRange :: ParseTree -> Bool
-integerWithinRange tree =
-  True
+integerWithinRange tree = True
 
-weederRules = [notAbstractFinal, bodyIfNotAbstractOrNative]
+weederRules =
+  [ notAbstractFinal
+  , bodyIfNotAbstractOrNative
+  , abstractMethodNotStaticOrFinal
+  , staticMethodNotFinal
+  , nativeMethodStatic
+  , voidTypeOnlyUsedAsMethodReturn
+  , interfaceMethodNotStaticFinalOrNative
+  , noFinalField
+  ]
 
-weed tree =
-  any id (pam weederRules tree)
+weed tree = any id (pam weederRules tree)
 
 main = do
   contents <- readFile "test/joos_tree.txt"
