@@ -6,6 +6,8 @@ import           JoosCompiler.Exit
 import           Parsing
 import           TokenTypes
 
+maxNegativeInt = 2147483648
+
 asLexeme :: Token -> Maybe String
 asLexeme (CharLiteral _) = Just "Identifier"
 asLexeme (StringLiteral _) = Just "Identifier"
@@ -52,6 +54,7 @@ main = do
   (tokens, s) <- maybeToIO (runParser token contents)
   when (hasTwoConsecutiveInts tokens) $ exitError "Invalid IntLiteral"
   when (hasInvalidKeywords tokens) $ exitError "Invalid keywords"
+  when (intOutsideRange tokens) $ exitError "Integer outside range"
   if (s /= [] || any ((==) InvalidOperator) tokens)
     then exitError "Could not scan"
     else putStr . unlines . map (++ " 0 0") . catMaybes . map asLexeme $ tokens
@@ -81,3 +84,16 @@ isInvalidKeywords (Identifier x)
   | x `elem` invalidkeywords = True
   | otherwise = False
 isInvalidKeywords _ = False
+
+intOutsideRange :: [Token] -> Bool
+intOutsideRange l
+  | any ((> maxNegativeInt) . read . getLexeme) $ (filter isIntLiteral l) = True
+  | otherwise = False
+
+isIntLiteral :: Token -> Bool
+isIntLiteral (IntLiteral _) = True
+isIntLiteral _ = False
+
+getLexeme :: Token -> String
+getLexeme (IntLiteral v) = v
+getLexeme _ = ""
