@@ -13,6 +13,15 @@ import           Control.Monad.Trans.State.Strict
 import           Data.Char                        (isDigit, isSpace, ord)
 import           System.IO
 
+-- Input is tagged with the character's index.
+data CharTag = CharTag { tagChar :: Char, tagIdx :: Int }
+type StringTag = [CharTag]
+invalidIdx = 999999999 :: Int
+
+-- Two characters are equal regardless of their index.
+instance Eq CharTag where
+    (CharTag x _) == (CharTag y _) = x == y
+
 data NoData =
   NoData
   deriving (Show)
@@ -20,7 +29,7 @@ data NoData =
 instance Exception NoData
 
 newtype Parser a =
-  Parser (StateT String Maybe a)
+  Parser (StateT StringTag Maybe a)
   deriving (Functor, Applicative, Alternative)
 
 instance Monad Parser where
@@ -30,36 +39,37 @@ instance Monad Parser where
       (a', s') <- runParser a s
       runParser (f a') s'
 
-runParser :: Parser a -> String -> Maybe (a, String)
+runParser :: Parser a -> StringTag -> Maybe (a, StringTag)
 runParser (Parser s) = runStateT s
 
-anyChar :: Parser Char
+anyChar :: Parser CharTag
 anyChar =
   Parser . StateT $ \s ->
     case s of
       []     -> empty
       (c:cs) -> pure (c, cs)
 
-satisfy :: (Char -> Bool) -> Parser Char
+satisfy :: (Char -> Bool) -> Parser CharTag
 satisfy pred = do
-  c <- anyChar
+  ct <- anyChar
+  let CharTag c _ = ct
   guard $ pred c
-  pure c
+  pure ct
 
-char :: Char -> Parser Char
+char :: Char -> Parser CharTag
 char = satisfy . (==)
 
-string :: String -> Parser String
+string :: String -> Parser StringTag
 string []     = pure []
 string (c:cs) = (:) <$> char c <*> string cs
 
-notChar :: Char -> Parser Char
+notChar :: Char -> Parser CharTag
 notChar = satisfy . (\x -> not . (== x))
 
-oneOfChar :: [Char] -> Parser Char
+oneOfChar :: [Char] -> Parser CharTag
 oneOfChar l = satisfy (\x -> any (== x) l)
 
-manyTill :: Parser Char -> Parser String -> Parser String
+manyTill :: Parser CharTag -> Parser StringTag -> Parser StringTag
 manyTill p end = scan
   where
     scan =
@@ -70,7 +80,7 @@ manyTill p end = scan
         cs <- manyTill p end
         return (c : cs)
 
-manyTill1 :: Parser String -> Parser String -> Parser String
+manyTill1 :: Parser StringTag -> Parser StringTag -> Parser StringTag
 manyTill1 p end = scan
   where
     scan =
@@ -81,7 +91,7 @@ manyTill1 p end = scan
         s2 <- manyTill1 p end
         return $ s1 ++ s2
 
-apply :: Parser a -> String -> Maybe (a, String)
+apply :: Parser a -> StringTag -> Maybe (a, StringTag)
 apply p = runParser p
 
 maybeToIO :: Maybe a -> IO a

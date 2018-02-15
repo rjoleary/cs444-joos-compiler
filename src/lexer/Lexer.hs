@@ -9,55 +9,65 @@ import           TokenTypes
 maxNegativeInt = 2147483648
 
 asLexeme :: Token -> Maybe String
-asLexeme (CharLiteral _) = Just "Identifier"
-asLexeme (StringLiteral _) = Just "Identifier"
-asLexeme (IntLiteral _) = Just "Identifier"
-asLexeme Assign = Just "="
-asLexeme Add = Just "+"
-asLexeme Subtract = Just "-"
-asLexeme Multiply = Just "*"
-asLexeme Divide = Just "/"
-asLexeme Modulus = Just "%"
-asLexeme Negate = Just "!"
-asLexeme Greater = Just ">"
-asLexeme Less = Just "<"
-asLexeme GreaterEqual = Just ">="
-asLexeme Equal = Just "=="
-asLexeme LessEqual = Just "<="
-asLexeme Inequal = Just "!="
-asLexeme BitwiseAnd = Just "&"
-asLexeme BitwiseOr = Just "|"
-asLexeme LogicalAnd = Just "&&"
-asLexeme LogicalOr = Just "||"
-asLexeme Period = Just "."
-asLexeme Comma = Just ","
-asLexeme Semicolon = Just ";"
-asLexeme LeftBrace = Just "{"
-asLexeme RightBrace = Just "}"
-asLexeme LeftParen = Just "("
-asLexeme RightParen = Just ")"
-asLexeme LeftSquare = Just "["
-asLexeme RightSquare = Just "]"
-asLexeme InvalidOperator = Just "DAMMIT"
-asLexeme Space = Nothing
-asLexeme Comment = Nothing
-asLexeme (Identifier x)
-  | x `elem` keywords = Just x
+asLexeme (Token CharLiteral _) = Just "Identifier"
+asLexeme (Token StringLiteral _) = Just "Identifier"
+asLexeme (Token IntLiteral _) = Just "Identifier"
+asLexeme (Token Assign _) = Just "="
+asLexeme (Token Add _) = Just "+"
+asLexeme (Token Subtract _) = Just "-"
+asLexeme (Token Multiply _) = Just "*"
+asLexeme (Token Divide _) = Just "/"
+asLexeme (Token Modulus _) = Just "%"
+asLexeme (Token Negate _) = Just "!"
+asLexeme (Token Greater _) = Just ">"
+asLexeme (Token Less _) = Just "<"
+asLexeme (Token GreaterEqual _) = Just ">="
+asLexeme (Token Equal _) = Just "=="
+asLexeme (Token LessEqual _) = Just "<="
+asLexeme (Token Inequal _) = Just "!="
+asLexeme (Token BitwiseAnd _) = Just "&"
+asLexeme (Token BitwiseOr _) = Just "|"
+asLexeme (Token LogicalAnd _) = Just "&&"
+asLexeme (Token LogicalOr _) = Just "||"
+asLexeme (Token Period _) = Just "."
+asLexeme (Token Comma _) = Just ","
+asLexeme (Token Semicolon _) = Just ";"
+asLexeme (Token LeftBrace _) = Just "{"
+asLexeme (Token RightBrace _) = Just "}"
+asLexeme (Token LeftParen _) = Just "("
+asLexeme (Token RightParen _) = Just ")"
+asLexeme (Token LeftSquare _) = Just "["
+asLexeme (Token RightSquare _) = Just "]"
+asLexeme (Token InvalidOperator _) = Just "INVALID"
+asLexeme (Token Space _) = Nothing
+asLexeme (Token Comment _) = Nothing
+asLexeme t@(Token Identifier _)
+  | (tokenString t) `elem` keywords = Just (tokenString t)
   | otherwise = Just "Identifier"
 
--- TODO: also need start and end index
 main :: IO ()
 main = do
   contents <- readFile "test/joos_input.txt"
   let nonAscii = any (not . isAscii) contents
   when (nonAscii) (exitError "Invalid non-ascii characters")
-  (tokens, s) <- maybeToIO (runParser token contents)
+  (tokens, s) <- maybeToIO (runParser token (zipWith CharTag contents [0..]))
   when (hasTwoConsecutiveInts tokens) $ exitError "Invalid IntLiteral"
   when (hasInvalidKeywords tokens) $ exitError "Invalid keywords"
   when (intOutsideRange tokens) $ exitError "Integer outside range"
-  if (s /= [] || any ((==) InvalidOperator) tokens)
+  if (s /= [] || any ((==) InvalidOperator) (map tokenName tokens))
     then exitError "Could not scan"
-    else putStr . unlines . map (++ " 0 0") . catMaybes . map asLexeme $ tokens
+    else putStr . unlines . catMaybes . map formatTokenLine $ tokens
+
+formatTokenLine :: Token -> Maybe String
+formatTokenLine t = formatLine (asLexeme t)
+    where formatLine (Nothing) = Nothing
+          formatLine (Just terminal) = Just (
+                                         terminal
+                                         ++ " "
+                                         ++ show (tokenStart t)
+                                         ++ " "
+                                         ++ show (tokenEnd t)
+                                         )
 
 hasTwoConsecutiveInts :: [Token] -> Bool
 hasTwoConsecutiveInts l
@@ -68,8 +78,9 @@ hasTwoConsecutiveInts l
   | otherwise = False
 
 bothIntLiteral :: Token -> Token -> Bool
-bothIntLiteral (IntLiteral _) (IntLiteral _) = True
-bothIntLiteral _ _                           = False
+bothIntLiteral (Token IntLiteral _) (Token IntLiteral _) = True
+bothIntLiteral _ _                                       = False
+
 
 hasInvalidKeywords :: [Token] -> Bool
 hasInvalidKeywords l
@@ -80,20 +91,14 @@ hasInvalidKeywords l
   | otherwise = False
 
 isInvalidKeywords :: Token -> Bool
-isInvalidKeywords (Identifier x)
-  | x `elem` invalidkeywords = True
+isInvalidKeywords t@(Token Identifier _)
+  | (tokenString t) `elem` invalidkeywords = True
   | otherwise = False
 isInvalidKeywords _ = False
 
 intOutsideRange :: [Token] -> Bool
 intOutsideRange l
-  | any ((> maxNegativeInt) . read . getLexeme) $ (filter isIntLiteral l) = True
+  | any ((> maxNegativeInt) . read . tokenString) $ (filter isIntLiteral l) = True
   | otherwise = False
-
-isIntLiteral :: Token -> Bool
-isIntLiteral (IntLiteral _) = True
-isIntLiteral _ = False
-
-getLexeme :: Token -> String
-getLexeme (IntLiteral v) = v
-getLexeme _ = ""
+  where
+    isIntLiteral t = tokenName t == IntLiteral
