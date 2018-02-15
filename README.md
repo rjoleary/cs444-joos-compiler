@@ -8,7 +8,7 @@
 
 ### Directory Structure
 
-* `src/haskell/`: Haskell source code for the lexer
+* `src/lexer/`: Haskell source code for the lexer
 * `src/rust/`: Rust source code for the parse engine
 * `src/java/`: Java source code for the parse generator
 * `src/weeder/`: Haskell source code for the weeder
