@@ -4,7 +4,7 @@ GRAMMAR  := Jlalr1
 HS_LIB   := src/lib/haskell
 HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs))
 
-LEXER_SRC  := src/haskell
+LEXER_SRC  := src/lexer
 LEXER_FILES := $(sort $(wildcard ${LEXER_SRC}/*.hs))
 LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
 
