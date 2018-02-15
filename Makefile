@@ -17,7 +17,7 @@ HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
 
 ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES}
 
-GHC = ghc -O2 -Wall -i ${HS_INCLUDE}
+GHC = ghc -O2 -Wall -i${HS_INCLUDE}
 
 .PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit hfmt
 
