@@ -49,6 +49,14 @@ spec = do
           (tokens, _) <- runJoosParser "\"\\n test \\b\""
           tokens `shouldBe` [StringLiteral "\\n test \\b"]
 
+        it "parses string literals with valid octal escapes" $ do
+          (tokens, _) <- runJoosParser "\"\\377\"\"\\077\"\"\\000\""
+          tokens `shouldBe` [StringLiteral "\\377", StringLiteral "\\077", StringLiteral "\\000"]
+
+        it "parses string literals with invalidoctal escapes" $ do
+          (tokens, _) <- runJoosParser "\"\\477\""
+          tokens `shouldBe` []
+
         it "does not parse string literals with illegal backslash" $ do
           -- x is not a legal character after a backslash
           (tokens, _) <- runJoosParser "\"\\x\""
@@ -67,9 +75,11 @@ spec = do
           (tokens, _) <- runJoosParser "12"
           tokens `shouldBe` [IntLiteral "12"]
 
-        it "does not parse string starting with 0" $ do
-          (tokens, _) <- runJoosParser "012"
-          tokens `shouldBe` []
+        -- Lexer checks afterward
+        -- it "does not parse string starting with 0" $ do
+        --   (tokens, _) <- runJoosParser "012"
+        --   tokens `shouldBe` []
+
     describe "operator" $ do
       describe "assign" $ do
         it "parses recognized assign" $ do
@@ -148,7 +158,7 @@ spec = do
 
       describe "logicaland" $ do
         it "parses recognized logicaland" $ do
-          (tokens, _) <- runJoosParser "$$"
+          (tokens, _) <- runJoosParser "&&"
           tokens `shouldBe` [LogicalAnd]
 
       describe "logicalor" $ do
@@ -211,11 +221,7 @@ spec = do
         it "parsers recognized newline" $ do
           (tokens, _) <- runJoosParser "\n"
           tokens `shouldBe` [Space]
-          
-        it "parsers recognized space as well" $ do
-          (tokens, _) <- runJoosParser "\b"
-          tokens `shouldBe` [Space]
-          
+
         it "parsers recognized tab" $ do
           (tokens, _) <- runJoosParser "\t"
           tokens `shouldBe` [Space]
@@ -237,8 +243,8 @@ spec = do
           (tokens, _) <- runJoosParser "//"
           tokens `shouldBe` [Comment]
 
-    describe "invalidkeyword" $ do
-      it "parsers recognized invaild keyword" $ do
-        (tokens, _) <- runJoosParser "long"
-        tokens `shouldBe` []
-
+    -- Lexer checks afterward
+    -- describe "invalidkeyword" $ do
+    --   it "parsers recognized invaild keyword" $ do
+    --     (tokens, _) <- runJoosParser "long"
+    --     tokens `shouldBe` []

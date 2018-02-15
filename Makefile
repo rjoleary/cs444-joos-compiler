@@ -11,11 +11,13 @@ LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
 WEEDER_SRC  := src/weeder
 WEEDER_FILES := $(sort $(wildcard ${WEEDER_SRC}/*.hs))
 
-ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES}
-
 HS_TEST := test/haskell
 
-GHC = ghc -O2 -Wall -i"${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
+HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
+
+ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES}
+
+GHC = ghc -O2 -Wall -i ${HS_INCLUDE}
 
 .PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit hfmt
 
@@ -73,7 +75,7 @@ hfmt :
 	hfmt -w ${ALL_HS_FILES}
 
 test.unit :
-	stack exec runghc -- -i"${HS_SRC}:${HS_TEST}" test/haskell/UnitTest.hs
+	stack exec runghc -- -i"${HS_INCLUDE}" test/haskell/UnitTest.hs
 
 test.positive : compiler
 	@./testrunner.sh positive

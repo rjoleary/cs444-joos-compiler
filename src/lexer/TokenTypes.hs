@@ -68,30 +68,41 @@ intPositiveInt = do
   cs <- many $ satisfy isDigit
   return $ IntLiteral $ c : cs
 
-escapeCharacters = "btnfr01234567'\\\""
+escapeCharacters = "btnfr'\\\""
+octalDigits = "01234567"
+zeroToThree = "0123"
 
-backslashed :: Parser Char -> [Char] -> Parser String
-backslashed c e = scan
+octalEscape :: Parser String
+octalEscape = do {c1 <- oneOfChar zeroToThree; c2 <- oneOfChar octalDigits; c3 <- oneOfChar octalDigits; return [c1,c2,c3]}
+  <|> do {c1 <- oneOfChar octalDigits; c2 <- oneOfChar octalDigits; return [c1,c2]}
+  <|> do {c <- oneOfChar octalDigits; return [c]}
+
+backslashed :: Parser String
+backslashed = scan
   where
     scan =
       do char '\\'
-         c <- oneOfChar e
+         s <- octalEscape
+         return ('\\' : s)
+      <|> do
+         char '\\'
+         c <- oneOfChar escapeCharacters
          return ['\\', c]
-     <|> do
-        c <- satisfy $ not . (== '\\')
-        return [c]
+      <|> do
+         c <- satisfy $ not . (== '\\')
+         return [c]
 
 charLiteral :: Parser Token
 charLiteral = do
   char '\''
-  s <- backslashed anyChar escapeCharacters
+  s <- backslashed
   char '\''
   return $ CharLiteral s
 
 stringLiteral :: Parser Token
 stringLiteral = do
   char '"'
-  s <- manyTill1 (backslashed anyChar escapeCharacters) (string "\"")
+  s <- manyTill1 (backslashed) (string "\"")
   return $ StringLiteral $ s
 
 -- identifier
