@@ -91,13 +91,13 @@ backslashed :: Parser StringTag
 backslashed = scan
   where
     scan =
-      do char '\\'
+      do c <- char '\\'
          s <- octalEscape
-         return ((CharTag '\\' invalidIdx) : s)
+         return (c : s)
       <|> do
-         char '\\'
-         c <- oneOfChar escapeCharacters
-         return [(CharTag '\\' invalidIdx), c]
+         c1 <- char '\\'
+         c2 <- oneOfChar escapeCharacters
+         return [c1, c2]
       <|> do
          c <- satisfy $ not . (=='\\')
          return [c]

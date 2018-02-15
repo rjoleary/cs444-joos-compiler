@@ -14,7 +14,7 @@ import           Data.Char                        (isDigit, isSpace, ord)
 import           System.IO
 
 -- Input is tagged with the character's index.
-data CharTag = CharTag { tagChar :: Char, tagIdx :: Int }
+data CharTag = CharTag { tagChar :: Char, tagIdx :: Int } deriving Show
 type StringTag = [CharTag]
 invalidIdx = 999999999 :: Int
 
