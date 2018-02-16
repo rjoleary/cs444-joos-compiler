@@ -34,13 +34,13 @@ zip :
 bin :
 	mkdir -p bin
 
-bin/lexer : bin ${LEXER_FILES} ${HS_LIB_FILES}
+bin/lexer : ${LEXER_FILES} ${HS_LIB_FILES}
 	${GHC} ${LEXER_MAIN} -o bin/lexer
 
-bin/parser : bin src/rust/parser.rs
+bin/parser : src/rust/parser.rs
 	rustc --codegen opt-level=2 src/rust/parser.rs -o bin/parser
 
-bin/weeder : bin src/weeder/weeder.hs ${HS_LIB_FILES}
+bin/weeder : src/weeder/weeder.hs ${HS_LIB_FILES}
 	${GHC} -o bin/weeder src/weeder/weeder.hs
 
 bin/ast : $(wildcard src/ast/*.hs)
