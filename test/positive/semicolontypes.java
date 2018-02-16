@@ -1,7 +1,9 @@
 ;
 ;
 ;
-public class X {};
+public class X {
+    public X() {}
+};
 ;
 ;
 ;

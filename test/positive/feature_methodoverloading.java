@@ -1,5 +1,6 @@
 
 public class feature_methodoverloading {
+  public feature_methodoverloading() {}
   public int m1(int x) {
     return 42;
   }

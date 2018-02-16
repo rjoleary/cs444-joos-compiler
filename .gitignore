@@ -9,5 +9,6 @@ bin/
 
 # TODO: Move intermediate files to a temporary directory.
 test/joos_input.txt
+test/joos_classname.txt
 test/joos_tokens.txt
 test/joos_tree.txt

@@ -37,12 +37,6 @@ lhs (Node x _) = x
 rhs :: Tree t -> [Tree t]
 rhs (Node _ x) = x
 
--- Reverse map http://snipplr.com/view/18351/reverse-map/
-pam :: [a -> b] -> a -> [b]
-pam lf x = map g lf
-  where
-    g f = f x
-
 kClassDeclaration :: String
 kClassDeclaration = "ClassDeclaration"
 
@@ -212,8 +206,8 @@ nativeMethodStatic tree
 
 -- TODO
 -- 8 A class/interface must be declared in a .java file with the same base name as the class/interface.
-classnameSameAsFilename :: UntaggedParseTree -> Bool
-classnameSameAsFilename tree = True
+classnameSameAsFilename :: TaggedParseTree -> ClassName -> Bool
+classnameSameAsFilename tree classname = True
 
 -- 10 An interface method cannot be static, final, or native.
 interfaceMethodNotStaticFinalOrNative :: UntaggedParseTree -> Bool
@@ -222,10 +216,12 @@ interfaceMethodNotStaticFinalOrNative tree
     hasMethodsWithModifiers [kStatic, kFinal, kNative] tree
   | otherwise = any interfaceMethodNotStaticFinalOrNative $ subForest tree
 
--- TODO
 -- 12 Every class must contain at least one explicit constructor.
+-- This works because Joos has at most one type per file.
 classAtLeastOneConstructor :: UntaggedParseTree -> Bool
-classAtLeastOneConstructor tree = True
+classAtLeastOneConstructor tree = null constructors && not (null classes)
+    where constructors = findChildren "ConstructorDeclaration" tree
+          classes = findChildren "ClassDeclaration" tree
 
 -- 13 No field can be final.
 noFinalField :: UntaggedParseTree -> Bool
@@ -234,8 +230,12 @@ noFinalField tree
   | otherwise = any noFinalField $ subForest tree
 
 -- TODO
-integerWithinRange :: UntaggedParseTree -> Bool
-integerWithinRange tree = True
+integerWithinRange :: TaggedParseTree -> ClassName -> Bool
+integerWithinRange tree _ = True
+
+-- An cast operator with an expression on the left may only be an indentifier.
+castExpression :: UntaggedParseTree -> Bool
+castExpression tree = False
 
 untaggedRules :: [UntaggedParseTree -> Bool]
 untaggedRules =
@@ -245,23 +245,27 @@ untaggedRules =
   , staticMethodNotFinal
   , nativeMethodStatic
   , interfaceMethodNotStaticFinalOrNative
+  , classAtLeastOneConstructor
   , noFinalField
+  , castExpression
   ]
 
-taggedRules :: [TaggedParseTree -> Bool]
+taggedRules :: [TaggedParseTree -> ClassName -> Bool]
 taggedRules =
-  [
-  -- TODO
+  [-- classnameSameAsFilename
+ -- , integerWithinRange
   ]
 
-untaggedWeed:: UntaggedParseTree -> Bool
-untaggedWeed tree = any id (pam untaggedRules tree)
+untaggedWeed :: UntaggedParseTree -> Bool
+untaggedWeed tree = or $ map (\f -> f tree) untaggedRules
 
-taggedWeed :: TaggedParseTree -> Bool
-taggedWeed tree = any id (pam taggedRules tree)
+type ClassName = String
+taggedWeed :: TaggedParseTree -> ClassName -> Bool
+taggedWeed tree classname = or $ map (\f -> f tree classname) taggedRules
 
 main :: IO ()
 main = do
+  classname <- readFile "test/joos_classname.txt"
   source <- readFile "test/joos_input.txt"
   tokens <- readFile "test/joos_tokens.txt"
   contents <- readFile "test/joos_tree.txt"
@@ -270,5 +274,5 @@ main = do
   when (untaggedWeed tree) $ exitError "Bad weed"
 
   let taggedTree = insertTokenStrings (tagTree tree (parseTokens tokens)) source
-  when (taggedWeed taggedTree) $ exitError "Bad weed"
+  when (taggedWeed taggedTree classname) $ exitError "Bad weed"
   putStrLn $ drawTree (fmap show taggedTree)
