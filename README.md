@@ -44,7 +44,7 @@ the course website). All other component are written in Haskell.
 
 Haskell
 
-Definitions: list of regular expressions and lexeme ids
+Definitions: list of token types and "regular expressions".
 
 Input: file
 
@@ -52,9 +52,22 @@ Output: string of tokens
 
 * Splits up the input into tokens
 * Catches lexical errors
-
 * Also checks that all byte are in the ASCII range (0 to 127). It is easiest to
-  weed out non-ASCII characters from the start to simplify the scanner.
+  weed out non-ASCII characters from the start to simplify the
+  scanner.
+
+The regular expressions are expressed using an EDSL (embedded
+domain-specific language) grammar . The grammar is based on the paper
+"Monadic Parsing in Haskell" and a modernization of its implementation
+(cited below).
+
+The scanner reads through the source code, breaking it into tokens. It
+finds the type of the token through greedy matching and backtracking
+in the event of failure. If the scanner cannot find the token type
+through backtracking, it returns a scanning error.
+
+The scanner also returns a scanning error if non-ascii characters are
+present or if it detects an invalid token (e.g illegal keyword).
 
 ### Stage 2: Parser
 
@@ -82,7 +95,12 @@ Input: rightmost derivation
 
 Output: parse tree (data structure in memory)
 
-* Detects simple errors
+* Detects context-sensitive errors in the programs through tree traversal
+* Operates on a concrete syntax tree
+
+In order to have the weeder working on time, it was implemented before
+the AST building part was completed. Because of that, it operates on
+the concrete syntax tree of the program.
 
 ### Stage 4: AST Building
 
@@ -99,6 +117,34 @@ Output: Abstract Syntax Tree (AST)
 ### Resolving Parser Conflicts
 
 TODO(ryan)
+
+### Greedy matching causes Scanner to recognize invalid programs
+
+Because of the style of the grammar used to represent the token types
+in the scanner, greedy matching caused an issue where some invalid
+programs were accepted.
+
+An example is the invalid integer literal 010. The greedy matching
+algorithm matched the integer 0 followed by the integer 10 -- when it
+should have rejected the program. A workaround for this problem would
+have been to complicate the grammar sufficiently in order to catch
+those instances.
+
+However, a simpler solution was implemented, which
+was to check whether two consecutive `IntLiteral`s exist in the
+program. This worked because spaces and comments were scanned as
+tokens, so the only time where there were two consecutive
+`IntLiteral`s is when an integer had a leading zero.
+
+Another example of this occured with octal escapes inside
+strings. `"\400"` is illegal in Joos. However, the scanner accepted
+this as the StringLiteral composed of `"\4"` followed by `"00"`. This
+problem has not been addressed yet, but will be fixed in the future
+through a more complex grammar that simulates lookahead.
+
+### Interoperability between languages
+
+<!-- This might be too trivial to add here -->
 
 ## Testing
 
