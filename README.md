@@ -14,6 +14,7 @@
 * `src/weeder/`: Haskell source code for the weeder
 * `src/ast/`: Haskell source code for the AST
 * `def/`: Joos grammar and other definition files
+* `def/joos.cfg2`: Joos production rules
 * `test/positive/`: Test inputs which are expected to pass
 * `test/negative/`: Test inputs which are expected to fail
 * `test/haskell/`: Unit tests written in Haskell which test only the Lexer stage
@@ -32,6 +33,7 @@ utilities:
     make test.negative  # Run the positive tests
     make test.unit      # Run Haskell unit tests
     make zip            # Generate zip file for submitting to Marmoset
+    make report         # Compile the report into a PDF
     make clean          # Delete intermediate files
 
 ## Stages
@@ -118,7 +120,53 @@ Output: Abstract Syntax Tree (AST)
 
 ### Resolving Parser Conflicts
 
-TODO(ryan)
+We used the grammar from the JLS2 with a few modifications. The productions
+rules can be found in `def/joos.cfg2`. The modifications were necessary to make
+the grammar conflict-free, LALR(1) and easy to parse.
+
+For example, JLS2 allows classes to contain a list of declarations which are
+either `FieldDeclaration` or `MethodDeclaration`. Each declaration is prefixed
+with a list of modifiers. The following subset of the grammar incurs a
+reduce-reduce conflict:
+
+    # JLS2
+    (1) ClassMemberDeclaration -> FieldDeclaration
+    (2) ClassMemberDeclaration -> MethodDeclaration
+    (3) FieldDeclaration       -> FieldModifiers Type VariableDeclarator
+    (4) MethodDeclaration      -> MethodModifiers Type MethodDeclarator MethodBody
+    (5) FieldModifiers         -> FieldModifier
+    (6) FieldModifiers         -> FieldModifiers FieldModifier
+    (7) FieldModifier          -> public
+    (8) FieldModifier          -> native
+    (9) MethodModifiers        -> MethodModifier
+    (10) MethodModifiers       -> MethodModifiers MethodModifer
+    (11) MethodModifier        -> public
+
+After pushing `public` onto the stack, the parser is unsure which reduce action
+to apply. Should it reduce with (7) or (11)? Single token lookahead will not
+help because both actions (3) and (4) have `Type` as the next token. There is
+nothing to disambiguate. This is not LR(1).
+
+To remove the conflict, we refactored the grammar by combining all modifiers
+into the same set of production rules like so:
+
+    # Joos
+    (1) ClassMemberDeclaration -> FieldDeclaration
+    (2) ClassMemberDeclaration -> MethodDeclaration
+    (3) FieldDeclaration       -> Modifiers Type VariableDeclarator
+    (4) MethodDeclaration      -> Modifiers Type MethodDeclarator MethodBody
+    (5) Modifiers              -> Modifier
+    (6) Modifiers              -> Modifiers Modifier
+    (7) Modifiers              -> public
+    (8) Modifiers              -> native
+
+The grammar has been factored so that `public` will always have the following
+derivation regardless of being in a field or method:
+
+    Modifiers -> Modifier -> public
+
+Unfourtunately, the grammar is now weaker because it allows the `native` to be
+applied to fields. Additional weeder rules account for this.
 
 ### Greedy matching causes Scanner to recognize invalid programs
 
