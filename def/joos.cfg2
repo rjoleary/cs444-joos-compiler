@@ -527,7 +527,7 @@ RelationalExpression    RelationalExpression < AdditiveExpression
 RelationalExpression    RelationalExpression > AdditiveExpression
 RelationalExpression    RelationalExpression <= AdditiveExpression
 RelationalExpression    RelationalExpression >= AdditiveExpression
-RelationalExpression    RelationalExpression instanceof AdditiveExpression
+RelationalExpression    RelationalExpression instanceof ReferenceType
 
 
 ########## 15.21: Equality Operators
