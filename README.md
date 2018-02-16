@@ -17,7 +17,8 @@
 * `def/joos.cfg2`: Joos production rules
 * `test/positive/`: Test inputs which are expected to pass
 * `test/negative/`: Test inputs which are expected to fail
-* `test/haskell/`: Unit tests written in Haskell which test only the Lexer stage
+* `test/haskell/`: Unit tests written in Haskell which currently only
+  test the Lexer stage
 * `MAKEFILE`: Builds compiler, build documentation, runs tests, etc...
 * `joosc`: Builds
 
@@ -40,7 +41,10 @@ utilities:
 
 Stages are run in sequence via a shell script called "joosc". The parser is
 written in Rust and the parse table generator is written in Java (provided by
-the course website). All other component are written in Haskell.
+the course website). All other components are written in Haskell.
+
+Rust and Haskell were chosen because they provide type safety and
+powerful pattern matching.
 
 ### Stage 1: Scanner
 
@@ -52,7 +56,7 @@ Input: file
 
 Output: string of tokens
 
-* Splits up the input into tokens
+* Splits the input into tokens
 * Catches lexical errors
 * Also checks that all byte are in the ASCII range (0 to 127). It is easiest to
   weed out non-ASCII characters from the start to simplify the
@@ -68,10 +72,15 @@ finds the type of the token through greedy matching and backtracking
 in the event of failure. If the scanner cannot find the token type
 through backtracking, it returns a scanning error.
 
-The scanner also returns a scanning error if non-ascii characters are
+The scanner also returns a scanning error if non-ASCII characters are
 present or if it detects an invalid token (e.g illegal
 keyword/operator). Some of the error detection is done after the
 program is scanned.
+
+In addition to outputting the token types, the scanner also outputs
+the start and end indices of all tokens. This makes it possible to
+retrieve the lexeme in later stages and to generate detailed error
+messages.
 
 ### Stage 2: Parser
 
@@ -87,9 +96,9 @@ Output: rightmost derivation
 * Checks that the input conforms to a Context-Free Grammar (CFG)
 
 Switched from LR(1) to LALR(1). Early measurements showed the LALR grammar is
-4x smallar without affecting the language.
+4x smaller without affecting the language.
 
-The course provided jlalr tool was used to generate generate the parse table.
+The course provided jlalr tool was used to generate the parse table.
 
 ### Stage 3: Weeder
 
@@ -106,6 +115,9 @@ In order to have the weeder working on time, it was implemented before
 the AST building part was completed. Because of that, it operates on
 the concrete syntax tree of the program.
 
+The weeder checks for errors by repeatedly traversing the tree to
+check if it breaks a specific rule.
+
 ### Stage 4: AST Building
 
 Haskell
@@ -120,7 +132,7 @@ Output: Abstract Syntax Tree (AST)
 
 ### Resolving Parser Conflicts
 
-We used the grammar from the JLS2 with a few modifications. The productions
+We used the grammar from the JLS2 with a few modifications. The production
 rules can be found in `def/joos.cfg2`. The modifications were necessary to make
 the grammar conflict-free, LALR(1) and easy to parse.
 
@@ -165,7 +177,7 @@ derivation regardless of being in a field or method:
 
     Modifiers -> Modifier -> public
 
-Unfourtunately, the grammar is now weaker because it allows the `native` to be
+Unfortunately, the grammar is now weaker because it allows the `native` to be
 applied to fields. Additional weeder rules account for this.
 
 ### Greedy matching causes Scanner to recognize invalid programs
@@ -186,7 +198,7 @@ program. This worked because spaces and comments were scanned as
 tokens, so the only time where there were two consecutive
 `IntLiteral`s is when an integer had a leading zero.
 
-Another example of this occured with octal escapes inside
+Another example of this occurred with octal escapes inside
 strings. `"\400"` is illegal in Joos. However, the scanner accepted
 this as the StringLiteral composed of `"\4"` followed by `"00"`. This
 problem has not been addressed yet, but will be fixed in the future
@@ -194,7 +206,14 @@ through a more complex grammar that simulates lookahead.
 
 ### Interoperability between languages
 
-<!-- This might be too trivial to add here -->
+Because of our choice to use multiple programming languages to
+implement the compiler, we needed a method to communicate the output
+of one stage to the next.
+
+One option was to use shell pipes, but we opted to save the output of each
+stage as a file. This makes it possible to use the output of a stage
+in future stages whether they are run immediately after or later in
+the pipeline.
 
 ## Testing
 
@@ -203,7 +222,7 @@ through a more complex grammar that simulates lookahead.
 
 ## Attribution
 
-The parsing code in [src/haskell/Parsing.hs](src/haskell/Parsing.hs) is based on
+The parsing code in [lexer/haskell/Parsing.hs](src/haskell/Parsing.hs) is based on
 the paper
 [Monadic Parsing in Haskell](http://www.cs.nott.ac.uk/~pszgmh/pearl.pdf). We
 also adopted the improvements outlined in
