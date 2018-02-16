@@ -56,9 +56,6 @@ kMethodHeader = "MethodHeader"
 kNative :: String
 kNative = "native"
 
-kVoid :: String
-kVoid = "void"
-
 -- Parse a single production rule into a tree with a single parent node.
 parseProduction :: String -> ParseTree
 parseProduction line = Node rhs (map singleNode lhs)
@@ -155,17 +152,6 @@ nativeMethodStatic tree
       else False
   | otherwise = any nativeMethodStatic $ subForest tree
 
--- 6 The type void may only be used as the return type of a method.
-voidTypeOnlyUsedAsMethodReturn :: ParseTree -> Bool
-voidTypeOnlyUsedAsMethodReturn tree
-  | (rootLabel tree) == kVoid = True
-  | (rootLabel tree) == kMethodHeader
-    -- We want to skip the return type of the method -- so check the declarator
-   = hasChild kVoid declarator
-  | otherwise = any voidTypeOnlyUsedAsMethodReturn $ subForest tree
-  where
-    declarator = head $ findChildren kMethodDeclarator tree
-
 -- TODO
 -- 8 A class/interface must be declared in a .java file with the same base name as the class/interface.
 classnameSameAsFilename :: ParseTree -> Bool
@@ -199,7 +185,6 @@ weederRules =
   , abstractMethodNotStaticOrFinal
   , staticMethodNotFinal
   , nativeMethodStatic
-  , voidTypeOnlyUsedAsMethodReturn
   , interfaceMethodNotStaticFinalOrNative
   , noFinalField
   ]
