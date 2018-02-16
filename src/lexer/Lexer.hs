@@ -52,7 +52,7 @@ main = do
   contents <- readFile "test/joos_input.txt"
   let nonAscii = any (not . isAscii) contents
   when (nonAscii) (exitError "Invalid non-ascii characters")
-  (tokens, s) <- maybeToIO (runParser token (zipWith CharTag contents [0..]))
+  (tokens, s) <- maybeToIO (runParser token (zipWith CharTag contents [0 ..]))
   when (hasTwoConsecutiveInts tokens) $ exitError "Invalid IntLiteral"
   when (hasInvalidKeywords tokens) $ exitError "Invalid keywords"
   when (intOutsideRange tokens) $ exitError "Integer outside range"
@@ -62,14 +62,10 @@ main = do
 
 formatTokenLine :: Token -> Maybe String
 formatTokenLine t = formatLine (asLexeme t)
-    where formatLine (Nothing) = Nothing
-          formatLine (Just terminal) = Just (
-                                         terminal
-                                         ++ " "
-                                         ++ show (tokenStart t)
-                                         ++ " "
-                                         ++ show (tokenEnd t)
-                                         )
+  where
+    formatLine (Nothing) = Nothing
+    formatLine (Just terminal) =
+      Just (terminal ++ " " ++ show (tokenStart t) ++ " " ++ show (tokenEnd t))
 
 hasTwoConsecutiveInts :: [Token] -> Bool
 hasTwoConsecutiveInts l
@@ -82,7 +78,6 @@ hasTwoConsecutiveInts l
 bothIntLiteral :: Token -> Token -> Bool
 bothIntLiteral (Token IntLiteral _) (Token IntLiteral _) = True
 bothIntLiteral _ _                                       = False
-
 
 hasInvalidKeywords :: [Token] -> Bool
 hasInvalidKeywords l
@@ -100,7 +95,8 @@ isInvalidKeywords _ = False
 
 intOutsideRange :: [Token] -> Bool
 intOutsideRange l
-  | any ((> maxNegativeInt) . read . tokenString) $ (filter isIntLiteral l) = True
+  | any ((> maxNegativeInt) . read . tokenString) $ (filter isIntLiteral l) =
+    True
   | otherwise = False
   where
     isIntLiteral t = tokenName t == IntLiteral

@@ -1,8 +1,8 @@
 ;
 ;
 ;
-public class X {
-    public X() {}
+public class semicolontypes {
+    public semicolontypes() {}
 };
 ;
 ;

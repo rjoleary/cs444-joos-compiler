@@ -11,22 +11,28 @@ import           JoosCompiler.Exit
 --    attached to the tree and more weeder rules are checked. These rules use
 --    TaggedParseTree and TaggedToken. Tagged token containing enough
 --    information to rescue the original token string from the input file.
-
 type UntaggedParseTree = Tree UntaggedToken
+
 type UntaggedToken = String
 
 type TaggedParseTree = Tree TaggedToken
-data TaggedToken = TaggedToken { tokenName :: String
-                               , tokenString :: String
-                               , tokenStart :: Int
-                               , tokenEnd :: Int
-                               }
-instance Show TaggedToken where
-    show (TaggedToken name str start end) =
-            name
-            ++ (if name == str then "" else " \"" ++ str ++ "\"")
-            ++ (if start == end then "" else " (" ++ show start ++ "," ++ show end ++ ")")
 
+data TaggedToken = TaggedToken
+  { tokenName   :: String
+  , tokenString :: String
+  , tokenStart  :: Int
+  , tokenEnd    :: Int
+  }
+
+instance Show TaggedToken where
+  show (TaggedToken name str start end) =
+    name ++
+    (if name == str
+       then ""
+       else " \"" ++ str ++ "\"") ++
+    (if start == end
+       then ""
+       else " (" ++ show start ++ "," ++ show end ++ ")")
 
 singleNode :: a -> Tree a
 singleNode x = Node x []
@@ -51,6 +57,9 @@ kFinal = "final"
 
 kBlock :: String
 kBlock = "Block"
+
+kIdentifier :: String
+kIdentifier = "Identifier"
 
 kStatic :: String
 kStatic = "static"
@@ -99,38 +108,46 @@ treeify' forest rule = rule' : forest'
 
 -- Parse the tokens from joos_tokens.txt.
 type Token = (String, Int, Int)
+
 parseTokens :: String -> [Token]
 parseTokens = map ((\[x, y, z] -> (x, (read y), (read z))) . words) . lines
 
 -- Convert an untagged tree to a tagged tree with the tokens file.
 tagTree :: UntaggedParseTree -> [Token] -> TaggedParseTree
-tagTree utree tokens = if remainingTokens == []
-                       then taggedTree
-                       else error "Remaining tokens after tagging tree"
-    where (taggedTree, remainingTokens) = tagTree' utree tokens
+tagTree utree tokens =
+  if remainingTokens == []
+    then taggedTree
+    else error "Remaining tokens after tagging tree"
+  where
+    (taggedTree, remainingTokens) = tagTree' utree tokens
 
 -- Recursively convert the tree and return any extra tokens.
 -- TODO: Tag inner nodes with (start, end) of their children.
 tagTree' :: UntaggedParseTree -> [Token] -> (TaggedParseTree, [Token])
 tagTree' (Node x []) [] = ((Node (TaggedToken x x 0 0) []), [])
 tagTree' (Node x []) a@((name, start, end):ts)
-    | x == name = ((Node (TaggedToken x x start end) []), ts)
-    | otherwise = ((Node (TaggedToken x x 0 0) []), a)
-tagTree' (Node x xs) ts = ((Node (TaggedToken x x 0 0) taggedChildren), remainingTokens)
-    where mapChildren :: [Tree UntaggedToken] -> [Token] -> ([Tree TaggedToken], [Token])
-          mapChildren [] ts = ([], ts)
-          mapChildren (n@(Node x xs):ns) ts = (taggedChild:ns', ts')
-              where (taggedChild, remainingTokens) = tagTree' n ts
-                    (ns', ts') = mapChildren ns remainingTokens
-          (taggedChildren, remainingTokens) = mapChildren xs ts
+  | x == name = ((Node (TaggedToken x x start end) []), ts)
+  | otherwise = ((Node (TaggedToken x x 0 0) []), a)
+tagTree' (Node x xs) ts =
+  ((Node (TaggedToken x x 0 0) taggedChildren), remainingTokens)
+  where
+    mapChildren ::
+         [Tree UntaggedToken] -> [Token] -> ([Tree TaggedToken], [Token])
+    mapChildren [] ts = ([], ts)
+    mapChildren (n@(Node x xs):ns) ts = (taggedChild : ns', ts')
+      where
+        (taggedChild, remainingTokens) = tagTree' n ts
+        (ns', ts') = mapChildren ns remainingTokens
+    (taggedChildren, remainingTokens) = mapChildren xs ts
 
 -- Fill the tree with
 insertTokenStrings :: TaggedParseTree -> String -> TaggedParseTree
 insertTokenStrings tree source = fmap mapToken tree
-    where mapToken t@(TaggedToken name str start end) =
-            if start == end
-            then t
-            else (TaggedToken name (drop start . take end $ source) start end)
+  where
+    mapToken t@(TaggedToken name str start end) =
+      if start == end
+        then t
+        else (TaggedToken name (drop start . take end $ source) start end)
 
 hasChild :: String -> UntaggedParseTree -> Bool
 hasChild s tree =
@@ -158,6 +175,12 @@ findChildren :: String -> UntaggedParseTree -> [UntaggedParseTree]
 findChildren childName tree
   | (rootLabel tree) == childName = [tree]
   | otherwise = mconcat $ map (findChildren childName) $ subForest tree
+
+getClassNameFromDeclaration :: TaggedParseTree -> ClassName
+getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
+  where
+    identifierNode =
+      head (filter (\node -> (tokenName $ rootLabel node) == kIdentifier) (subForest tree))
 
 -- Weeder rules
 -- Return true if check fails
@@ -204,10 +227,13 @@ nativeMethodStatic tree
       else False
   | otherwise = any nativeMethodStatic $ subForest tree
 
--- TODO
 -- 8 A class/interface must be declared in a .java file with the same base name as the class/interface.
-classnameSameAsFilename :: TaggedParseTree -> ClassName -> Bool
-classnameSameAsFilename tree classname = True
+classnameSameAsFilename :: ClassName -> TaggedParseTree -> Bool
+classnameSameAsFilename classname tree
+  | (tokenName (rootLabel tree)) `elem`
+      [kClassDeclaration, kInterfaceDeclaration] =
+    classname /= getClassNameFromDeclaration tree
+  | otherwise = any (classnameSameAsFilename classname) $ subForest tree
 
 -- 10 An interface method cannot be static, final, or native.
 interfaceMethodNotStaticFinalOrNative :: UntaggedParseTree -> Bool
@@ -220,8 +246,9 @@ interfaceMethodNotStaticFinalOrNative tree
 -- This works because Joos has at most one type per file.
 classAtLeastOneConstructor :: UntaggedParseTree -> Bool
 classAtLeastOneConstructor tree = null constructors && not (null classes)
-    where constructors = findChildren "ConstructorDeclaration" tree
-          classes = findChildren "ClassDeclaration" tree
+  where
+    constructors = findChildren "ConstructorDeclaration" tree
+    classes = findChildren "ClassDeclaration" tree
 
 -- 13 No field can be final.
 noFinalField :: UntaggedParseTree -> Bool
@@ -230,23 +257,33 @@ noFinalField tree
   | otherwise = any noFinalField $ subForest tree
 
 -- TODO
-integerWithinRange :: TaggedParseTree -> ClassName -> Bool
-integerWithinRange tree _ = True
+integerWithinRange :: ClassName -> TaggedParseTree -> Bool
+integerWithinRange tree _ = False
 
 -- A cast operator with an expression on the left may only be a Name.
 castExpression :: UntaggedParseTree -> Bool
-castExpression tree = or $ map notValidExpression $ findChildren "CastExpression" tree
-    where notValidExpression (Node _ ((Node "(" _):n@(Node "Expression" xs):_)) =
-                not (isPrefixOf prefix (flatten n))
-          notValidExpression _ = False
-          prefix = ["Expression", "AssignmentExpression",
-                    "ConditionalOrExpression", "ConditionalAndExpression",
-                    "InclusiveOrExpression", "ExclusiveOrExpression",
-                    "AndExpression", "EqualityExpression",
-                    "RelationalExpression", "AdditiveExpression",
-                    "MultiplicativeExpression", "UnaryExpression",
-                    "UnaryExpressionNotPlusMinus", "Name"]
-
+castExpression tree =
+  or $ map notValidExpression $ findChildren "CastExpression" tree
+  where
+    notValidExpression (Node _ ((Node "(" _):n@(Node "Expression" xs):_)) =
+      not (isPrefixOf prefix (flatten n))
+    notValidExpression _ = False
+    prefix =
+      [ "Expression"
+      , "AssignmentExpression"
+      , "ConditionalOrExpression"
+      , "ConditionalAndExpression"
+      , "InclusiveOrExpression"
+      , "ExclusiveOrExpression"
+      , "AndExpression"
+      , "EqualityExpression"
+      , "RelationalExpression"
+      , "AdditiveExpression"
+      , "MultiplicativeExpression"
+      , "UnaryExpression"
+      , "UnaryExpressionNotPlusMinus"
+      , "Name"
+      ]
 
 untaggedRules :: [UntaggedParseTree -> Bool]
 untaggedRules =
@@ -261,18 +298,16 @@ untaggedRules =
   , castExpression
   ]
 
-taggedRules :: [TaggedParseTree -> ClassName -> Bool]
-taggedRules =
-  [-- classnameSameAsFilename
- -- , integerWithinRange
-  ]
+taggedRules :: [ClassName -> TaggedParseTree -> Bool]
+taggedRules = [classnameSameAsFilename, integerWithinRange]
 
 untaggedWeed :: UntaggedParseTree -> Bool
 untaggedWeed tree = or $ map (\f -> f tree) untaggedRules
 
 type ClassName = String
+
 taggedWeed :: TaggedParseTree -> ClassName -> Bool
-taggedWeed tree classname = or $ map (\f -> f tree classname) taggedRules
+taggedWeed tree classname = or $ map (\f -> f classname tree) taggedRules
 
 main :: IO ()
 main = do
@@ -280,10 +315,8 @@ main = do
   source <- readFile "test/joos_input.txt"
   tokens <- readFile "test/joos_tokens.txt"
   contents <- readFile "test/joos_tree.txt"
-
   let tree = treeify contents
   when (untaggedWeed tree) $ exitError "Bad weed"
-
   let taggedTree = insertTokenStrings (tagTree tree (parseTokens tokens)) source
   when (taggedWeed taggedTree classname) $ exitError "Bad weed"
   putStrLn $ drawTree (fmap show taggedTree)

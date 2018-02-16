@@ -9,7 +9,7 @@ fi
 
 # Put the source file and classname into position.
 cp "$@" test/joos_input.txt
-echo "$(basename "$@" .java)" > test/joos_classname.txt
+echo -n "$(basename "$@" .java)" > test/joos_classname.txt
 
 # Lexer
 bin/lexer > test/joos_tokens.txt

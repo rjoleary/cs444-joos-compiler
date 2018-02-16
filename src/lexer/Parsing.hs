@@ -14,13 +14,18 @@ import           Data.Char                        (isDigit, isSpace, ord)
 import           System.IO
 
 -- Input is tagged with the character's index.
-data CharTag = CharTag { tagChar :: Char, tagIdx :: Int } deriving Show
+data CharTag = CharTag
+  { tagChar :: Char
+  , tagIdx  :: Int
+  } deriving (Show)
+
 type StringTag = [CharTag]
+
 invalidIdx = 999999999 :: Int
 
 -- Two characters are equal regardless of their index.
 instance Eq CharTag where
-    (CharTag x _) == (CharTag y _) = x == y
+  (CharTag x _) == (CharTag y _) = x == y
 
 data NoData =
   NoData
