@@ -44,6 +44,7 @@ asLexeme (Token Comment _) = Nothing
 asLexeme t@(Token Identifier _)
   | (tokenString t) `elem` keywords = Just (tokenString t)
   | (tokenString t) `elem` ["true", "false"] = Just "BooleanLiteral"
+  | (tokenString t) == "null" = Just "NullLiteral"
   | otherwise = Just "Identifier"
 
 main :: IO ()
