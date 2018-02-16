@@ -67,7 +67,9 @@ in the event of failure. If the scanner cannot find the token type
 through backtracking, it returns a scanning error.
 
 The scanner also returns a scanning error if non-ascii characters are
-present or if it detects an invalid token (e.g illegal keyword).
+present or if it detects an invalid token (e.g illegal
+keyword/operator). Some of the error detection is done after the
+program is scanned.
 
 ### Stage 2: Parser
 
