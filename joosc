@@ -1,5 +1,12 @@
 #!/bin/sh
 
+# Check extension.
+echo "$@" | grep '\.java$'
+ret="$?"
+if [ "$ret" != 0 ]; then
+    exit 42
+fi
+
 # Put the source file and classname into position.
 cp "$@" test/joos_input.txt
 echo "$(basename "$@" .java)" > test/joos_classname.txt

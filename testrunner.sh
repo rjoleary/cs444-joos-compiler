@@ -45,14 +45,14 @@ runtests() {
 
 case "$1" in
     positive)
-        runtests 0 42 $(ls test/positive/*.java)
+        runtests 0 42 $(ls test/positive/*)
         ;;
     negative)
-        runtests 42 0 $(ls test/negative/*.java)
+        runtests 42 0 $(ls test/negative/*)
         ;;
     all)
-        runtests 0 42 $(ls test/positive/*.java)
-        runtests 42 0 $(ls test/negative/*.java)
+        runtests 0 42 $(ls test/positive/*)
+        runtests 42 0 $(ls test/negative/*)
         ;;
     *)
         echo "Error: Argument 0 must be positive, negative or all" >&2
