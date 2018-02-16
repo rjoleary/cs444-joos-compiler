@@ -233,9 +233,20 @@ noFinalField tree
 integerWithinRange :: TaggedParseTree -> ClassName -> Bool
 integerWithinRange tree _ = True
 
--- An cast operator with an expression on the left may only be an indentifier.
+-- A cast operator with an expression on the left may only be a Name.
 castExpression :: UntaggedParseTree -> Bool
-castExpression tree = False
+castExpression tree = or $ map notValidExpression $ findChildren "CastExpression" tree
+    where notValidExpression (Node _ ((Node "(" _):n@(Node "Expression" xs):_)) =
+                not (isPrefixOf prefix (flatten n))
+          notValidExpression _ = False
+          prefix = ["Expression", "AssignmentExpression",
+                    "ConditionalOrExpression", "ConditionalAndExpression",
+                    "InclusiveOrExpression", "ExclusiveOrExpression",
+                    "AndExpression", "EqualityExpression",
+                    "RelationalExpression", "AdditiveExpression",
+                    "MultiplicativeExpression", "UnaryExpression",
+                    "UnaryExpressionNotPlusMinus", "Name"]
+
 
 untaggedRules :: [UntaggedParseTree -> Bool]
 untaggedRules =
