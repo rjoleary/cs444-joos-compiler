@@ -130,6 +130,14 @@ tagTree' (Node x xs) ts = ((Node (TaggedToken x x 0 0) taggedChildren), remainin
                     (ns', ts') = mapChildren ns remainingTokens
           (taggedChildren, remainingTokens) = mapChildren xs ts
 
+-- Fill the tree with
+insertTokenStrings :: TaggedParseTree -> String -> TaggedParseTree
+insertTokenStrings tree source = fmap mapToken tree
+    where mapToken t@(TaggedToken name str start end) =
+            if start == end
+            then t
+            else (TaggedToken name (drop start . take end $ source) start end)
+
 hasChild :: String -> UntaggedParseTree -> Bool
 hasChild s tree =
   if (rootLabel tree) == s
@@ -254,12 +262,13 @@ taggedWeed tree = any id (pam taggedRules tree)
 
 main :: IO ()
 main = do
+  source <- readFile "test/joos_input.txt"
+  tokens <- readFile "test/joos_tokens.txt"
   contents <- readFile "test/joos_tree.txt"
+
   let tree = treeify contents
   when (untaggedWeed tree) $ exitError "Bad weed"
 
-  tokens <- readFile "test/joos_tokens.txt"
-  let taggedTree = tagTree tree (parseTokens tokens)
+  let taggedTree = insertTokenStrings (tagTree tree (parseTokens tokens)) source
   when (taggedWeed taggedTree) $ exitError "Bad weed"
   putStrLn $ drawTree (fmap show taggedTree)
-  return ()
