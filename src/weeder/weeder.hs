@@ -6,7 +6,8 @@ import           JoosCompiler.Exit
 
 type ParseTree = Tree String
 
-singleNode = flip Node []
+singleNode :: a -> Tree a
+singleNode x = Node x []
 
 lhs :: Tree t -> t
 lhs (Node x _) = x
@@ -179,6 +180,7 @@ noFinalField tree
 integerWithinRange :: ParseTree -> Bool
 integerWithinRange tree = True
 
+weederRules :: [ParseTree -> Bool]
 weederRules =
   [ notAbstractFinal
   , bodyIffNotAbstractOrNative
@@ -189,8 +191,10 @@ weederRules =
   , noFinalField
   ]
 
+weed :: ParseTree -> Bool
 weed tree = any id (pam weederRules tree)
 
+main :: IO ()
 main = do
   contents <- readFile "test/joos_tree.txt"
   let tree = treeify contents
