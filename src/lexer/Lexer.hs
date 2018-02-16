@@ -9,9 +9,9 @@ import           TokenTypes
 maxNegativeInt = 2147483648
 
 asLexeme :: Token -> Maybe String
-asLexeme (Token CharLiteral _) = Just "Identifier"
-asLexeme (Token StringLiteral _) = Just "Identifier"
-asLexeme (Token IntLiteral _) = Just "Identifier"
+asLexeme (Token CharLiteral _) = Just "CharacterLiteral"
+asLexeme (Token StringLiteral _) = Just "StringLiteral"
+asLexeme (Token IntLiteral _) = Just "IntegerLiteral"
 asLexeme (Token Assign _) = Just "="
 asLexeme (Token Add _) = Just "+"
 asLexeme (Token Subtract _) = Just "-"
@@ -43,6 +43,7 @@ asLexeme (Token Space _) = Nothing
 asLexeme (Token Comment _) = Nothing
 asLexeme t@(Token Identifier _)
   | (tokenString t) `elem` keywords = Just (tokenString t)
+  | (tokenString t) `elem` ["true", "false"] = Just "BooleanLiteral"
   | otherwise = Just "Identifier"
 
 main :: IO ()
