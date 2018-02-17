@@ -17,6 +17,8 @@ type UntaggedToken = String
 
 type TaggedParseTree = Tree TaggedToken
 
+type ClassName = String
+
 data TaggedToken = TaggedToken
   { tokenName   :: String
   , tokenString :: String
@@ -67,6 +69,12 @@ kBlock = "Block"
 kIdentifier :: String
 kIdentifier = "Identifier"
 
+kProtected :: String
+kProtected = "protected"
+
+kPublic :: String
+kPublic = "public"
+
 kStatic :: String
 kStatic = "static"
 
@@ -79,11 +87,11 @@ kMethodBody = "MethodBody"
 kMethodDeclaration :: String
 kMethodDeclaration = "MethodDeclaration"
 
-kMethodDeclarator :: String
-kMethodDeclarator = "MethodDeclarator"
-
 kMethodHeader :: String
 kMethodHeader = "MethodHeader"
+
+kModifiers :: String
+kModifiers = "Modifiers"
 
 kMinus :: String
 kMinus = "-"
@@ -205,14 +213,26 @@ getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
            (\node -> (tokenName $ rootLabel node) == kIdentifier)
            (subForest tree))
 
+getClassModifiersFromDeclaration :: UntaggedParseTree -> UntaggedParseTree
+getClassModifiersFromDeclaration tree =
+  head $ filter (\x -> (rootLabel x) == kModifiers) $ subForest tree
+
+getMethodModifiersFromDeclaration :: UntaggedParseTree -> UntaggedParseTree
+getMethodModifiersFromDeclaration tree = head $ findChildren kModifiers header
+  where
+    header = head $ findChildren kMethodHeader tree
+
 -- Weeder rules
 -- Return true if check fails
 -- 1 A class cannot be both abstract and final
 notAbstractFinal :: UntaggedParseTree -> Bool
 notAbstractFinal tree =
   if (rootLabel tree) == kClassDeclaration
-    then (hasModifier kAbstract tree) && (hasModifier kFinal tree)
+    then (hasModifier kAbstract classModifiers) &&
+         (hasModifier kFinal classModifiers)
     else any id $ map notAbstractFinal $ subForest tree
+  where
+    classModifiers = getClassModifiersFromDeclaration tree
 
 -- 2 A method has a body if and only if it is neither abstract nor native.
 bodyIffNotAbstractOrNative :: UntaggedParseTree -> Bool
@@ -324,6 +344,22 @@ castExpression tree =
       , "Name"
       ]
 
+packagePrivateClass :: UntaggedParseTree -> Bool
+packagePrivateClass tree
+  | (rootLabel tree) == kClassDeclaration =
+    not $ hasModifier kPublic classModifiers
+  | otherwise = any packagePrivateClass $ subForest tree
+  where
+    classModifiers = getClassModifiersFromDeclaration tree
+
+packagePrivateMethod :: UntaggedParseTree -> Bool
+packagePrivateMethod tree
+  | (rootLabel tree) == kMethodDeclaration =
+    not $ or $ map (\x -> hasModifier x methodModifiers) [kPublic, kProtected]
+  | otherwise = any packagePrivateMethod $ subForest tree
+  where
+    methodModifiers = getMethodModifiersFromDeclaration tree
+
 untaggedRules :: [UntaggedParseTree -> Bool]
 untaggedRules =
   [ notAbstractFinal
@@ -335,6 +371,8 @@ untaggedRules =
   , classAtLeastOneConstructor
   , noFinalField
   , castExpression
+  , packagePrivateClass
+  , packagePrivateMethod
   ]
 
 taggedRules :: [ClassName -> TaggedParseTree -> Bool]
@@ -342,8 +380,6 @@ taggedRules = [classnameSameAsFilename, integerWithinRange]
 
 untaggedWeed :: UntaggedParseTree -> Bool
 untaggedWeed tree = or $ map (\f -> f tree) untaggedRules
-
-type ClassName = String
 
 taggedWeed :: TaggedParseTree -> ClassName -> Bool
 taggedWeed tree classname = or $ map (\f -> f classname tree) taggedRules
