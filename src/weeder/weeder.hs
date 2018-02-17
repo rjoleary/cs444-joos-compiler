@@ -43,11 +43,17 @@ lhs (Node x _) = x
 rhs :: Tree t -> [Tree t]
 rhs (Node _ x) = x
 
+kUnaryExpression :: String
+kUnaryExpression = "UnaryExpression"
+
 kClassDeclaration :: String
 kClassDeclaration = "ClassDeclaration"
 
 kInterfaceDeclaration :: String
 kInterfaceDeclaration = "InterfaceDeclaration"
+
+kIntLiteral :: String
+kIntLiteral = "IntegerLiteral"
 
 kAbstract :: String
 kAbstract = "abstract"
@@ -79,8 +85,17 @@ kMethodDeclarator = "MethodDeclarator"
 kMethodHeader :: String
 kMethodHeader = "MethodHeader"
 
+kMinus :: String
+kMinus = "-"
+
 kNative :: String
 kNative = "native"
+
+maxPositive :: Integer
+maxPositive = 2147483647
+
+maxNegative :: Integer
+maxNegative = 2147483648
 
 -- Parse a single production rule into a tree with a single parent node.
 parseProduction :: String -> UntaggedParseTree
@@ -176,11 +191,19 @@ findChildren childName tree
   | (rootLabel tree) == childName = [tree]
   | otherwise = mconcat $ map (findChildren childName) $ subForest tree
 
+findChildren1 :: String -> TaggedParseTree -> [TaggedParseTree]
+findChildren1 childName tree
+  | tokenName (rootLabel tree) == childName = [tree]
+  | otherwise = mconcat $ map (findChildren1 childName) $ subForest tree
+
 getClassNameFromDeclaration :: TaggedParseTree -> ClassName
 getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
   where
     identifierNode =
-      head (filter (\node -> (tokenName $ rootLabel node) == kIdentifier) (subForest tree))
+      head
+        (filter
+           (\node -> (tokenName $ rootLabel node) == kIdentifier)
+           (subForest tree))
 
 -- Weeder rules
 -- Return true if check fails
@@ -256,9 +279,25 @@ noFinalField tree
   | (rootLabel tree) == kFieldDeclaration = hasModifier kFinal tree
   | otherwise = any noFinalField $ subForest tree
 
--- TODO
+-- Reminder: true means this check failed (i.e. reject program)
+intLiteralLessThanEqual :: Integer -> TaggedParseTree -> Bool
+intLiteralLessThanEqual n tree
+  | length children > 0 = n < (read $ tokenString $ rootLabel $ head $ children)
+  | otherwise = False
+  where
+    children = findChildren1 kIntLiteral tree
+
 integerWithinRange :: ClassName -> TaggedParseTree -> Bool
-integerWithinRange tree _ = False
+integerWithinRange c tree
+  | (tokenName $ rootLabel tree) == kUnaryExpression =
+    if (kMinus == (tokenName $ rootLabel $ head $ children))
+    -- We recurse in case we have something like (-(3))
+      then (intLiteralLessThanEqual maxNegative tree) ||
+           (any (integerWithinRange c) $ subForest $ children !! 1)
+      else (intLiteralLessThanEqual maxPositive tree)
+  | otherwise = any (integerWithinRange c) $ children
+  where
+    children = subForest tree
 
 -- A cast operator with an expression on the left may only be a Name.
 castExpression :: UntaggedParseTree -> Bool
