@@ -1,3 +1,3 @@
 public interface InterfaceFinalMethod {
-    public final f();
+    public final void f();
 }

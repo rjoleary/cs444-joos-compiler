@@ -1,3 +1,3 @@
 public interface InterfaceStaticMethod {
-    public static f();
+    public static void f();
 }

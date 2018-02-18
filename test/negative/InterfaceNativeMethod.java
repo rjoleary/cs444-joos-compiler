@@ -1,3 +1,3 @@
 public interface InterfaceNativeMethod {
-    public native f();
+    public native void f();
 }

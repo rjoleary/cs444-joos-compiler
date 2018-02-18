@@ -188,12 +188,6 @@ hasModifier modifier tree
   | rootLabel tree == modifier = True
   | otherwise = any (hasModifier modifier) $ subForest tree
 
-hasMethodsWithModifiers :: [String] -> UntaggedParseTree -> Bool
-hasMethodsWithModifiers modifiers tree
-  | (rootLabel tree) == kMethodDeclaration =
-    any (\x -> hasModifier x tree) modifiers
-  | otherwise = any (hasMethodsWithModifiers modifiers) $ subForest tree
-
 findChildren :: String -> UntaggedParseTree -> [UntaggedParseTree]
 findChildren childName tree
   | (rootLabel tree) == childName = [tree]
@@ -280,10 +274,12 @@ classnameSameAsFilename classname tree
 
 -- 10 An interface method cannot be static, final, or native.
 interfaceMethodNotStaticFinalOrNative :: UntaggedParseTree -> Bool
-interfaceMethodNotStaticFinalOrNative tree
-  | (rootLabel tree) == kInterfaceDeclaration =
-    hasMethodsWithModifiers [kStatic, kFinal, kNative] tree
-  | otherwise = any interfaceMethodNotStaticFinalOrNative $ subForest tree
+interfaceMethodNotStaticFinalOrNative tree = interface && (static || final || native)
+    where
+      static = not $ null $ findChildren "static" tree
+      final = not $ null $ findChildren "final" tree
+      native = not $ null $ findChildren "native" tree
+      interface = not $ null $ findChildren "interface" tree
 
 -- 12 Every class must contain at least one explicit constructor.
 -- This works because Joos has at most one type per file.
