@@ -20,7 +20,7 @@
 * `test/haskell/`: Unit tests written in Haskell which currently only
   test the Lexer stage
 * `MAKEFILE`: Builds compiler, build documentation, runs tests, etc...
-* `joosc`: Builds
+* `joosc`: A script which ties all the stages together
 
 ### Build System
 
@@ -48,13 +48,11 @@ powerful pattern matching.
 
 ### Stage 1: Scanner
 
-Haskell
+***Definitions***: list of token types and "regular languages" expressed using an EDSL
 
-Definitions: list of token types and "regular expressions".
+***Input***: source file
 
-Input: file
-
-Output: string of tokens
+***Output***: string of tokens names (with start and end index)
 
 * Splits the input into tokens
 * Catches lexical errors
@@ -63,7 +61,7 @@ Output: string of tokens
   scanner.
 
 The regular expressions are expressed using an EDSL (embedded
-domain-specific language) grammar . The grammar is based on the paper
+domain-specific language) grammar. The grammar is based on the paper
 "Monadic Parsing in Haskell" and a modernization of its implementation
 (cited below).
 
@@ -84,32 +82,37 @@ messages.
 
 ### Stage 2: Parser
 
-Rust
+***Definitions***: LR(1) oracle, located at `def/joos.lr1`
 
-Definitions: LR(1) oracle
+***Input***: string of tokens
 
-Input: string of tokens
+***Output***: rightmost derivation
 
-Output: rightmost derivation
-
-* Bottom-up parse
+* Bottom-up parse using shift-reduce rules
 * Checks that the input conforms to a Context-Free Grammar (CFG)
-
-Switched from LR(1) to LALR(1). Early measurements showed the LALR grammar is
-4x smaller without affecting the language.
+* In case of error, the bad token is printed to stderr and a list of expected
+  tokens is also printed.
 
 The course provided jlalr tool was used to generate the parse table.
 
+We wrote a file format `def/joos.cfg2` which expresses the grammar. This file
+has the following format:
+
+1. Blank lines and lines starting with '#' are ignored.
+2. Productions start with a non-terminal and are followed by 0 or more terminals.
+3. The root of the syntax tree is S.
+
+We switched from LR(1) to LALR(1). Early measurements showed the LALR grammar
+is 4x smaller without affecting the language.
+
 ### Stage 3: Weeder
 
-Haskell
+***Input***: rightmost derivation
 
-Input: rightmost derivation
+***Output***: parse tree (data structure in memory)
 
-Output: parse tree (data structure in memory)
-
-* Detects context-sensitive errors in the programs through tree traversal
-* Operates on a concrete syntax tree
+* Detects errors in the programs through tree traversal
+* Operates on the concrete syntax tree
 
 In order to have the weeder working on time, it was implemented before
 the AST building part was completed. Because of that, it operates on
@@ -120,13 +123,11 @@ check if it breaks a specific rule.
 
 ### Stage 4: AST Building
 
-Haskell
+***Input***: parse tree
 
-Input: parse tree
+***Output***: Abstract Syntax Tree (AST)
 
-Output: Abstract Syntax Tree (AST)
-
-* Converts the initial parse tree into a simpler AST
+Converts the initial parse tree into a simpler AST.
 
 ## Design Issues
 
@@ -213,12 +214,26 @@ of one stage to the next.
 One option was to use shell pipes, but we opted to save the output of each
 stage as a file. This makes it possible to use the output of a stage
 in future stages whether they are run immediately after or later in
-the pipeline.
+the pipeline. Additionally, it makes debugging easier because intermediate
+files may be inspected.
 
 ## Testing
 
-* Haskell unit tests
-* positive/negative system tests
+### Positive/Negative System Tests
+
+The directory `test/positive/` contains over 70 test files. Each one of these
+files are expected to compile successfully. They are run with `make test.positive`.
+
+The directory `test/negative/` contains over 90 test files. Each one of these
+files are expected to fail compilation. They are run with `make test.negative`.
+
+### Haskell Unit Tests
+
+Unit tests for the Lexer are written in Haskell and located in
+`test/haskell/TokenTypesSpec.hs`. They are run with `make test.unit`.
+
+These tests found a number of issues in the Lexer. For example, they found that
+"0123" was incorrectly tokenized to "0" and "123".
 
 ## Attribution
 
