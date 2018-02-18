@@ -198,6 +198,12 @@ findChildren1 childName tree
   | tokenName (rootLabel tree) == childName = [tree]
   | otherwise = mconcat $ map (findChildren1 childName) $ subForest tree
 
+findDirectChildren1 :: String -> String -> TaggedParseTree -> [TaggedParseTree]
+findDirectChildren1 childName indirectChildName tree
+  | tokenName (rootLabel tree) == childName = [tree]
+  | tokenName (rootLabel tree) == indirectChildName = []
+  | otherwise = mconcat $ map (findDirectChildren1 childName indirectChildName) $ subForest tree
+
 getClassNameFromDeclaration :: TaggedParseTree -> ClassName
 getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
   where
@@ -301,7 +307,7 @@ intLiteralLessThanEqual n tree
   | length children > 0 = n < (read $ tokenString $ rootLabel $ head $ children)
   | otherwise = False
   where
-    children = findChildren1 kIntLiteral tree
+    children = findDirectChildren1 kIntLiteral kUnaryExpression tree
 
 integerWithinRange :: ClassName -> TaggedParseTree -> Bool
 integerWithinRange c tree
@@ -310,7 +316,7 @@ integerWithinRange c tree
     -- We recurse in case we have something like (-(3))
       then (intLiteralLessThanEqual maxNegative tree) ||
            (any (integerWithinRange c) $ subForest $ children !! 1)
-      else (intLiteralLessThanEqual maxPositive tree)
+      else any (intLiteralLessThanEqual maxPositive) $ subForest tree
   | otherwise = any (integerWithinRange c) $ children
   where
     children = subForest tree
@@ -387,7 +393,7 @@ main = do
   tokens <- readFile "test/joos_tokens.txt"
   contents <- readFile "test/joos_tree.txt"
   let tree = treeify contents
-  when (untaggedWeed tree) $ exitError "Bad weed"
   let taggedTree = insertTokenStrings (tagTree tree (parseTokens tokens)) source
-  when (taggedWeed taggedTree classname) $ exitError "Bad weed"
   putStrLn $ drawTree (fmap show taggedTree)
+  when (untaggedWeed tree) $ exitError "Bad weed"
+  when (taggedWeed taggedTree classname) $ exitError "Bad weed"
