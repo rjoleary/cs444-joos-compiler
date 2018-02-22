@@ -1,8 +1,8 @@
 import           Control.Monad
 import           Data.List
-import           Data.Maybe
 import           Data.Tree
 import           JoosCompiler.Exit
+import           JoosCompiler.Treeify
 
 -- There are two types of weeder rules:
 -- 1. The simpler variety depend solely on the token names. These rules use
@@ -11,10 +11,6 @@ import           JoosCompiler.Exit
 --    attached to the tree and more weeder rules are checked. These rules use
 --    TaggedParseTree and TaggedToken. Tagged token containing enough
 --    information to rescue the original token string from the input file.
-type UntaggedParseTree = Tree UntaggedToken
-
-type UntaggedToken = String
-
 type TaggedParseTree = Tree TaggedToken
 
 type ClassName = String
@@ -35,15 +31,6 @@ instance Show TaggedToken where
     (if start == end
        then ""
        else " (" ++ show start ++ "," ++ show end ++ ")")
-
-singleNode :: a -> Tree a
-singleNode x = Node x []
-
-lhs :: Tree t -> t
-lhs (Node x _) = x
-
-rhs :: Tree t -> [Tree t]
-rhs (Node _ x) = x
 
 kUnaryExpression :: String
 kUnaryExpression = "UnaryExpression"
@@ -104,30 +91,6 @@ maxPositive = 2147483647
 
 maxNegative :: Integer
 maxNegative = 2147483648
-
--- Parse a single production rule into a tree with a single parent node.
-parseProduction :: String -> UntaggedParseTree
-parseProduction line = Node rhs (map singleNode lhs)
-  where
-    rhs:lhs = words line
-
--- Convert the bottom-up parse to a Haskell datatype.
-treeify :: String -> UntaggedParseTree
-treeify x =
-  case foldl treeify' [] (map parseProduction . lines $ x) of
-    [t] -> t
-    _   -> error "Could not create tree"
-
--- Run this for each rule added to the tree.
-treeify' :: [UntaggedParseTree] -> UntaggedParseTree -> [UntaggedParseTree]
-treeify' forest rule = rule' : forest'
-  where
-    lhsEq x y = lhs x == lhs y
-        -- TODO: The following line fails on rules with multiple of the same
-        -- token on the RHS. It is not an issue for our current grammar.
-    rule' =
-      Node (lhs rule) [fromMaybe x $ find (lhsEq x) forest | x <- rhs rule]
-    forest' = deleteFirstsBy lhsEq forest (rhs rule)
 
 -- Parse the tokens from joos_tokens.txt.
 type Token = (String, Int, Int)

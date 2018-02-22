@@ -57,7 +57,6 @@ data Expression = MethodInvocation
         , operand :: Expression
         }
 
-
 -- TODO: add constructor fields for statements
 data Statement = AssignStatement
         { assignedVar :: Maybe Field
@@ -72,4 +71,6 @@ data ControlFlowStatement = ForStatement
         | IfStatement
 
 -- TODO
+data Operator = Plus | Minus | Divide | Mod | Negate
+
 data Type = Type
