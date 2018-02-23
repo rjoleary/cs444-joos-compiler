@@ -72,5 +72,4 @@ data ControlFlowStatement = ForStatement
 
 -- TODO
 data Operator = Plus | Minus | Divide | Mod | Negate
-
 data Type = Type

@@ -11,26 +11,7 @@ import           JoosCompiler.Treeify
 --    attached to the tree and more weeder rules are checked. These rules use
 --    TaggedParseTree and TaggedToken. Tagged token containing enough
 --    information to rescue the original token string from the input file.
-type TaggedParseTree = Tree TaggedToken
-
 type ClassName = String
-
-data TaggedToken = TaggedToken
-  { tokenName   :: String
-  , tokenString :: String
-  , tokenStart  :: Int
-  , tokenEnd    :: Int
-  }
-
-instance Show TaggedToken where
-  show (TaggedToken name str start end) =
-    name ++
-    (if name == str
-       then ""
-       else " \"" ++ str ++ "\"") ++
-    (if start == end
-       then ""
-       else " (" ++ show start ++ "," ++ show end ++ ")")
 
 kUnaryExpression :: String
 kUnaryExpression = "UnaryExpression"
@@ -91,49 +72,6 @@ maxPositive = 2147483647
 
 maxNegative :: Integer
 maxNegative = 2147483648
-
--- Parse the tokens from joos_tokens.txt.
-type Token = (String, Int, Int)
-
-parseTokens :: String -> [Token]
-parseTokens = map ((\[x, y, z] -> (x, (read y), (read z))) . words) . lines
-
--- Convert an untagged tree to a tagged tree with the tokens file.
-tagTree :: UntaggedParseTree -> [Token] -> TaggedParseTree
-tagTree utree tokens =
-  if remainingTokens == []
-    then taggedTree
-    else error "Remaining tokens after tagging tree"
-  where
-    (taggedTree, remainingTokens) = tagTree' utree tokens
-
--- Recursively convert the tree and return any extra tokens.
--- TODO: Tag inner nodes with (start, end) of their children.
-tagTree' :: UntaggedParseTree -> [Token] -> (TaggedParseTree, [Token])
-tagTree' (Node x []) [] = ((Node (TaggedToken x x 0 0) []), [])
-tagTree' (Node x []) a@((name, start, end):ts)
-  | x == name = ((Node (TaggedToken x x start end) []), ts)
-  | otherwise = ((Node (TaggedToken x x 0 0) []), a)
-tagTree' (Node x xs) ts =
-  ((Node (TaggedToken x x 0 0) taggedChildren), remainingTokens)
-  where
-    mapChildren ::
-         [Tree UntaggedToken] -> [Token] -> ([Tree TaggedToken], [Token])
-    mapChildren [] ts = ([], ts)
-    mapChildren (n@(Node x xs):ns) ts = (taggedChild : ns', ts')
-      where
-        (taggedChild, remainingTokens) = tagTree' n ts
-        (ns', ts') = mapChildren ns remainingTokens
-    (taggedChildren, remainingTokens) = mapChildren xs ts
-
--- Fill the tree with
-insertTokenStrings :: TaggedParseTree -> String -> TaggedParseTree
-insertTokenStrings tree source = fmap mapToken tree
-  where
-    mapToken t@(TaggedToken name str start end) =
-      if start == end
-        then t
-        else (TaggedToken name (drop start . take end $ source) start end)
 
 hasChild :: String -> UntaggedParseTree -> Bool
 hasChild s tree =
@@ -356,7 +294,7 @@ main = do
   tokens <- readFile "test/joos_tokens.txt"
   contents <- readFile "test/joos_tree.txt"
   let tree = treeify contents
-  let taggedTree = insertTokenStrings (tagTree tree (parseTokens tokens)) source
+  let taggedTree = tagTree tree tokens source
   putStrLn $ drawTree (fmap show taggedTree)
   when (untaggedWeed tree) $ exitError "Bad weed"
   when (taggedWeed taggedTree classname) $ exitError "Bad weed"
