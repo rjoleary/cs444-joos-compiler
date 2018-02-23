@@ -11,13 +11,15 @@ LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
 WEEDER_SRC  := src/weeder
 WEEDER_FILES := $(sort $(wildcard ${WEEDER_SRC}/*.hs))
 
+HS_BUILD := ghc_build
+
 HS_TEST := test/haskell
 
 HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
 
 ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES}
 
-GHC = ghc -O2 -Wall -i${HS_INCLUDE}
+GHC = stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
 
 .PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit hfmt
 
@@ -89,6 +91,5 @@ test.java : compiler
 test : compiler
 	@./testrunner.sh all
 
-
 clean :
-	rm -rf bin/ report.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip
+	rm -rf bin/ report.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip ${HS_BUILD}
