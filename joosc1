@@ -21,7 +21,7 @@ case "$ret" in
 esac
 
 # Parser
-bin/parser > test/joos_tree.txt
+bin/parser > test/joos_parse.txt
 ret="$?"
 case "$ret" in
     0) ;;

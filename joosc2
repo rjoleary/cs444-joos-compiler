@@ -1,41 +1,45 @@
-#!/bin/sh
+#!/bin/bash
 
-# Check extension.
-echo "$@" | grep '\.java$'
-ret="$?"
-if [ "$ret" != 0 ]; then
-    exit 42
-fi
+for FILE; do
+    # Check extension.
+    echo "$FILE" | grep '\.java$'; ret="$?"
+    if [ "$ret" != 0 ]; then
+        echo "Invalid filename"
+        exit 42
+    fi
+done
 
-# Put the source file and classname into position.
-cp "$@" test/joos_input.txt
-echo -n "$(basename "$@" .java)" > test/joos_classname.txt
+for FILE; do
+    TOKENS="${FILE%.java}.tokens"
+    PARSE="${FILE%.java}.parse"
 
-# Lexer
-bin/lexer > test/joos_tokens.txt
-ret="$?"
-case "$ret" in
-    0) ;;
-    42) exit 42; ;;
-    *) echo "Exiting due to lexer error"; exit $ret; ;;
-esac
+    # Lexer
+    cp "$FILE" test/joos_input.txt
+    bin/lexer > "$TOKENS"; ret="$?"
+    cp "$TOKENS" test/joos_tokens.txt
+    case "$ret" in
+        0) ;;
+        42) exit 42; ;;
+        *) echo "Exiting due to lexer error"; exit $ret; ;;
+    esac
 
-# Parser
-bin/parser > test/joos_tree.txt
-ret="$?"
-case "$ret" in
-    0) ;;
-    42) exit 42; ;;
-    *) echo "Exiting due to parser error"; exit $ret; ;;
-esac
+    # Parser
+    bin/parser > "$PARSE"; ret="$?"
+    cp "$PARSE" test/joos_parse.txt
+    case "$ret" in
+        0) ;;
+        42) exit 42; ;;
+        *) echo "Exiting due to parser error"; exit $ret; ;;
+    esac
 
-# Weeder
-bin/weeder
-ret="$?"
-case "$ret" in
-    0) ;;
-    42) exit 42; ;;
-    *) echo "Exiting due to weeder error"; exit $ret; ;;
-esac
+    # Weeder
+    echo -n "$(basename "$FILE" .java)" > test/joos_classname.txt
+    bin/weeder; ret="$?"
+    case "$ret" in
+        0) ;;
+        42) exit 42; ;;
+        *) echo "Exiting due to weeder error"; exit $ret; ;;
+    esac
+done
 
 # TODO: AST

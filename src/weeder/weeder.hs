@@ -292,7 +292,7 @@ main = do
   classname <- readFile "test/joos_classname.txt"
   source <- readFile "test/joos_input.txt"
   tokens <- readFile "test/joos_tokens.txt"
-  contents <- readFile "test/joos_tree.txt"
+  contents <- readFile "test/joos_parse.txt"
   let tree = treeify contents
   let taggedTree = tagTree tree tokens source
   putStrLn $ drawTree (fmap show taggedTree)

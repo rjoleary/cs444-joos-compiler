@@ -8,23 +8,30 @@ FAILED=0
 ERROR=0
 IGNORED=0
 
-# runtests <PASS_CODE> <FAIL_CODE> <FILES>
+# runtests <PASS_CODE> <FAIL_CODE> <TESTS>...
 runtests() {
     local PASS_CODE=$1
     local FAIL_CODE=$2
     shift 2
 
-    for file in "$@" ; do
-        if echo "$file" | grep IGNORE > /dev/null; then
-            echo "IGNORED $file"
+    for testname in "$@" ; do
+        if echo "$testname" | grep IGNORE > /dev/null; then
+            echo "IGNORED $testname"
             IGNORED=$((IGNORED+1))
             continue
         fi
 
+        # If testname is a directory, run all the tests inside it.
+        if [ -d $testname ]; then
+            local files=$(find $testname -name '*.java')
+        else
+            local files=$testname
+        fi
+
         RUN=$((RUN+1))
-        echo -n "$RUN: $file... "
+        echo -n "$RUN: $testname... "
         rm -f test/joos_{input,tokens,tree}.txt
-        $COMPILER "$file" > /dev/null
+        $COMPILER $files > /dev/null
         case $? in
             $PASS_CODE)
                 PASSED=$((PASSED+1))
@@ -43,16 +50,23 @@ runtests() {
 }
 
 
+# Delete intermediate files from previous testing.
+find 'test' -name '*.tokens' -delete
+find 'test' -name '*.parse' -delete
+
+POSITIVE_TESTS=$(echo test/positive/*)
+NEGATIVE_TESTS=$(echo test/negative/*)
+
 case "$1" in
     positive)
-        runtests 0 42 $(ls test/positive/*)
+        runtests 0 42 $POSITIVE_TESTS
         ;;
     negative)
-        runtests 42 0 $(ls test/negative/*)
+        runtests 42 0 $NEGATIVE_TESTS
         ;;
     all)
-        runtests 0 42 $(ls test/positive/*)
-        runtests 42 0 $(ls test/negative/*)
+        runtests 0 42 $POSITIVE_TESTS
+        runtests 42 0 $NEGATIVE_TESTS
         ;;
     *)
         echo "Error: Argument 0 must be positive, negative or all" >&2
