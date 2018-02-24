@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Check extension.
+echo "$@" | grep '\.java$'
+ret="$?"
+if [ "$ret" != 0 ]; then
+    exit 42
+fi
+
+# Put the source file and classname into position.
+cp "$@" test/joos_input.txt
+echo -n "$(basename "$@" .java)" > test/joos_classname.txt
+
+# Lexer
+bin/lexer > test/joos_tokens.txt
+ret="$?"
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to lexer error"; exit $ret; ;;
+esac
+
+# Parser
+bin/parser > test/joos_tree.txt
+ret="$?"
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to parser error"; exit $ret; ;;
+esac
+
+# Weeder
+bin/weeder
+ret="$?"
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to weeder error"; exit $ret; ;;
+esac
+
+# TODO: AST

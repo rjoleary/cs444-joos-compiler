@@ -19,9 +19,13 @@ HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
 
 ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES}
 
+# Includes all the files tracked by git.
+ZIP_FILES := $(shell git ls-files)
+
 GHC = stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
 
-.PHONY : compiler all zip clean report grammar test.positive test.negative test test.unit hfmt
+.PHONY : compiler all zip clean report grammar test.positive test.negative \
+	test test.unit hfmt
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder bin/ast
@@ -29,9 +33,12 @@ compiler : bin bin/parser bin/lexer bin/weeder bin/ast
 # Builds everything including the grammar and report.
 all : compiler grammar report
 
-zip :
+zip : zip2
+
+zip% : joosc%
 	rm -f submission.zip
-	zip submission `git ls-files`
+	ln -sf $^ joosc
+	@zip submission $(ZIP_FILES)
 
 bin :
 	mkdir -p bin
