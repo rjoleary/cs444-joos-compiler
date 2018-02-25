@@ -2,6 +2,7 @@ import           Control.Monad
 import           Data.List
 import           Data.Tree
 import           JoosCompiler.Exit
+import           JoosCompiler.TokenTypesConstants
 import           JoosCompiler.Treeify
 
 -- There are two types of weeder rules:
@@ -12,60 +13,6 @@ import           JoosCompiler.Treeify
 --    TaggedParseTree and TaggedToken. Tagged token containing enough
 --    information to rescue the original token string from the input file.
 type ClassName = String
-
-kUnaryExpression :: String
-kUnaryExpression = "UnaryExpression"
-
-kClassDeclaration :: String
-kClassDeclaration = "ClassDeclaration"
-
-kInterfaceDeclaration :: String
-kInterfaceDeclaration = "InterfaceDeclaration"
-
-kIntLiteral :: String
-kIntLiteral = "IntegerLiteral"
-
-kAbstract :: String
-kAbstract = "abstract"
-
-kFinal :: String
-kFinal = "final"
-
-kBlock :: String
-kBlock = "Block"
-
-kIdentifier :: String
-kIdentifier = "Identifier"
-
-kProtected :: String
-kProtected = "protected"
-
-kPublic :: String
-kPublic = "public"
-
-kStatic :: String
-kStatic = "static"
-
-kFieldDeclaration :: String
-kFieldDeclaration = "FieldDeclaration"
-
-kMethodBody :: String
-kMethodBody = "MethodBody"
-
-kMethodDeclaration :: String
-kMethodDeclaration = "MethodDeclaration"
-
-kMethodHeader :: String
-kMethodHeader = "MethodHeader"
-
-kModifiers :: String
-kModifiers = "Modifiers"
-
-kMinus :: String
-kMinus = "-"
-
-kNative :: String
-kNative = "native"
 
 maxPositive :: Integer
 maxPositive = 2147483647

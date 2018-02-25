@@ -3,6 +3,7 @@ module JoosCompiler.Ast where
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
+import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 import           JoosCompiler.Ast.Transformers

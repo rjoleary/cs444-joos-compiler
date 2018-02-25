@@ -9,6 +9,7 @@ data AstWrapper
   | AstCompilationUnit CompilationUnit
   | AstModifier Modifier
   | AstScope Scope
+  | AstTaggedToken TaggedToken
 
 type AstNode = Tree AstWrapper
 
