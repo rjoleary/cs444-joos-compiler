@@ -4,6 +4,10 @@ GRAMMAR  := Jlalr1
 HS_LIB   := src/lib/haskell
 HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs))
 
+AST_SRC  := src/ast
+AST_FILES := $(sort $(wildcard ${AST_SRC}/*.hs))
+AST_MAIN := ${AST_SRC}/Main.hs
+
 LEXER_SRC  := src/lexer
 LEXER_FILES := $(sort $(wildcard ${LEXER_SRC}/*.hs))
 LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
@@ -17,7 +21,7 @@ HS_TEST := test/haskell
 
 HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
 
-ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES}
+ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES} ${AST_FILES}
 
 # Includes all the files tracked by git.
 ZIP_FILES := $(shell git ls-files)
@@ -52,7 +56,7 @@ bin/parser : src/rust/parser.rs
 bin/weeder : src/weeder/weeder.hs ${HS_LIB_FILES}
 	${GHC} -o bin/weeder src/weeder/weeder.hs
 
-bin/ast : $(wildcard src/ast/*.hs)
+bin/ast : ${AST_FILES}
 	${GHC} -o bin/ast $^
 
 report : report.pdf

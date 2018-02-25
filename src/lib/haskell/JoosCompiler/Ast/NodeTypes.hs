@@ -1,7 +1,8 @@
-module Ast where
+module JoosCompiler.Ast.NodeTypes where
+
+type Name = [String]
 
 data Modifier = Public | Protected | Final | Abstract | Static | Native
-type Name = [String]
 
 data CompilationUnit = CompilationUnit
         { package   :: Maybe Name
