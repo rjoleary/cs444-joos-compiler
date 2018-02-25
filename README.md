@@ -127,7 +127,24 @@ check if it breaks a specific rule.
 
 ***Output***: Abstract Syntax Tree (AST)
 
-Converts the initial parse tree into a simpler AST.
+Converts the initial parse tree into an augmented AST.
+
+The code lives in `src/lib/haskell/JoosCompiler/`. The different
+modules in that directory play different roles:
+
+  * `Ast.hs` exposes `cstToAst`, which converts a parse tree to an
+  abstract syntax tree. It does this by applying the correct
+  `transformer` depending on the token type.
+  * `Ast/Transformers.hs` exposes the transformer functions
+  * `Ast/NodeTypes.hs` contains the different node types that can be
+    part of the AST
+  * `Ast/Transformers/Types` contains types that are used by
+    transformers and their consumers
+
+when `cstToAst` is invoked, it traverses the tree, calling the correct
+transformer for each node depending on what `getTransformer`
+returns. The default transformer is `cstTransformer` which returns a
+wrapped version of the (concrete) parse tree.
 
 ## Design Issues
 
