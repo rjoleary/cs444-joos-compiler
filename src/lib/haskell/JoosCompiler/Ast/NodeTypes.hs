@@ -32,15 +32,18 @@ data Scope = Scope
   } deriving (Show)
 
 data ClassDeclaration = ClassDeclaration
-  { isInterface    :: Bool
+  { className      :: String
   , classModifiers :: [Modifier]
-  , className      :: String
+  , isInterface    :: Bool
   , super          :: Name
   , interfaces     :: [Name]
   , classScope     :: Scope
   , methods        :: [Method]
   , constructor    :: Maybe Method
-  } deriving (Show)
+  }
+
+instance Show ClassDeclaration where
+  show (ClassDeclaration name _ _ _ _ _ _ _) = name
 
 data Method = Method
   { methodType      :: Type

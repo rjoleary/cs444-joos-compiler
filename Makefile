@@ -3,7 +3,8 @@ GRAMMAR  := Jlalr1
 
 HS_LIB   := src/lib/haskell
 # This is not matching all files for some reason
-HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/**/*.hs))
+HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs \
+			${HS_LIB}/*/*.hs ${HS_LIB}/*/*/*.hs))
 
 AST_SRC  := src/ast
 AST_FILES := $(sort $(wildcard ${AST_SRC}/*.hs))
@@ -57,7 +58,7 @@ bin/parser : src/rust/parser.rs
 bin/weeder : src/weeder/weeder.hs ${HS_LIB_FILES}
 	${GHC} -o bin/weeder src/weeder/weeder.hs
 
-bin/ast : ${AST_FILES}
+bin/ast : ${AST_FILES} ${HS_LIB_FILES}
 	${GHC} -o bin/ast $^
 
 report : report.pdf

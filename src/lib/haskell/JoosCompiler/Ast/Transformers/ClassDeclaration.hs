@@ -3,6 +3,8 @@ module JoosCompiler.Ast.Transformers.ClassDeclaration where
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
+import           JoosCompiler.TokenTypeConstants
+import           JoosCompiler.Treeify
 
 classDeclarationTransformer :: Transformer
 classDeclarationTransformer transformedChildren t@(Node label children) =
@@ -18,7 +20,7 @@ classDeclarationTransformer transformedChildren t@(Node label children) =
   , constructor = constructor
   }
   where
-    isInterface = False
+    isInterface = (kInterfaceDeclaration == tokenName label)
     modifiers = []
     className = "TODO"
     super = []

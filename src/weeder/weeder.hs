@@ -2,7 +2,7 @@ import           Control.Monad
 import           Data.List
 import           Data.Tree
 import           JoosCompiler.Exit
-import           JoosCompiler.TokenTypesConstants
+import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 -- There are two types of weeder rules:
