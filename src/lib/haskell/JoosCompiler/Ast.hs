@@ -1,11 +1,11 @@
 module JoosCompiler.Ast where
 
-import JoosCompiler.Ast.NodeTypes
-import Data.Tree
-import JoosCompiler.Treeify
-import JoosCompiler.Ast.Transformers.Types
+import           Data.Tree
+import           JoosCompiler.Ast.NodeTypes
+import           JoosCompiler.Ast.Transformers.Types
+import           JoosCompiler.Treeify
 
-import JoosCompiler.Ast.Transformers
+import           JoosCompiler.Ast.Transformers
 
 -- We first transform children so root has access to them
 cstToAstTransform :: Transformer -> TaggedParseTree -> AstNode
@@ -22,4 +22,5 @@ getTransformer t@(Node label _)
 
 cstToAst :: TaggedParseTree -> AstNode
 cstToAst t = cstToAstTransform transformer t
-  where transformer = getTransformer t
+  where
+    transformer = getTransformer t

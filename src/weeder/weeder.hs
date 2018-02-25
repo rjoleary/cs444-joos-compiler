@@ -103,7 +103,9 @@ findDirectChildren1 :: String -> String -> TaggedParseTree -> [TaggedParseTree]
 findDirectChildren1 childName indirectChildName tree
   | tokenName (rootLabel tree) == childName = [tree]
   | tokenName (rootLabel tree) == indirectChildName = []
-  | otherwise = mconcat $ map (findDirectChildren1 childName indirectChildName) $ subForest tree
+  | otherwise =
+    mconcat $
+    map (findDirectChildren1 childName indirectChildName) $ subForest tree
 
 getClassNameFromDeclaration :: TaggedParseTree -> ClassName
 getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
@@ -181,12 +183,13 @@ classnameSameAsFilename classname tree
 
 -- 10 An interface method cannot be static, final, or native.
 interfaceMethodNotStaticFinalOrNative :: UntaggedParseTree -> Bool
-interfaceMethodNotStaticFinalOrNative tree = interface && (static || final || native)
-    where
-      static = not $ null $ findChildren "static" tree
-      final = not $ null $ findChildren "final" tree
-      native = not $ null $ findChildren "native" tree
-      interface = not $ null $ findChildren "interface" tree
+interfaceMethodNotStaticFinalOrNative tree =
+  interface && (static || final || native)
+  where
+    static = not $ null $ findChildren "static" tree
+    final = not $ null $ findChildren "final" tree
+    native = not $ null $ findChildren "native" tree
+    interface = not $ null $ findChildren "interface" tree
 
 -- 12 Every class must contain at least one explicit constructor.
 -- This works because Joos has at most one type per file.

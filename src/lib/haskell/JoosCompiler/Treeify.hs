@@ -5,10 +5,15 @@ import           Data.Maybe
 import           Data.Tree
 
 type UntaggedToken = String
+
 type JoosTokens = String
+
 type JoosSource = String
+
 type UntaggedParseTree = Tree UntaggedToken
+
 type TaggedParseTree = Tree TaggedToken
+
 type Token = (String, Int, Int)
 
 data TaggedToken = TaggedToken
@@ -62,7 +67,6 @@ rhs :: Tree t -> [Tree t]
 rhs (Node _ x) = x
 
 -- Parse the tokens from joos_tokens.txt.
-
 parseTokens :: String -> [Token]
 parseTokens = map ((\[x, y, z] -> (x, (read y), (read z))) . words) . lines
 
@@ -104,4 +108,5 @@ insertTokenStrings tree source = fmap mapToken tree
         else (TaggedToken name (drop start . take end $ source) start end)
 
 tagTree :: UntaggedParseTree -> JoosTokens -> JoosSource -> TaggedParseTree
-tagTree tree tokens source = insertTokenStrings (tagTree'' tree (parseTokens tokens)) source
+tagTree tree tokens source =
+  insertTokenStrings (tagTree'' tree (parseTokens tokens)) source

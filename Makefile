@@ -2,7 +2,8 @@
 GRAMMAR  := Jlalr1
 
 HS_LIB   := src/lib/haskell
-HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs))
+# This is not matching all files for some reason
+HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/**/*.hs))
 
 AST_SRC  := src/ast
 AST_FILES := $(sort $(wildcard ${AST_SRC}/*.hs))
@@ -85,8 +86,7 @@ def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
 
 # Format haskell code
 hfmt :
-	hfmt -w ${ALL_HS_FILES}
-
+	stack build hfmt && stack exec hfmt -- -w src
 test.unit :
 	stack exec runghc -- -i"${HS_INCLUDE}" test/haskell/UnitTest.hs
 

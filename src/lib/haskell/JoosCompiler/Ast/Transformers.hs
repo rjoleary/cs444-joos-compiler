@@ -1,3 +1,5 @@
-module JoosCompiler.Ast.Transformers (classDeclarationTransformer) where
+module JoosCompiler.Ast.Transformers
+  ( classDeclarationTransformer
+  ) where
 
-import JoosCompiler.Ast.Transformers.ClassDeclaration
+import           JoosCompiler.Ast.Transformers.ClassDeclaration

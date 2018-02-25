@@ -1,7 +1,6 @@
 -- This file only tests conversion to an AST. The idea is to test the
 -- conversion here by outputting the result and import the AST
 -- conversion facilities where they're needed
-
 import           Data.Tree
 import           JoosCompiler.Ast
 import           JoosCompiler.Treeify
