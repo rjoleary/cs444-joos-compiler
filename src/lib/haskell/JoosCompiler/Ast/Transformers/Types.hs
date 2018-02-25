@@ -10,6 +10,7 @@ data AstWrapper
   | AstModifier Modifier
   | AstScope Scope
   | AstTaggedToken TaggedToken
+  deriving (Show)
 
 type AstNode = Tree AstWrapper
 

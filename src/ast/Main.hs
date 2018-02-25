@@ -13,4 +13,4 @@ main = do
   let tree = treeify contents
   let taggedTree = tagTree tree tokens source
   let ast = cstToAst taggedTree
-  putStrLn $ drawTree (fmap show taggedTree)
+  putStrLn $ drawTree (fmap show ast)
