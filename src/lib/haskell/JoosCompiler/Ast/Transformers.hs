@@ -1,6 +1,7 @@
 module JoosCompiler.Ast.Transformers
   ( classDeclarationTransformer
   , cstTransformer
+  , modifierTransformer
   ) where
 
 import           Data.Tree

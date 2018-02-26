@@ -45,6 +45,9 @@ kMethodDeclaration = "MethodDeclaration"
 kMethodHeader :: String
 kMethodHeader = "MethodHeader"
 
+kModifier :: String
+kModifier = "Modifier"
+
 kModifiers :: String
 kModifiers = "Modifiers"
 

@@ -9,7 +9,7 @@ main :: IO ()
 main = do
   source <- readFile "test/joos_input.txt"
   tokens <- readFile "test/joos_tokens.txt"
-  contents <- readFile "test/joos_tree.txt"
+  contents <- readFile "test/joos_parse.txt"
   let tree = treeify contents
   let taggedTree = tagTree tree tokens source
   let ast = cstToAst taggedTree
