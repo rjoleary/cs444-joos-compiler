@@ -33,7 +33,7 @@ ZIP_FILES := $(shell git ls-files)
 GHC = stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
 
 .PHONY : compiler all zip clean report grammar test.positive test.negative \
-	test test.unit hfmt
+	test test.unit hfmt ghci
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder bin/ast
@@ -90,6 +90,10 @@ def/joos.lr1 : src/java/jlalr/${GRAMMAR}.class bin/joos.cfg
 # Format haskell code
 hfmt :
 	stack build hfmt && stack exec hfmt -- -w src
+
+ghci :
+	stack ghci --ghci-options -i"${HS_INCLUDE}"
+
 test.unit :
 	stack exec runghc -- -i"${HS_INCLUDE}" test/haskell/UnitTest.hs
 

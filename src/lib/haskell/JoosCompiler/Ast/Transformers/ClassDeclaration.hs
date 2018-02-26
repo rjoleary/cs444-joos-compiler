@@ -8,36 +8,40 @@ import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
 
 classDeclarationTransformer :: Transformer
-classDeclarationTransformer transformedChildren t@(Node label children) =
+classDeclarationTransformer transformedChildren t@(Node label _) =
   AstClassDeclaration $
   ClassDeclaration
-  { isInterface = isInterface
+  { className = _className
   , classModifiers = modifiers
-  , className = className
-  , super = super
-  , interfaces = interfaces
+  , isInterface = _isInterface
+  , super = _super
+  , interfaces = _interfaces
   , classScope = scope
-  , methods = methods
-  , constructor = constructor
+  , methods = _methods
+  , constructor = _constructor
   }
   where
-    isInterface = (kInterfaceDeclaration == tokenName label)
+    _isInterface = (kInterfaceDeclaration == tokenName label)
     modifiers = astModifiers $ getClassModifiers transformedChildren
-    className = getClassNameFromDeclaration t
-    super = getSuperName t
-    interfaces = getInterfaceNames t
+    _className = getClassNameFromDeclaration t
+    _super = getSuperName t
+    _interfaces = getInterfaceNames t
     scope = Scope Nothing [] []
-    methods = []
-    constructor = Nothing
+    _methods = []
+    _constructor = Nothing
 
 getClassModifiers :: [AstNode] -> AstWrapper
 getClassModifiers ts = rootLabel $ head $ findChildren1 isModifiers ts
 
 getSuperName :: TaggedParseTree -> Name
-getSuperName t = extractName nameNodes
+getSuperName t = extractName nameParts
   where
-    parentNameNode = head $ findChildrenByTokenName kName t
-    nameNodes = findChildrenByTokenName kIdentifier parentNameNode
+    nameNodes = findChildrenByTokenName kName t
+    parentNameNode = head $ nameNodes
+    nameParts =
+      if length nameNodes > 0
+        then findChildrenByTokenName kIdentifier parentNameNode
+        else []
 
 getInterfaceNames :: TaggedParseTree -> [Name]
 getInterfaceNames t = map extractName nameNodesList

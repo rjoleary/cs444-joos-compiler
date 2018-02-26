@@ -52,13 +52,11 @@ instance Show ClassDeclaration where
        then "interface"
        else "class") ++
     " " ++
-    (showName super) ++
-    " " ++
     name ++
-    " " ++
     (if (length interfaces) >= 0
-       then "implements" ++ " " ++ (show $ map showName interfaces) ++ " "
-       else "")
+       then " implements " ++ (show $ map showName interfaces) ++ " "
+       else "") ++
+    " extends " ++ (showName super)
 
 data Method = Method
   { methodType      :: Type

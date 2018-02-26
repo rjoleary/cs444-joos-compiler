@@ -118,11 +118,7 @@ tagTree tree tokens source =
 getClassNameFromDeclaration :: TaggedParseTree -> ClassName
 getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
   where
-    identifierNode =
-      head
-        (filter
-           (\node -> (tokenName $ rootLabel node) == kIdentifier)
-           (subForest tree))
+    identifierNode = head $ findChildrenByTokenName kIdentifier tree
 
 findChildrenByTokenName :: String -> TaggedParseTree -> [TaggedParseTree]
 findChildrenByTokenName name t = findChildren predicate t
