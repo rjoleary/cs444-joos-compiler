@@ -12,8 +12,6 @@ import           JoosCompiler.Treeify
 --    attached to the tree and more weeder rules are checked. These rules use
 --    TaggedParseTree and TaggedToken. Tagged token containing enough
 --    information to rescue the original token string from the input file.
-type ClassName = String
-
 maxPositive :: Integer
 maxPositive = 2147483647
 
@@ -53,15 +51,6 @@ findDirectChildren1 childName indirectChildName tree
   | otherwise =
     mconcat $
     map (findDirectChildren1 childName indirectChildName) $ subForest tree
-
-getClassNameFromDeclaration :: TaggedParseTree -> ClassName
-getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
-  where
-    identifierNode =
-      head
-        (filter
-           (\node -> (tokenName $ rootLabel node) == kIdentifier)
-           (subForest tree))
 
 getClassModifiersFromDeclaration :: UntaggedParseTree -> UntaggedParseTree
 getClassModifiersFromDeclaration tree =

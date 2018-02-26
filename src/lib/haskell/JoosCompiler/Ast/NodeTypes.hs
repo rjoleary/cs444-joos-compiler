@@ -43,7 +43,7 @@ data ClassDeclaration = ClassDeclaration
   }
 
 instance Show ClassDeclaration where
-  show (ClassDeclaration name _ _ _ _ _ _ _) = name
+  show (ClassDeclaration name modifiers _ _ _ _ _ _) = name ++ show modifiers
 
 data Method = Method
   { methodType      :: Type

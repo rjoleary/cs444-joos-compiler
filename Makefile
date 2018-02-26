@@ -4,7 +4,9 @@ GRAMMAR  := Jlalr1
 HS_LIB   := src/lib/haskell
 # This is not matching all files for some reason
 HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs \
-			${HS_LIB}/*/*.hs ${HS_LIB}/*/*/*.hs))
+			${HS_LIB}/*/*.hs \
+			${HS_LIB}/*/*/*.hs \
+			${HS_LIB}/*/*/*/*.hs))
 
 AST_SRC  := src/ast
 AST_FILES := $(sort $(wildcard ${AST_SRC}/*.hs))

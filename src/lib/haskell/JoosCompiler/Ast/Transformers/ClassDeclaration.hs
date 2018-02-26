@@ -5,6 +5,7 @@ import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
+import           JoosCompiler.TreeUtils
 
 classDeclarationTransformer :: Transformer
 classDeclarationTransformer transformedChildren t@(Node label children) =
@@ -21,10 +22,15 @@ classDeclarationTransformer transformedChildren t@(Node label children) =
   }
   where
     isInterface = (kInterfaceDeclaration == tokenName label)
-    modifiers = []
-    className = "TODO"
+    -- There should only be one
+    modifiersWrappers = mconcat $ map getClassModifiers transformedChildren
+    modifiers = astModifiers $ head modifiersWrappers
+    className = getClassNameFromDeclaration t
     super = []
     interfaces = []
     scope = Scope Nothing [] []
     methods = []
     constructor = Nothing
+
+getClassModifiers :: AstNode -> [AstWrapper]
+getClassModifiers t = map rootLabel $ findChildren isModifiers t

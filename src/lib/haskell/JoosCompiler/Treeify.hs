@@ -3,6 +3,9 @@ module JoosCompiler.Treeify where
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           JoosCompiler.TokenTypeConstants
+
+type ClassName = String
 
 type UntaggedToken = String
 
@@ -110,3 +113,12 @@ insertTokenStrings tree source = fmap mapToken tree
 tagTree :: UntaggedParseTree -> JoosTokens -> JoosSource -> TaggedParseTree
 tagTree tree tokens source =
   insertTokenStrings (tagTree'' tree (parseTokens tokens)) source
+
+getClassNameFromDeclaration :: TaggedParseTree -> ClassName
+getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
+  where
+    identifierNode =
+      head
+        (filter
+           (\node -> (tokenName $ rootLabel node) == kIdentifier)
+           (subForest tree))
