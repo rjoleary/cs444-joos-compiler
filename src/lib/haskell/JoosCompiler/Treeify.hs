@@ -4,6 +4,7 @@ import           Data.List
 import           Data.Maybe
 import           Data.Tree
 import           JoosCompiler.TokenTypeConstants
+import           JoosCompiler.TreeUtils
 
 type ClassName = String
 
@@ -122,3 +123,24 @@ getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
         (filter
            (\node -> (tokenName $ rootLabel node) == kIdentifier)
            (subForest tree))
+
+findChildrenByTokenName :: String -> TaggedParseTree -> [TaggedParseTree]
+findChildrenByTokenName name t = findChildren predicate t
+  where
+    predicate = ((==) name) . tokenName
+
+findDirectChildrenByTokenName ::
+     String -> String -> TaggedParseTree -> [TaggedParseTree]
+findDirectChildrenByTokenName childName indirectName t =
+  findDirectChildren childPred indirectPred t
+  where
+    childPred = ((==) childName) . tokenName
+    indirectPred = ((==) indirectName) . tokenName
+
+findDirectChildrenByTokenName1 ::
+     String -> String -> [TaggedParseTree] -> [TaggedParseTree]
+findDirectChildrenByTokenName1 childName indirectName ts =
+  mconcat $ map (findDirectChildren childPred indirectPred) ts
+  where
+    childPred = ((==) childName) . tokenName
+    indirectPred = ((==) indirectName) . tokenName

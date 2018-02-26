@@ -9,6 +9,9 @@ kClassDeclaration = "ClassDeclaration"
 kInterfaceDeclaration :: String
 kInterfaceDeclaration = "InterfaceDeclaration"
 
+kInterfaceTypeList :: String
+kInterfaceTypeList = "InterfaceTypeList"
+
 kIntLiteral :: String
 kIntLiteral = "IntegerLiteral"
 
@@ -33,6 +36,9 @@ kPublic = "public"
 kStatic :: String
 kStatic = "static"
 
+kSuper :: String
+kSuper = "Super"
+
 kFieldDeclaration :: String
 kFieldDeclaration = "FieldDeclaration"
 
@@ -53,6 +59,9 @@ kModifiers = "Modifiers"
 
 kMinus :: String
 kMinus = "-"
+
+kName :: String
+kName = "Name"
 
 kNative :: String
 kNative = "native"

@@ -1,5 +1,7 @@
 module JoosCompiler.Ast.NodeTypes where
 
+import           Data.List
+
 type Name = [String]
 
 data Modifier
@@ -43,7 +45,20 @@ data ClassDeclaration = ClassDeclaration
   }
 
 instance Show ClassDeclaration where
-  show (ClassDeclaration name modifiers _ _ _ _ _ _) = name ++ show modifiers
+  show (ClassDeclaration name modifiers isInterface super interfaces _ _ _) =
+    show modifiers ++
+    " " ++
+    (if isInterface
+       then "interface"
+       else "class") ++
+    " " ++
+    (showName super) ++
+    " " ++
+    name ++
+    " " ++
+    (if (length interfaces) >= 0
+       then "implements" ++ " " ++ (show $ map showName interfaces) ++ " "
+       else "")
 
 data Method = Method
   { methodType      :: Type
@@ -91,3 +106,6 @@ data Operator
 data Type =
   Type
   deriving (Show)
+
+showName :: [String] -> String
+showName l = intercalate "." l

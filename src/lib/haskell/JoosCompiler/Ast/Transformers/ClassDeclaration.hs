@@ -22,15 +22,32 @@ classDeclarationTransformer transformedChildren t@(Node label children) =
   }
   where
     isInterface = (kInterfaceDeclaration == tokenName label)
-    -- There should only be one
-    modifiersWrappers = mconcat $ map getClassModifiers transformedChildren
-    modifiers = astModifiers $ head modifiersWrappers
+    modifiers = astModifiers $ getClassModifiers transformedChildren
     className = getClassNameFromDeclaration t
-    super = []
-    interfaces = []
+    super = getSuperName t
+    interfaces = getInterfaceNames t
     scope = Scope Nothing [] []
     methods = []
     constructor = Nothing
 
-getClassModifiers :: AstNode -> [AstWrapper]
-getClassModifiers t = map rootLabel $ findChildren isModifiers t
+getClassModifiers :: [AstNode] -> AstWrapper
+getClassModifiers ts = rootLabel $ head $ findChildren1 isModifiers ts
+
+getSuperName :: TaggedParseTree -> Name
+getSuperName t = extractName nameNodes
+  where
+    parentNameNode = head $ findChildrenByTokenName kName t
+    nameNodes = findChildrenByTokenName kIdentifier parentNameNode
+
+getInterfaceNames :: TaggedParseTree -> [Name]
+getInterfaceNames t = map extractName nameNodesList
+  where
+    interfaceNodes = findChildrenByTokenName kInterfaceTypeList t
+    parentNameNodes =
+      mconcat $
+      map (findDirectChildrenByTokenName1 kName kInterfaceTypeList) $
+      map subForest interfaceNodes
+    nameNodesList = map (findChildrenByTokenName kIdentifier) parentNameNodes
+
+extractName :: [TaggedParseTree] -> Name
+extractName nameNodes = map (tokenString . rootLabel) nameNodes
