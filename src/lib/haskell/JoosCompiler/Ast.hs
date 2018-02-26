@@ -19,6 +19,8 @@ getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
   | (tokenName label) == kModifier = modifierTransformer
   | (tokenName label) == kModifiers = modifiersTransformer
+  | (tokenName label) == kFieldDeclaration = fieldTransformer
+  | (tokenName label) == kType = typeTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     classDeclarationTransformer
   | otherwise = cstTransformer

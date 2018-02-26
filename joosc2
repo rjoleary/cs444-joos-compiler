@@ -40,6 +40,11 @@ for FILE; do
         42) exit 42; ;;
         *) echo "Exiting due to weeder error"; exit $ret; ;;
     esac
-done
 
-# TODO: AST
+    bin/ast; ret="$?"
+    case "$ret" in
+        0) ;;
+        42) exit 42; ;;
+        *) echo "Exiting due to AST error"; exit $ret; ;;
+    esac
+done

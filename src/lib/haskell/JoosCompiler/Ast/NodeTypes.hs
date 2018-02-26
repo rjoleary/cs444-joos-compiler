@@ -75,6 +75,7 @@ data Expression
                      , rightOperand :: Expression }
   | UnaryOpApplication { operator :: Operator
                        , operand  :: Expression }
+  | Literal { value :: String }
   deriving (Show)
 
 -- TODO: add constructor fields for statements
@@ -101,9 +102,19 @@ data Operator
   | Negate
   deriving (Show)
 
-data Type =
-  Type
+data InnerType
+  = Boolean
+  | Byte
+  | Char
+  | Int
+  | Short
+  | NamedType { unNamedType :: String }
   deriving (Show)
+
+data Type = Type
+  { joosType :: InnerType
+  , isArray  :: Bool
+  } deriving (Show)
 
 showName :: [String] -> String
 showName l = intercalate "." l

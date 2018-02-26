@@ -1,5 +1,23 @@
 module JoosCompiler.TokenTypeConstants where
 
+kArrayType :: String
+kArrayType = "ArrayType"
+
+kBoolean :: String
+kBoolean = "boolean"
+
+kByte :: String
+kByte = "byte"
+
+kChar :: String
+kChar = "char"
+
+kInt :: String
+kInt = "int"
+
+kShort :: String
+kShort = "short"
+
 kUnaryExpression :: String
 kUnaryExpression = "UnaryExpression"
 
@@ -9,6 +27,9 @@ kClassDeclaration = "ClassDeclaration"
 kInterfaceDeclaration :: String
 kInterfaceDeclaration = "InterfaceDeclaration"
 
+kVariableDeclarator :: String
+kVariableDeclarator = "VariableDeclarator"
+
 kInterfaceTypeList :: String
 kInterfaceTypeList = "InterfaceTypeList"
 
@@ -17,6 +38,9 @@ kIntLiteral = "IntegerLiteral"
 
 kAbstract :: String
 kAbstract = "abstract"
+
+kExpression :: String
+kExpression = "Expression"
 
 kFinal :: String
 kFinal = "final"
@@ -38,6 +62,9 @@ kStatic = "static"
 
 kSuper :: String
 kSuper = "Super"
+
+kType :: String
+kType = "Type"
 
 kFieldDeclaration :: String
 kFieldDeclaration = "FieldDeclaration"

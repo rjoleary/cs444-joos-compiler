@@ -22,16 +22,14 @@ classDeclarationTransformer transformedChildren t@(Node label _) =
   }
   where
     _isInterface = (kInterfaceDeclaration == tokenName label)
-    modifiers = astModifiers $ getClassModifiers transformedChildren
+    modifiers = astModifiers $ getModifiers transformedChildren
     _className = getClassNameFromDeclaration t
     _super = getSuperName t
     _interfaces = getInterfaceNames t
+    vars = map astField $ getFields transformedChildren
     scope = Scope Nothing [] []
     _methods = []
     _constructor = Nothing
-
-getClassModifiers :: [AstNode] -> AstWrapper
-getClassModifiers ts = rootLabel $ head $ findChildren1 isModifiers ts
 
 getSuperName :: TaggedParseTree -> Name
 getSuperName t = extractName nameParts
