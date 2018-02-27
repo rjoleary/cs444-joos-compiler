@@ -110,4 +110,6 @@ test : compiler
 	@./testrunner.sh all
 
 clean :
-	rm -rf bin/ report.pdf src/java/jlalr/*.class src/haskell/*.o src/haskell/*.hi submission.zip ${HS_BUILD}
+	find src \( -name '*.o' -o -name '*.hi' \) -delete
+	find test \( -name '*.tokens' -o -name '*.parse' \) -delete
+	rm -rf bin/ report.pdf src/java/jlalr/*.class submission.zip ${HS_BUILD}
