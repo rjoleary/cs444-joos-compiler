@@ -1,5 +1,6 @@
 
-public class A {
+public class feature_switch {
+  public feature_switch() {}
   public int m(int x) {
     int y = 0;
     switch (x) {

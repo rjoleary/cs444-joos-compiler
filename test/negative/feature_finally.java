@@ -1,5 +1,6 @@
 
-public class A {
+public class feature_finally {
+  public feature_finally() {}
   public int m(java.io.FileInputStream x) throws java.io.IOException{
     int y;
     try {

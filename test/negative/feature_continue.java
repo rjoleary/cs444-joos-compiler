@@ -1,5 +1,6 @@
 
-public class A {
+public class feature_continue {
+  public feature_continue() {}
   public int m(int x) {
     while (x>0) {
        x=x-1;

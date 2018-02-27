@@ -1,5 +1,6 @@
 
-public class A {
+public class feature_labeledstatement {
+  public feature_labeledstatement() {}
   public int m(int x) {
     loop:
     while (x>0) {

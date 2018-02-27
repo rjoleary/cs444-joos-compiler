@@ -1,5 +1,6 @@
 
-public class A {
+public class feature_trycatch {
+  public feature_trycatch() {}
   public int m(java.io.FileInputStream x) {
     int y;
     try {

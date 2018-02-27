@@ -1,10 +1,10 @@
 
-public class A {
-  public A() {}
-  public A(Object x, Object y) {}
-  public A(Object x, A y) {}
+public class feature_closestmatchconstructoroverloading {
+  public feature_closestmatchconstructoroverloading() {}
+  public feature_closestmatchconstructoroverloading(Object x, Object y) {}
+  public feature_closestmatchconstructoroverloading(Object x, feature_closestmatchconstructoroverloading y) {}
   public void m() {
-    new A(new A(), new A());
+    new feature_closestmatchconstructoroverloading(new feature_closestmatchconstructoroverloading(), new feature_closestmatchconstructoroverloading());
   }
 }
 

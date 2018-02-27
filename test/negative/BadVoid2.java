@@ -1,4 +1,4 @@
-public class BadVoid {
-    public BadVoid(void x) {
+public class BadVoid2 {
+    public BadVoid2(void x) {
     }
 }

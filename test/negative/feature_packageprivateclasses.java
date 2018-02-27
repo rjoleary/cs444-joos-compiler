@@ -1,5 +1,7 @@
 
 package dovs.joos.features;
 
-/* package private */ class A {}
+/* package private */ class feature_packageprivateclasses {
+  public feature_packageprivateclasses() {}
+}
 
