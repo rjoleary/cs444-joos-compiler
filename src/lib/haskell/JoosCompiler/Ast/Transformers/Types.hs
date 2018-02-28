@@ -10,6 +10,7 @@ data AstWrapper
   | AstCompilationUnit CompilationUnit
   | AstExpression { astExpression :: Expression }
   | AstField { astField :: Field }
+  | AstLocalVariable { astLocalVariable :: Field }
   | AstMethod { astMethod :: Method }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }

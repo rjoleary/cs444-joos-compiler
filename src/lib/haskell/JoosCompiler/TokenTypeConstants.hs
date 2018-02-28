@@ -48,6 +48,9 @@ kInterfaceDeclaration = "InterfaceDeclaration"
 kInterfaceTypeList :: String
 kInterfaceTypeList = "InterfaceTypeList"
 
+kLocalVariableDeclaration :: String
+kLocalVariableDeclaration = "LocalVariableDeclaration"
+
 kMethodBody :: String
 kMethodBody = "MethodBody"
 

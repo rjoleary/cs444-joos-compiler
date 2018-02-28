@@ -20,10 +20,11 @@ getTransformer t@(Node label _)
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     classDeclarationTransformer
   | (tokenName label) == kFieldDeclaration = fieldTransformer
-  | (tokenName label) `elem` [kType, kVoid] = typeTransformer
+  | (tokenName label) == kLocalVariableDeclaration = localVariableTransformer
   | (tokenName label) == kMethodDeclaration = methodTransformer
   | (tokenName label) == kModifier = modifierTransformer
   | (tokenName label) == kModifiers = modifiersTransformer
+  | (tokenName label) `elem` [kType, kVoid] = typeTransformer
   | otherwise = cstTransformer
 
 cstToAst :: TaggedParseTree -> AstNode
