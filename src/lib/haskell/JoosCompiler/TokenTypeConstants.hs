@@ -1,7 +1,13 @@
 module JoosCompiler.TokenTypeConstants where
 
+kAbstract :: String
+kAbstract = "abstract"
+
 kArrayType :: String
 kArrayType = "ArrayType"
+
+kBlock :: String
+kBlock = "Block"
 
 kBoolean :: String
 kBoolean = "boolean"
@@ -12,68 +18,35 @@ kByte = "byte"
 kChar :: String
 kChar = "char"
 
-kInt :: String
-kInt = "int"
-
-kShort :: String
-kShort = "short"
-
-kVoid :: String
-kVoid = "void"
-
-kUnaryExpression :: String
-kUnaryExpression = "UnaryExpression"
-
 kClassDeclaration :: String
 kClassDeclaration = "ClassDeclaration"
-
-kInterfaceDeclaration :: String
-kInterfaceDeclaration = "InterfaceDeclaration"
-
-kVariableDeclarator :: String
-kVariableDeclarator = "VariableDeclarator"
-
-kFormalParameterList :: String
-kFormalParameterList = "FormalParameterList"
-
-kInterfaceTypeList :: String
-kInterfaceTypeList = "InterfaceTypeList"
-
-kIntLiteral :: String
-kIntLiteral = "IntegerLiteral"
-
-kAbstract :: String
-kAbstract = "abstract"
 
 kExpression :: String
 kExpression = "Expression"
 
+kFieldDeclaration :: String
+kFieldDeclaration = "FieldDeclaration"
+
 kFinal :: String
 kFinal = "final"
 
-kBlock :: String
-kBlock = "Block"
+kFormalParameterList :: String
+kFormalParameterList = "FormalParameterList"
 
 kIdentifier :: String
 kIdentifier = "Identifier"
 
-kProtected :: String
-kProtected = "protected"
+kInt :: String
+kInt = "int"
 
-kPublic :: String
-kPublic = "public"
+kIntLiteral :: String
+kIntLiteral = "IntegerLiteral"
 
-kStatic :: String
-kStatic = "static"
+kInterfaceDeclaration :: String
+kInterfaceDeclaration = "InterfaceDeclaration"
 
-kSuper :: String
-kSuper = "Super"
-
-kType :: String
-kType = "Type"
-
-kFieldDeclaration :: String
-kFieldDeclaration = "FieldDeclaration"
+kInterfaceTypeList :: String
+kInterfaceTypeList = "InterfaceTypeList"
 
 kMethodBody :: String
 kMethodBody = "MethodBody"
@@ -84,17 +57,44 @@ kMethodDeclaration = "MethodDeclaration"
 kMethodHeader :: String
 kMethodHeader = "MethodHeader"
 
+kMinus :: String
+kMinus = "-"
+
 kModifier :: String
 kModifier = "Modifier"
 
 kModifiers :: String
 kModifiers = "Modifiers"
 
-kMinus :: String
-kMinus = "-"
-
 kName :: String
 kName = "Name"
 
 kNative :: String
 kNative = "native"
+
+kProtected :: String
+kProtected = "protected"
+
+kPublic :: String
+kPublic = "public"
+
+kShort :: String
+kShort = "short"
+
+kStatic :: String
+kStatic = "static"
+
+kSuper :: String
+kSuper = "Super"
+
+kType :: String
+kType = "Type"
+
+kUnaryExpression :: String
+kUnaryExpression = "UnaryExpression"
+
+kVariableDeclarator :: String
+kVariableDeclarator = "VariableDeclarator"
+
+kVoid :: String
+kVoid = "void"
