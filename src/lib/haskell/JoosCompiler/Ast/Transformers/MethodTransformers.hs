@@ -29,6 +29,9 @@ getMethodModifiers :: [AstNode] -> AstWrapper
 getMethodModifiers ts =
   rootLabel $ head $ findDirectChildren1 isModifiers isMethod ts
 
+getMethodName :: [AstNode] -> Name
+getMethodName _ = []
+
 getMethodType :: [AstNode] -> Type
 getMethodType ts = extractType typeLabel
   where
@@ -38,3 +41,6 @@ getMethodType ts = extractType typeLabel
     extractType :: AstWrapper -> Type
     extractType (AstType t) = t
     extractType _           = error "Unexpected AST type in methodtype"
+
+getStatements :: [AstNode] -> [Statement]
+getStatements _ = []
