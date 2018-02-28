@@ -17,12 +17,13 @@ cstToAstTransform f t = Node transformedRoot transformedChildren
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
-  | (tokenName label) == kModifier = modifierTransformer
-  | (tokenName label) == kModifiers = modifiersTransformer
-  | (tokenName label) == kFieldDeclaration = fieldTransformer
-  | (tokenName label) == kType = typeTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     classDeclarationTransformer
+  | (tokenName label) == kFieldDeclaration = fieldTransformer
+  | (tokenName label) `elem` [kType, kVoid] = typeTransformer
+  | (tokenName label) == kMethodDeclaration = methodTransformer
+  | (tokenName label) == kModifier = modifierTransformer
+  | (tokenName label) == kModifiers = modifiersTransformer
   | otherwise = cstTransformer
 
 cstToAst :: TaggedParseTree -> AstNode

@@ -18,6 +18,9 @@ kInt = "int"
 kShort :: String
 kShort = "short"
 
+kVoid :: String
+kVoid = "void"
+
 kUnaryExpression :: String
 kUnaryExpression = "UnaryExpression"
 

@@ -1,8 +1,11 @@
-module JoosCompiler.Ast.Transformers.ClassDeclaration where
+module JoosCompiler.Ast.Transformers.ClassDeclaration
+  ( classDeclarationTransformer
+  ) where
 
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
+import           JoosCompiler.Ast.Utils
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
@@ -16,20 +19,24 @@ classDeclarationTransformer transformedChildren t@(Node label _) =
   , isInterface = _isInterface
   , super = _super
   , interfaces = _interfaces
-  , classScope = scope
+  , classFields = vars
   , methods = _methods
   , constructor = _constructor
   }
   where
     _isInterface = (kInterfaceDeclaration == tokenName label)
-    modifiers = astModifiers $ getModifiers transformedChildren
+    modifiers = [] -- astModifiers $ getClassModifiers transformedChildren
     _className = getClassNameFromDeclaration t
     _super = getSuperName t
     _interfaces = getInterfaceNames t
-    vars = map astField $ getFields transformedChildren
-    scope = Scope Nothing [] []
+    vars = map astField $ getClassFields transformedChildren
     _methods = []
     _constructor = Nothing
+
+getClassFields :: [AstNode] -> [AstWrapper]
+getClassFields ts = map rootLabel fieldNodes
+  where
+    fieldNodes = mconcat $ map (findDirectChildren isField isMethod) ts
 
 getSuperName :: TaggedParseTree -> Name
 getSuperName t = extractName nameParts
@@ -51,5 +58,5 @@ getInterfaceNames t = map extractName nameNodesList
       map subForest interfaceNodes
     nameNodesList = map (findChildrenByTokenName kIdentifier) parentNameNodes
 
-extractName :: [TaggedParseTree] -> Name
-extractName nameNodes = map (tokenString . rootLabel) nameNodes
+getClassModifiers :: [AstNode] -> AstWrapper
+getClassModifiers ts = rootLabel $ findDirectChild1 isModifiers isMethod ts

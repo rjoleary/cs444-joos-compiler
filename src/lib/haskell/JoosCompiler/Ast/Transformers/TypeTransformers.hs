@@ -8,12 +8,14 @@ import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
 
 typeTransformer :: Transformer
-typeTransformer transformedChildren t =
-  AstType $ Type {joosType = innerType, isArray = _isArray}
+typeTransformer transformedChildren t = AstType $ _type
   where
     _isArray = ((> 0) . length) $ findChildrenByTokenName kArrayType t
     typeNameLeaf = head $ getLeaves t
     typeString = tokenString typeNameLeaf
+    _type
+      | typeString == kVoid = Void
+      | otherwise = Type {joosType = innerType, isArray = _isArray}
     innerType
       | typeString == kBoolean = Boolean
       | typeString == kByte = Byte

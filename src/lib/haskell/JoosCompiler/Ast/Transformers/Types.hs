@@ -10,11 +10,11 @@ data AstWrapper
   | AstCompilationUnit CompilationUnit
   | AstExpression { astExpression :: Expression }
   | AstField { astField :: Field }
-  | AstType { astType :: Type }
+  | AstMethod { astMethod :: Method }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }
-  | AstScope Scope
   | AstTaggedToken TaggedToken
+  | AstType { astType :: Type }
   deriving (Show)
 
 type AstNode = Tree AstWrapper
@@ -33,7 +33,11 @@ isField (AstField _) = True
 isField _            = False
 
 getFields :: [AstNode] -> [AstWrapper]
-getFields ts = map rootLabel $ findChildren1 isExpression ts
+getFields ts = map rootLabel $ findChildren1 isField ts
+
+isMethod :: AstWrapper -> Bool
+isMethod (AstMethod _) = True
+isMethod _             = False
 
 isModifier :: AstWrapper -> Bool
 isModifier (AstModifier _) = True

@@ -27,44 +27,41 @@ data Field = Field
   , fieldValue     :: Expression
   } deriving (Show)
 
-data Scope = Scope
-  { parentScope    :: Maybe Scope
-  , scopeVariables :: [Field]
-  , statements     :: [Statement]
-  } deriving (Show)
-
 data ClassDeclaration = ClassDeclaration
   { className      :: String
   , classModifiers :: [Modifier]
   , isInterface    :: Bool
   , super          :: Name
   , interfaces     :: [Name]
-  , classScope     :: Scope
+  , classFields    :: [Field]
   , methods        :: [Method]
   , constructor    :: Maybe Method
   }
 
 instance Show ClassDeclaration where
-  show (ClassDeclaration name modifiers isInterface super interfaces _ _ _) =
-    show modifiers ++
+  show (ClassDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
+    show _modifiers ++
     " " ++
-    (if isInterface
+    (if _isInterface
        then "interface"
        else "class") ++
     " " ++
     name ++
-    (if (length interfaces) >= 0
-       then " implements " ++ (show $ map showName interfaces) ++ " "
+    (if (length _interfaces) > 0
+       then " implements(" ++ (show $ map showName _interfaces) ++ ")"
        else "") ++
-    " extends " ++ (showName super)
+    " extends(" ++
+    (showName _super) ++
+    ") Fields(" ++
+    (intercalate ", " $ map (showName . fieldName) fields) ++
+    ") Methods(" ++
+    (intercalate ", " (map (showName . methodName) _methods)) ++ ")"
 
 data Method = Method
   { methodType      :: Type
   , methodModifiers :: [Modifier]
   , methodName      :: Name
-        -- list of scopes where scope n is a parent of scope n + 1
-        -- (first methodScopes) is the scope of this method's class
-  , methodScopes    :: [Scope]
+  , statements      :: [Statement]
   } deriving (Show)
 
 data Expression
@@ -111,10 +108,11 @@ data InnerType
   | NamedType { unNamedType :: String }
   deriving (Show)
 
-data Type = Type
-  { joosType :: InnerType
-  , isArray  :: Bool
-  } deriving (Show)
+data Type
+  = Void
+  | Type { joosType :: InnerType
+         , isArray  :: Bool }
+  deriving (Show)
 
 showName :: [String] -> String
 showName l = intercalate "." l

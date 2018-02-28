@@ -125,6 +125,17 @@ findChildrenByTokenName name t = findChildren predicate t
   where
     predicate = ((==) name) . tokenName
 
+findChildrenByTokenName1 :: String -> [TaggedParseTree] -> [TaggedParseTree]
+findChildrenByTokenName1 name ts =
+  mconcat $ map (findChildrenByTokenName name) ts
+
+findChildByTokenName1 :: String -> [TaggedParseTree] -> TaggedParseTree
+findChildByTokenName1 name ts
+  | length matches > 1 = error "Too many children"
+  | otherwise = head matches
+  where
+    matches = findChildrenByTokenName1 name ts
+
 findDirectChildrenByTokenName ::
      String -> String -> TaggedParseTree -> [TaggedParseTree]
 findDirectChildrenByTokenName childName indirectName t =

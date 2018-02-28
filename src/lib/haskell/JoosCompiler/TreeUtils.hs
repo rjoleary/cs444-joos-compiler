@@ -36,9 +36,28 @@ findChild1 predicate t
   where
     matches = mconcat $ map (findChildren predicate) t
 
-findDirectChildren :: (a -> Bool) -> (a -> Bool) -> (Tree a) -> [Tree a]
+findDirectChildren :: (a -> Bool) -> (a -> Bool) -> Tree a -> [Tree a]
 findDirectChildren childPred indirectPred t@(Node label children)
-  | childPred label = [t]
+  | childPred label = t : childMatches
   | indirectPred label = []
-  | otherwise =
-    mconcat $ map (findDirectChildren childPred indirectPred) children
+  | otherwise = childMatches
+  where
+    childMatches = findDirectChildren1 childPred indirectPred children
+
+findDirectChild :: (a -> Bool) -> (a -> Bool) -> Tree a -> Tree a
+findDirectChild childPred indirectPred t
+  | length matches > 1 = error "Too many children"
+  | otherwise = head matches
+  where
+    matches = findDirectChildren childPred indirectPred t
+
+findDirectChildren1 :: (a -> Bool) -> (a -> Bool) -> [Tree a] -> [Tree a]
+findDirectChildren1 childPred indirectPred ts =
+  mconcat $ map (findDirectChildren childPred indirectPred) ts
+
+findDirectChild1 :: (a -> Bool) -> (a -> Bool) -> [Tree a] -> Tree a
+findDirectChild1 childPred indirectPred ts
+  | length matches > 1 = error "Too many children"
+  | otherwise = head matches
+  where
+    matches = findDirectChildren1 childPred indirectPred ts
