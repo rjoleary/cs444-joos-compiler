@@ -25,6 +25,7 @@ getTransformer t@(Node label _)
   | (tokenName label) == kMethodDeclaration = methodTransformer
   | (tokenName label) == kModifier = modifierTransformer
   | (tokenName label) == kModifiers = modifiersTransformer
+  | (tokenName label) == kBlockStatement = statementTransformer
   | (tokenName label) `elem` [kType, kVoid] = typeTransformer
   | otherwise = cstTransformer
 

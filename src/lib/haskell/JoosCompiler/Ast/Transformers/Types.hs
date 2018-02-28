@@ -9,12 +9,12 @@ data AstWrapper
   = AstClassDeclaration ClassDeclaration
   | AstBlock Block
   | AstCompilationUnit CompilationUnit
-  | AstExpression { astExpression :: Expression }
   | AstField { astField :: Field }
   | AstLocalVariable { astLocalVariable :: Field }
   | AstMethod { astMethod :: Method }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }
+  | AstStatement { astStatement :: Statement }
   | AstTaggedToken TaggedToken
   | AstType { astType :: Type }
   deriving (Show)
@@ -26,13 +26,6 @@ type Transformer = [AstNode] -> TaggedParseTree -> AstWrapper
 isBlock :: AstWrapper -> Bool
 isBlock (AstBlock _) = True
 isBlock _            = False
-
-isExpression :: AstWrapper -> Bool
-isExpression (AstExpression _) = True
-isExpression _                 = False
-
-getExpression :: [AstNode] -> AstWrapper
-getExpression ts = rootLabel $ head $ findChildren1 isExpression ts
 
 isField :: AstWrapper -> Bool
 isField (AstField _) = True

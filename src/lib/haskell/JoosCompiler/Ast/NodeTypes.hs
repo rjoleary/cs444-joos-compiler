@@ -83,29 +83,28 @@ data Expression
   | Literal { value :: String }
   deriving (Show)
 
--- TODO: add constructor fields for statements
-data Statement
-  = AssignStatement { assignedVar   :: Maybe Field
+data Scope = Scope
+  { fields      :: [Field]
+  , parentScope :: Maybe Scope
+  } deriving (Show)
+
+data InnerStatement
+  = AssignStatement { assignedVar   :: Name
                     , assignedValue :: Expression }
-  | BreakStatement
-  | ReturnStatement
-  | ControlFlowStatement
+  | ExpressionStatement { statementExpression :: Expression }
+  | LoopStatement { loopInit   :: Maybe Statement -- ExpressionStatement
+                  , loopTest   :: Maybe Statement
+                  , loopUpdate :: Maybe Statement }
+  | IfStatement { ifTest        :: Expression
+                , thenStatement :: Statement
+                , elseStatement :: Maybe Statement }
+  | EmptyStatement
   deriving (Show)
 
-data ControlFlowStatement
-  = ForStatement
-  | WhileStatement
-  | IfStatement
-  deriving (Show)
-
--- TODO
-data Operator
-  = Plus
-  | Minus
-  | Divide
-  | Mod
-  | Negate
-  deriving (Show)
+data Statement = Statement
+  { scope     :: Scope
+  , statement :: InnerStatement
+  } deriving (Show)
 
 data InnerType
   = Boolean
@@ -128,6 +127,14 @@ instance Show Type where
        then "[]"
        else "")
   show Void = "Void"
+
+data Operator
+  = Plus
+  | Minus
+  | Divide
+  | Mod
+  | Negate
+  deriving (Show)
 
 showName :: [String] -> String
 showName l = intercalate "." l

@@ -9,6 +9,9 @@ kArrayType = "ArrayType"
 kBlock :: String
 kBlock = "Block"
 
+kBlockStatement :: String
+kBlockStatement = "BlockStatement"
+
 kBoolean :: String
 kBoolean = "boolean"
 

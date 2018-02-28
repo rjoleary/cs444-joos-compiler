@@ -7,6 +7,7 @@ module JoosCompiler.Ast.Transformers
   , methodTransformer
   , modifierTransformer
   , modifiersTransformer
+  , statementTransformer
   , typeTransformer
   ) where
 
@@ -17,4 +18,5 @@ import           JoosCompiler.Ast.Transformers.LittleTransformers
 import           JoosCompiler.Ast.Transformers.LocalVariableTransformers
 import           JoosCompiler.Ast.Transformers.MethodTransformers
 import           JoosCompiler.Ast.Transformers.ModifierTransformers
+import           JoosCompiler.Ast.Transformers.StatementTransformers
 import           JoosCompiler.Ast.Transformers.TypeTransformers
