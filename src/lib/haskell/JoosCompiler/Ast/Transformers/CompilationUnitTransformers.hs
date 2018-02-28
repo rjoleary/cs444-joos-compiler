@@ -32,8 +32,10 @@ getImports ts = imports
     importNodes = findChildren1 isImport ts
     imports = map (astImport . rootLabel) importNodes
 
-getClassDecl :: [AstNode] -> ClassDeclaration
-getClassDecl ts = classDecl
+getClassDecl :: [AstNode] -> Maybe ClassDeclaration
+getClassDecl ts
+  | length classDeclNodes > 0 = Just classDecl
+  | otherwise = Nothing
   where
-    classDeclNode = findChild1 isClassDeclaration ts
-    classDecl = astClass $ rootLabel $ classDeclNode
+    classDeclNodes = findChildren1 isClassDeclaration ts
+    classDecl = astClass $ rootLabel $ head $ classDeclNodes

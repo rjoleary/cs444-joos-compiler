@@ -3,7 +3,6 @@
 -- conversion facilities where they're needed
 import           Data.Tree
 import           JoosCompiler.Ast
-import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Treeify
 import           System.Environment
 

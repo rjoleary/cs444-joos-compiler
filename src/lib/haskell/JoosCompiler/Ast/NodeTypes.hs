@@ -17,7 +17,7 @@ data Modifier
 data CompilationUnit
   = CompilationUnit { package   :: Maybe Name
                     , imports   :: [ImportDeclaration]
-                    , classDecl :: ClassDeclaration }
+                    , classDecl :: Maybe ClassDeclaration }
   | EmptyFile
 
 instance Show CompilationUnit where
@@ -26,7 +26,8 @@ instance Show CompilationUnit where
     (showName $ fromMaybe ["N/A"] p) ++
     " i=[" ++
     (intercalate ", " $ map (showName . importName) i) ++
-    "]" ++ " c=" ++ className c ++ ")"
+    "]" ++ " c=" ++ extractClassName c ++ ")"
+  show EmptyFile = "EmptyFile"
 
 data PackageDeclaration = PackageDeclaration
   { packageName :: Name
@@ -155,3 +156,7 @@ data Operator
 
 showName :: [String] -> String
 showName l = intercalate "." l
+
+extractClassName :: Maybe ClassDeclaration -> String
+extractClassName Nothing  = "N/A"
+extractClassName (Just c) = className c
