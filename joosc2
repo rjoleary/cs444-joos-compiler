@@ -1,7 +1,7 @@
 #!/bin/bash
 
+# Check extensions.
 for FILE; do
-    # Check extension.
     echo "$FILE" | grep '\.java$'; ret="$?"
     if [ "$ret" != 0 ]; then
         echo "Invalid filename"
@@ -9,6 +9,7 @@ for FILE; do
     fi
 done
 
+# Tokenize and parse files individually.
 for FILE; do
     TOKENS="${FILE%.java}.tokens"
     PARSE="${FILE%.java}.parse"
@@ -40,11 +41,12 @@ for FILE; do
         42) exit 42; ;;
         *) echo "Exiting due to weeder error"; exit $ret; ;;
     esac
-
-    bin/ast; ret="$?"
-    case "$ret" in
-        0) ;;
-        42) exit 42; ;;
-        *) echo "Exiting due to AST error"; exit $ret; ;;
-    esac
 done
+
+# The rest of the compiler is one executable.
+bin/ast "$@"; ret="$?"
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to AST error"; exit $ret; ;;
+esac
