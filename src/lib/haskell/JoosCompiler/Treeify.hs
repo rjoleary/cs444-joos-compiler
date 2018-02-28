@@ -144,6 +144,14 @@ findDirectChildrenByTokenName childName indirectName t =
     childPred = ((==) childName) . tokenName
     indirectPred = ((==) indirectName) . tokenName
 
+findDirectChildByTokenName ::
+     String -> String -> TaggedParseTree -> TaggedParseTree
+findDirectChildByTokenName childName indirectName t
+  | length matches > 1 = error "Too many matches"
+  | otherwise = head matches
+  where
+    matches = findDirectChildrenByTokenName childName indirectName t
+
 findDirectChildrenByTokenName1 ::
      String -> String -> [TaggedParseTree] -> [TaggedParseTree]
 findDirectChildrenByTokenName1 childName indirectName ts =

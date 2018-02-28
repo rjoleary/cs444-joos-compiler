@@ -2,10 +2,10 @@
 -- conversion here by outputting the result and import the AST
 -- conversion facilities where they're needed
 import           Data.Tree
-import           System.Environment
 import           JoosCompiler.Ast
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Treeify
+import           System.Environment
 
 main :: IO ()
 main = do
@@ -15,7 +15,7 @@ main = do
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""
-stripSuffix (x:xs)  = x:(stripSuffix xs)
+stripSuffix (x:xs)  = x : (stripSuffix xs)
 stripSuffix ""      = error "Filename does not end in .java"
 
 astFromFile :: String -> IO AstNode

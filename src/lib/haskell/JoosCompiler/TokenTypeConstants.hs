@@ -33,6 +33,9 @@ kInterfaceDeclaration = "InterfaceDeclaration"
 kVariableDeclarator :: String
 kVariableDeclarator = "VariableDeclarator"
 
+kFormalParameterList :: String
+kFormalParameterList = "FormalParameterList"
+
 kInterfaceTypeList :: String
 kInterfaceTypeList = "InterfaceTypeList"
 

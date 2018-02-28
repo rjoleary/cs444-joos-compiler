@@ -22,20 +22,25 @@ methodTransformer transformedChildren t@(Node label _) =
   where
     _type = getMethodType transformedChildren
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
-    _name = getMethodName transformedChildren
+    _name = getMethodName t
     _statements = getStatements transformedChildren
 
 getMethodModifiers :: [AstNode] -> AstWrapper
 getMethodModifiers ts =
   rootLabel $ head $ findDirectChildren1 isModifiers isMethod ts
 
-getMethodName :: [AstNode] -> Name
-getMethodName _ = []
+getMethodName :: TaggedParseTree -> Name
+getMethodName (Node _ ts) = extractName [nameNode]
+  where
+    methodHeader = head ts
+    declaratorNode = subForest methodHeader !! 2
+    nameNode =
+      findDirectChildByTokenName kIdentifier kFormalParameterList declaratorNode
 
 getMethodType :: [AstNode] -> Type
 getMethodType ts = extractType typeLabel
   where
-    methodHeader = findAstChildByTokenName1 kMethodHeader ts
+    methodHeader = head ts
     typeNode = subForest methodHeader !! 1
     typeLabel = rootLabel typeNode
     extractType :: AstWrapper -> Type
