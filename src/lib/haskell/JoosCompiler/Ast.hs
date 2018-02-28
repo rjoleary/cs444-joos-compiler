@@ -17,6 +17,7 @@ cstToAstTransform f t = Node transformedRoot transformedChildren
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
+  | (tokenName label) == kBlock = blockTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     classDeclarationTransformer
   | (tokenName label) == kFieldDeclaration = fieldTransformer

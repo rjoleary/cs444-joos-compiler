@@ -7,6 +7,7 @@ import           JoosCompiler.TreeUtils
 
 data AstWrapper
   = AstClassDeclaration ClassDeclaration
+  | AstBlock Block
   | AstCompilationUnit CompilationUnit
   | AstExpression { astExpression :: Expression }
   | AstField { astField :: Field }
@@ -22,6 +23,10 @@ type AstNode = Tree AstWrapper
 
 type Transformer = [AstNode] -> TaggedParseTree -> AstWrapper
 
+isBlock :: AstWrapper -> Bool
+isBlock (AstBlock _) = True
+isBlock _            = False
+
 isExpression :: AstWrapper -> Bool
 isExpression (AstExpression _) = True
 isExpression _                 = False
@@ -35,6 +40,10 @@ isField _            = False
 
 getFields :: [AstNode] -> [AstWrapper]
 getFields ts = map rootLabel $ findChildren1 isField ts
+
+isLocalVariable :: AstWrapper -> Bool
+isLocalVariable (AstLocalVariable _) = True
+isLocalVariable _                    = False
 
 isMethod :: AstWrapper -> Bool
 isMethod (AstMethod _) = True

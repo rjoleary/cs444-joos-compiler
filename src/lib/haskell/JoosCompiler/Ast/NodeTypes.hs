@@ -20,12 +20,20 @@ data CompilationUnit
   | EmptyFile
   deriving (Show)
 
+data Block = Block
+  { blockFields :: [Field]
+  } deriving (Show)
+
 data Field = Field
   { fieldType      :: Type
   , fieldModifiers :: [Modifier]
   , fieldName      :: Name
   , fieldValue     :: Expression
-  } deriving (Show)
+  }
+
+instance Show Field where
+  show (Field _type _modifiers _name _) =
+    show _modifiers ++ " " ++ show _type ++ " " ++ showName _name
 
 data ClassDeclaration = ClassDeclaration
   { className      :: String
@@ -112,7 +120,14 @@ data Type
   = Void
   | Type { joosType :: InnerType
          , isArray  :: Bool }
-  deriving (Show)
+
+instance Show Type where
+  show (Type _type _isArray) =
+    show _type ++
+    (if _isArray
+       then "[]"
+       else "")
+  show Void = "Void"
 
 showName :: [String] -> String
 showName l = intercalate "." l
