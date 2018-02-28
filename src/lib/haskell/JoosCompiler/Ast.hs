@@ -20,11 +20,14 @@ getTransformer t@(Node label _)
   | (tokenName label) == kBlock = blockTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     classDeclarationTransformer
+  | (tokenName label) == kCompilationUnit = compilationUnitTransformer
   | (tokenName label) == kFieldDeclaration = fieldTransformer
+  | (tokenName label) == kImportDeclaration = importTransformer
   | (tokenName label) == kLocalVariableDeclaration = localVariableTransformer
   | (tokenName label) == kMethodDeclaration = methodTransformer
   | (tokenName label) == kModifier = modifierTransformer
   | (tokenName label) == kModifiers = modifiersTransformer
+  | (tokenName label) == kPackageDeclaration = packageTransformer
   | (tokenName label) == kBlockStatement = statementTransformer
   | (tokenName label) `elem` [kType, kVoid] = typeTransformer
   | otherwise = cstTransformer

@@ -6,14 +6,16 @@ import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
 
 data AstWrapper
-  = AstClassDeclaration ClassDeclaration
+  = AstClassDeclaration { astClass :: ClassDeclaration }
   | AstBlock Block
   | AstCompilationUnit CompilationUnit
   | AstField { astField :: Field }
+  | AstImport { astImport :: ImportDeclaration }
   | AstLocalVariable { astLocalVariable :: Field }
   | AstMethod { astMethod :: Method }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }
+  | AstPackage { astPackage :: PackageDeclaration }
   | AstStatement { astStatement :: Statement }
   | AstTaggedToken TaggedToken
   | AstType { astType :: Type }
@@ -27,12 +29,20 @@ isBlock :: AstWrapper -> Bool
 isBlock (AstBlock _) = True
 isBlock _            = False
 
+isClassDeclaration :: AstWrapper -> Bool
+isClassDeclaration (AstClassDeclaration _) = True
+isClassDeclaration _                       = False
+
 isField :: AstWrapper -> Bool
 isField (AstField _) = True
 isField _            = False
 
 getFields :: [AstNode] -> [AstWrapper]
 getFields ts = map rootLabel $ findChildren1 isField ts
+
+isImport :: AstWrapper -> Bool
+isImport (AstImport _) = True
+isImport _             = False
 
 isLocalVariable :: AstWrapper -> Bool
 isLocalVariable (AstLocalVariable _) = True
@@ -52,6 +62,10 @@ isModifiers _                = False
 
 getModifiers :: [AstNode] -> AstWrapper
 getModifiers ts = rootLabel $ head $ findChildren1 isModifiers ts
+
+isPackage :: AstWrapper -> Bool
+isPackage (AstPackage _) = True
+isPackage _              = False
 
 isType :: AstWrapper -> Bool
 isType (AstType _) = True

@@ -24,6 +24,9 @@ kChar = "char"
 kClassDeclaration :: String
 kClassDeclaration = "ClassDeclaration"
 
+kCompilationUnit :: String
+kCompilationUnit = "CompilationUnit"
+
 kExpression :: String
 kExpression = "Expression"
 
@@ -38,6 +41,9 @@ kFormalParameterList = "FormalParameterList"
 
 kIdentifier :: String
 kIdentifier = "Identifier"
+
+kImportDeclaration :: String
+kImportDeclaration = "ImportDeclaration"
 
 kInt :: String
 kInt = "int"
@@ -78,6 +84,9 @@ kName = "Name"
 kNative :: String
 kNative = "native"
 
+kPackageDeclaration :: String
+kPackageDeclaration = "PackageDeclaration"
+
 kProtected :: String
 kProtected = "protected"
 
@@ -95,6 +104,9 @@ kSuper = "Super"
 
 kType :: String
 kType = "Type"
+
+kTypeImportOnDemandDeclaration :: String
+kTypeImportOnDemandDeclaration = "TypeImportOnDemandDeclaration"
 
 kUnaryExpression :: String
 kUnaryExpression = "UnaryExpression"

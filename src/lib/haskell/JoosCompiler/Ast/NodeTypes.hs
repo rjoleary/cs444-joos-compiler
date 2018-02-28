@@ -1,6 +1,7 @@
 module JoosCompiler.Ast.NodeTypes where
 
 import           Data.List
+import           Data.Maybe
 
 type Name = [String]
 
@@ -15,10 +16,26 @@ data Modifier
 
 data CompilationUnit
   = CompilationUnit { package   :: Maybe Name
-                    , imports   :: [Name]
+                    , imports   :: [ImportDeclaration]
                     , classDecl :: ClassDeclaration }
   | EmptyFile
-  deriving (Show)
+
+instance Show CompilationUnit where
+  show (CompilationUnit p i c) =
+    "CompilationUnit(p=" ++
+    (showName $ fromMaybe ["N/A"] p) ++
+    " i=[" ++
+    (intercalate ", " $ map (showName . importName) i) ++
+    "]" ++ " c=" ++ className c ++ ")"
+
+data PackageDeclaration = PackageDeclaration
+  { packageName :: Name
+  } deriving (Show)
+
+data ImportDeclaration = ImportDeclaration
+  { importName :: Name
+  , onDemand   :: Bool
+  } deriving (Show)
 
 data Block = Block
   { blockFields :: [Field]
