@@ -36,6 +36,9 @@ kFieldDeclaration = "FieldDeclaration"
 kFinal :: String
 kFinal = "final"
 
+kFormalParameter :: String
+kFormalParameter = "FormalParameter"
+
 kFormalParameterList :: String
 kFormalParameterList = "FormalParameterList"
 

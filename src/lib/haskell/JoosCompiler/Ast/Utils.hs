@@ -10,7 +10,7 @@ extractName nameNodes = map (tokenString . rootLabel) nameNodes
 
 findAstChildrenByTokenName :: String -> AstNode -> [AstNode]
 findAstChildrenByTokenName name t@(Node (AstTaggedToken label) children) =
-  if name == tokenString label
+  if name == tokenName label
     then t : childMatches
     else childMatches
   where

@@ -17,13 +17,27 @@ methodTransformer transformedChildren t@(Node label _) =
   { methodType = _type
   , methodModifiers = _modifiers
   , methodName = _name
+  , formalParameters = _formalParams
   , statements = _statements
   }
   where
     _type = getMethodType transformedChildren
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
     _name = getMethodName t
+    _formalParams = getFormalParams transformedChildren
     _statements = getStatements transformedChildren
+
+getFormalParams :: [AstNode] -> [Field]
+getFormalParams ts = map convertToField formalParamNodes
+  where
+    formalParamNodes = findAstChildrenByTokenName1 kFormalParameter ts
+    convertToField :: AstNode -> Field
+    convertToField paramNode = Field _type [] [_name] (Literal "3")
+      where
+        typeNode = (subForest paramNode) !! 0
+        nameNode = (subForest paramNode) !! 1
+        _type = astType $ rootLabel typeNode
+        _name = tokenString $ astTaggedToken $ rootLabel nameNode
 
 getMethodModifiers :: [AstNode] -> AstWrapper
 getMethodModifiers ts =

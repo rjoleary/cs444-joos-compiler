@@ -14,7 +14,9 @@ data Modifier
   | Native
   deriving (Show)
 
-data WholeProgram = WholeProgram [CompilationUnit] deriving (Show)
+data WholeProgram =
+  WholeProgram [CompilationUnit]
+  deriving (Show)
 
 data CompilationUnit
   = CompilationUnit { package   :: Maybe Name
@@ -86,10 +88,11 @@ instance Show ClassDeclaration where
     (intercalate ", " (map (showName . methodName) _methods)) ++ ")"
 
 data Method = Method
-  { methodType      :: Type
-  , methodModifiers :: [Modifier]
-  , methodName      :: Name
-  , statements      :: [Statement]
+  { methodType       :: Type
+  , methodModifiers  :: [Modifier]
+  , methodName       :: Name
+  , formalParameters :: [Field]
+  , statements       :: [Statement]
   } deriving (Show)
 
 data Expression

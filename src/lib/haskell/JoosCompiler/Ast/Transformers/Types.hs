@@ -18,7 +18,7 @@ data AstWrapper
   | AstModifiers { astModifiers :: [Modifier] }
   | AstPackage { astPackage :: PackageDeclaration }
   | AstStatement { astStatement :: Statement }
-  | AstTaggedToken TaggedToken
+  | AstTaggedToken { astTaggedToken :: TaggedToken }
   | AstType { astType :: Type }
   deriving (Show)
 

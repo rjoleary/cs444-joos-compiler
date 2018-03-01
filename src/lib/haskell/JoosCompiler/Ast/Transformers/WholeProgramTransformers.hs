@@ -11,4 +11,5 @@ import           JoosCompiler.TreeUtils
 wholeProgramTransformer :: [AstNode] -> AstWrapper
 wholeProgramTransformer transformedChildren =
   AstWholeProgram $ WholeProgram $ map getCompilationUnit transformedChildren
-  where getCompilationUnit (Node (AstCompilationUnit x) ts) = x
+  where
+    getCompilationUnit (Node (AstCompilationUnit x) ts) = x
