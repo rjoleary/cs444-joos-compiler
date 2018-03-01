@@ -51,6 +51,7 @@ runtests() {
 
 
 # Delete intermediate files from previous testing.
+find 'test' -name '*.ast' -delete
 find 'test' -name '*.tokens' -delete
 find 'test' -name '*.parse' -delete
 

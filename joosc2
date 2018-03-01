@@ -16,7 +16,6 @@ done
 for FILE; do
     TOKENS="${FILE%.java}.tokens"
     PARSE="${FILE%.java}.parse"
-    AST="${FILE%.java}.ast"
 
     # Lexer
     cp "$FILE" test/joos_input.txt
@@ -45,13 +44,15 @@ for FILE; do
         42) exit 42; ;;
         *) echo "Exiting due to weeder error"; exit $ret; ;;
     esac
-
-    bin/ast "$@" > "$AST"; ret="$?"
-    sed "/AstTaggedToken/ n; s/Ast.*/$HIGHLIGHT_BEGIN\\0$HIGHLIGHT_END/" "$AST"
-    # Print AST with AST nodes highlighted
-    case "$ret" in
-        0) ;;
-        42) exit 42; ;;
-        *) echo "Exiting due to AST error"; exit $ret; ;;
-    esac
 done
+
+AST="test/ast.ast"
+
+bin/ast "$@" > "$AST"; ret="$?"
+sed "/AstTaggedToken/ n; s/Ast.*/$HIGHLIGHT_BEGIN\\0$HIGHLIGHT_END/" "$AST"
+# Print AST with AST nodes highlighted
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to AST error"; exit $ret; ;;
+esac
