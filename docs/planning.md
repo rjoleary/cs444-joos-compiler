@@ -1,6 +1,8 @@
 Assignment 2
 ============
 
+**This** document looks best in plaintext or as a PDF.
+
 This is a list of the rules we need to check and ideas for how to go
 about checking them using our AST.
 
