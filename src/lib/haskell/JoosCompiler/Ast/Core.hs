@@ -2,6 +2,7 @@ module JoosCompiler.Ast.Core where
 
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
+import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
@@ -16,8 +17,10 @@ cstToAstTransform f t = Node transformedRoot transformedChildren
     transformedRoot = f transformedChildren t
 
 cstToAst :: TaggedParseTree -> AstNode
-cstToAst t = cstToAstTransform transformer t
+cstToAst t = ast2
   where
+    ast1 = cstToAstTransform transformer t
+    ast2 = injectScopesIntoChildrenBlocks ast1
     transformer = getTransformer t
 
 getTransformer :: TaggedParseTree -> Transformer
