@@ -31,9 +31,9 @@ There is a function `cstToAst` in
 [Core.hs](src/lib/haskell/JoosCompiler/Ast/Core.hs). This function
 recursively calls the correct "transformer" on each node of the tree.
 
-A transformer is a function with signature `[AstNode] ->
-TaggedParseTree -> AstWrapper`. The reason for that weird signature is
-that it accepts those two arguments:
+A transformer is a function with signature
+`[AstNode] -> TaggedParseTree -> AstWrapper`. The reason for that
+weird signature is that it accepts those two arguments:
 
 - transformedChildren, a list of the node's children after they had
   been transformed with `cstToAst`
