@@ -51,11 +51,17 @@ data Field = Field
   , fieldModifiers :: [Modifier]
   , fieldName      :: Name
   , fieldValue     :: Expression
+  , isClassField   :: Bool
   }
 
 instance Show Field where
-  show (Field _type _modifiers _name _) =
-    show _modifiers ++ " " ++ show _type ++ " " ++ showName _name
+  show (Field _type _modifiers _name _ _) =
+    m ++ show _type ++ " " ++ showName _name
+    where
+      m =
+        if length _modifiers > 0
+          then (intercalate " " $ map show _modifiers) ++ " "
+          else ""
 
 data ClassDeclaration = ClassDeclaration
   { className      :: String

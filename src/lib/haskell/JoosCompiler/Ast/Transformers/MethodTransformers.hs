@@ -32,7 +32,14 @@ getFormalParams ts = map convertToField formalParamNodes
   where
     formalParamNodes = findAstChildrenByTokenName1 kFormalParameter ts
     convertToField :: AstNode -> Field
-    convertToField paramNode = Field _type [] [_name] (Literal "3")
+    convertToField paramNode =
+      Field
+      { fieldType = _type
+      , fieldModifiers = []
+      , fieldName = [_name]
+      , fieldValue = (Literal "3")
+      , isClassField = True
+      }
       where
         typeNode = (subForest paramNode) !! 0
         nameNode = (subForest paramNode) !! 1
