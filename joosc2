@@ -48,7 +48,7 @@ done
 
 AST="test/ast.ast"
 
-bin/ast "$@" > "$AST"; ret="$?"
+bin/compiler "$@" > "$AST"; ret="$?"
 sed "/AstTaggedToken/ n; s/Ast.*/$HIGHLIGHT_BEGIN\\0$HIGHLIGHT_END/" "$AST"
 # Print AST with AST nodes highlighted
 case "$ret" in

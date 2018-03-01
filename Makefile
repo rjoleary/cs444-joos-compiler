@@ -13,9 +13,9 @@ HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs \
 			${HS_LIB}/*/*/*.hs \
 			${HS_LIB}/*/*/*/*.hs))
 
-AST_SRC  := src/ast
-AST_FILES := $(sort $(wildcard ${AST_SRC}/*.hs))
-AST_MAIN := ${AST_SRC}/Main.hs
+COMPILER_SRC  := src/compiler
+COMPILER_FILES := $(sort $(wildcard ${COMPILER_SRC}/*.hs))
+COMPILER_MAIN := ${COMPILER_SRC}/Main.hs
 
 LEXER_SRC  := src/lexer
 LEXER_FILES := $(sort $(wildcard ${LEXER_SRC}/*.hs))
@@ -30,7 +30,7 @@ HS_TEST := test/haskell
 
 HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
 
-ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES} ${AST_FILES}
+ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES} ${COMPILER_FILES}
 
 # Includes all the files tracked by git.
 ZIP_FILES := $(shell git ls-files)
@@ -39,7 +39,7 @@ ZIP_FILES := $(shell git ls-files)
 	test test.unit hfmt ghci
 
 # Only builds the compiler. This is the recipe run by Marmoset.
-compiler : bin bin/parser bin/lexer bin/weeder bin/ast
+compiler : bin bin/parser bin/lexer bin/weeder bin/compiler
 
 # Builds everything including the grammar and report.
 all : compiler grammar docs
@@ -63,8 +63,8 @@ bin/parser : src/rust/parser.rs
 bin/weeder : src/weeder/weeder.hs ${HS_LIB_FILES}
 	${GHC} -o bin/weeder src/weeder/weeder.hs
 
-bin/ast : ${AST_FILES} ${HS_LIB_FILES}
-	${GHC} -o bin/ast $^
+bin/compiler : ${COMPILER_FILES} ${HS_LIB_FILES}
+	${GHC} -o $@ $^
 
 docs : ${DOC_OUTPUT}
 
