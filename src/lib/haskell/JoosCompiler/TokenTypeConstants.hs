@@ -87,6 +87,9 @@ kNative = "native"
 kPackageDeclaration :: String
 kPackageDeclaration = "PackageDeclaration"
 
+kPrimitiveType :: String
+kPrimitiveType = "PrimitiveType"
+
 kProtected :: String
 kProtected = "protected"
 

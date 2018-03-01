@@ -11,23 +11,31 @@ typeTransformer :: Transformer
 typeTransformer transformedChildren t = AstType $ _type
   where
     _isArray = ((> 0) . length) $ findChildrenByTokenName kArrayType t
-    typeNameLeaf = head $ getLeaves t
-    typeString = tokenString typeNameLeaf
+    isPrimitiveType = (> 0) $ length $ findChildrenByTokenName kPrimitiveType t
+    primitiveType = getPrimitiveType t _isArray
+    complexType = getComplexType t _isArray
     _type
-      | typeString == kVoid = Void
-      | otherwise = Type {joosType = innerType, isArray = _isArray}
-    innerType
-      | typeString == kBoolean = Boolean
-      | typeString == kByte = Byte
-      | typeString == kChar = Char
-      | typeString == kInt = Int
-      | typeString == kShort = Short
-      | otherwise = NamedType typeString
+      | isPrimitiveType = primitiveType
+      | otherwise = complexType
 
-getFieldName :: TaggedParseTree -> String
-getFieldName t = tokenString $ rootLabel identifierNode
+getComplexType :: TaggedParseTree -> Bool -> Type
+getComplexType t _isArray
+  | isVoid = Void
+  | otherwise = Type {innerType = _innerType, isArray = _isArray}
   where
-    variableDeclarator = head $ findChildrenByTokenName kVariableDeclarator t
-    identifierNode =
-      head $
-      findDirectChildrenByTokenName kIdentifier kExpression variableDeclarator
+    nameNodes = findChildrenByTokenName kIdentifier t
+    typeName = map (tokenString . rootLabel) nameNodes
+    isVoid = typeName == [kVoid] || typeName == []
+    _innerType = NamedType typeName
+
+getPrimitiveType :: TaggedParseTree -> Bool -> Type
+getPrimitiveType t _isArray = Type {innerType = _innerType, isArray = _isArray}
+  where
+    typeName = tokenString $ head $ getLeaves t
+    _innerType
+      | typeName == kBoolean = Boolean
+      | typeName == kByte = Byte
+      | typeName == kChar = Char
+      | typeName == kInt = Int
+      | typeName == kShort = Short
+      | otherwise = error "Unexpected type name"

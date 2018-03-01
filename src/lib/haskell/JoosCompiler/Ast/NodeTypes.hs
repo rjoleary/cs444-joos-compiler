@@ -132,13 +132,13 @@ data InnerType
   | Char
   | Int
   | Short
-  | NamedType { unNamedType :: String }
+  | NamedType { unNamedType :: Name }
   deriving (Show)
 
 data Type
   = Void
-  | Type { joosType :: InnerType
-         , isArray  :: Bool }
+  | Type { innerType :: InnerType
+         , isArray   :: Bool }
 
 instance Show Type where
   show (Type _type _isArray) =
