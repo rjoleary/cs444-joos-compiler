@@ -92,7 +92,7 @@ functions of various signatures for finding nodes in trees.
 If you are searching for an AST node of a specific type (e.g. a block
 or a method declaration), you will probably want to use one of the
 functions in `TreeUtils` and the `AstWrapper -> Bool` functions in
-(`JoosCompiler.Ast.Transformers.Types`)[src/lib/haskell/JoosCompiler/Ast/Transformers/Types.hs]. Feel
+(JoosCompiler.Ast.Transformers.Types)[src/lib/haskell/JoosCompiler/Ast/Transformers/Types.hs]. Feel
 free to add more if you need to.
 
 ### Debugging
