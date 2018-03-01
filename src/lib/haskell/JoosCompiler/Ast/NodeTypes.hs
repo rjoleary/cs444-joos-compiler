@@ -43,7 +43,7 @@ data ImportDeclaration = ImportDeclaration
   } deriving (Show)
 
 data Block = Block
-  { blockFields :: [Field]
+  { blockScope :: Scope
   } deriving (Show)
 
 data Field = Field

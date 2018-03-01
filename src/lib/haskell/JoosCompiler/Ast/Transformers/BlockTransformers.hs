@@ -10,9 +10,10 @@ import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.TreeUtils
 
 blockTransformer :: Transformer
-blockTransformer transformedChildren t = AstBlock $ Block _fields
+blockTransformer transformedChildren t = AstBlock $ Block $ scope
   where
     _fields = getBlockFields transformedChildren
+    scope = Scope {fields = _fields, parentScope = Nothing}
 
 getBlockFields :: [AstNode] -> [Field]
 getBlockFields ts = _fields
