@@ -1,6 +1,11 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
+GHC = stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
+
+DOC_INPUT := $(sort $(wildcard ./docs/*.md))
+DOC_OUTPUT := $(patsubst %.md,%.pdf,${DOC_INPUT})
+
 HS_LIB   := src/lib/haskell
 # This is not matching all files for some reason
 HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs \
@@ -30,16 +35,14 @@ ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES} ${AST_FILES}
 # Includes all the files tracked by git.
 ZIP_FILES := $(shell git ls-files)
 
-GHC = stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
-
-.PHONY : compiler all zip clean report grammar test.positive test.negative \
+.PHONY : compiler all zip clean grammar test.positive test.negative \
 	test test.unit hfmt ghci
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder bin/ast
 
 # Builds everything including the grammar and report.
-all : compiler grammar report
+all : compiler grammar ${DOC_OUTPUT}
 
 zip : zip2
 
@@ -63,10 +66,8 @@ bin/weeder : src/weeder/weeder.hs ${HS_LIB_FILES}
 bin/ast : ${AST_FILES} ${HS_LIB_FILES}
 	${GHC} -o bin/ast $^
 
-report : report.pdf
-
-report.pdf : README.md
-	pandoc -V geometry:margin=1in -o $@ $<
+${DOC_OUTPUT} : ${DOC_INPUT}
+	./docs/generate-docs.sh $@ $<
 
 grammar : def/joos.lr1
 
@@ -112,4 +113,4 @@ test : compiler
 clean :
 	find src \( -name '*.o' -o -name '*.hi' \) -delete
 	find test \( -name '*.tokens' -o -name '*.parse' \) -delete
-	rm -rf bin/ report.pdf src/java/jlalr/*.class submission.zip ${HS_BUILD}
+	rm -rf bin/ ${DOC_OUTPUT} src/java/jlalr/*.class submission.zip ${HS_BUILD}
