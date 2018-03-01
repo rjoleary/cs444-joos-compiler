@@ -1,7 +1,8 @@
-report.pdf
+*.pdf
 bin/
 *.o
 *.hi
+/ghc_build
 /*.zip
 
 /.stack-work/

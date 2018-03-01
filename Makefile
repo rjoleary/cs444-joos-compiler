@@ -35,14 +35,14 @@ ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES} ${AST_FILES}
 # Includes all the files tracked by git.
 ZIP_FILES := $(shell git ls-files)
 
-.PHONY : compiler all zip clean grammar test.positive test.negative \
+.PHONY : compiler all zip clean docs grammar test.positive test.negative \
 	test test.unit hfmt ghci
 
 # Only builds the compiler. This is the recipe run by Marmoset.
 compiler : bin bin/parser bin/lexer bin/weeder bin/ast
 
 # Builds everything including the grammar and report.
-all : compiler grammar ${DOC_OUTPUT}
+all : compiler grammar docs
 
 zip : zip2
 
@@ -66,7 +66,9 @@ bin/weeder : src/weeder/weeder.hs ${HS_LIB_FILES}
 bin/ast : ${AST_FILES} ${HS_LIB_FILES}
 	${GHC} -o bin/ast $^
 
-${DOC_OUTPUT} : ${DOC_INPUT}
+docs : ${DOC_OUTPUT}
+
+docs/%.pdf : docs/%.md
 	./docs/generate-docs.sh $@ $<
 
 grammar : def/joos.lr1
