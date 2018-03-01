@@ -114,5 +114,5 @@ test : compiler
 
 clean :
 	find src \( -name '*.o' -o -name '*.hi' \) -delete
-	find test \( -name '*.tokens' -o -name '*.parse' \) -delete
+	find test \( -name '*.tokens' -o -name '*.parse' -o -name '*.ast' \) -delete
 	rm -rf bin/ ${DOC_OUTPUT} src/java/jlalr/*.class submission.zip ${HS_BUILD}

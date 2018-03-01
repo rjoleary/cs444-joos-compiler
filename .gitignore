@@ -15,6 +15,7 @@ test/joos_tokens.txt
 test/joos_tree.txt
 test/joos_parse.txt
 
+*.ast
 *.tokens
 *.parse
 *.tree

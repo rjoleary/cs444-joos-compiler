@@ -1,5 +1,8 @@
 #!/bin/bash
 
+HIGHLIGHT_BEGIN=$(tput setf 2)
+HIGHLIGHT_END=$(tput sgr0)
+
 # Check extensions.
 for FILE; do
     echo "$FILE" | grep '\.java$'; ret="$?"
@@ -13,6 +16,7 @@ done
 for FILE; do
     TOKENS="${FILE%.java}.tokens"
     PARSE="${FILE%.java}.parse"
+    AST="${FILE%.java}.ast"
 
     # Lexer
     cp "$FILE" test/joos_input.txt
@@ -35,18 +39,19 @@ for FILE; do
 
     # Weeder
     echo -n "$(basename "$FILE" .java)" > test/joos_classname.txt
-    bin/weeder; ret="$?"
+    bin/weeder > /dev/null; ret="$?"
     case "$ret" in
         0) ;;
         42) exit 42; ;;
         *) echo "Exiting due to weeder error"; exit $ret; ;;
     esac
-done
 
-# The rest of the compiler is one executable.
-bin/ast "$@"; ret="$?"
-case "$ret" in
-    0) ;;
-    42) exit 42; ;;
-    *) echo "Exiting due to AST error"; exit $ret; ;;
-esac
+    bin/ast "$@" > "$AST"; ret="$?"
+    sed "/AstTaggedToken/ n; s/Ast.*/$HIGHLIGHT_BEGIN\\0$HIGHLIGHT_END/" "$AST"
+    # Print AST with AST nodes highlighted
+    case "$ret" in
+        0) ;;
+        42) exit 42; ;;
+        *) echo "Exiting due to AST error"; exit $ret; ;;
+    esac
+done
