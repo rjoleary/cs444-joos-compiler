@@ -8,6 +8,7 @@ import           JoosCompiler.TreeUtils
 data AstWrapper
   = AstClassDeclaration { astClass :: ClassDeclaration }
   | AstBlock Block
+  | AstWholeProgram WholeProgram
   | AstCompilationUnit CompilationUnit
   | AstField { astField :: Field }
   | AstImport { astImport :: ImportDeclaration }

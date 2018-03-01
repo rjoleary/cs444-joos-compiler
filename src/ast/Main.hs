@@ -10,7 +10,8 @@ main :: IO ()
 main = do
   filenames <- getArgs
   astForest <- mapM astFromFile filenames
-  putStrLn $ drawForest (fmap (fmap show) astForest)
+  let ast = Node (wholeProgramTransformer astForest) (astForest)
+  putStrLn $ drawTree (fmap show ast)
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""

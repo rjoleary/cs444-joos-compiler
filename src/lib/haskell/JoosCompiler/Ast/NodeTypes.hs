@@ -14,6 +14,8 @@ data Modifier
   | Native
   deriving (Show)
 
+data WholeProgram = WholeProgram [CompilationUnit] deriving (Show)
+
 data CompilationUnit
   = CompilationUnit { package   :: Maybe Name
                     , imports   :: [ImportDeclaration]
