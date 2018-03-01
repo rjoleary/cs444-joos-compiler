@@ -5,6 +5,11 @@ import           Data.Maybe
 
 type Name = [String]
 
+concatName :: Name -> String
+concatName []     = ""
+concatName [x]    = x
+concatName (x:xs) = x ++ "." ++ (concatName xs)
+
 data Modifier
   = Public
   | Protected

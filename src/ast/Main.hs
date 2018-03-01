@@ -5,6 +5,7 @@ import           Data.Tree
 import           JoosCompiler.Ast
 import           JoosCompiler.Treeify
 import           System.Environment
+import           SymbolTable
 
 main :: IO ()
 main = do
@@ -12,6 +13,11 @@ main = do
   astForest <- mapM astFromFile filenames
   let ast = Node (wholeProgramTransformer astForest) (astForest)
   putStrLn $ drawTree (fmap show ast)
+
+  let symbolTable = createSymbolTable (rootLabel ast)
+  case symbolTable of
+    Right symbolTable' -> putStrLn (show symbolTable')
+    Left err           -> putStrLn err
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""
