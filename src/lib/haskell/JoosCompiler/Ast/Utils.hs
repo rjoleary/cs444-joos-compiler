@@ -33,3 +33,10 @@ findAstChildByTokenName1 name ts
   | otherwise = head matches
   where
     matches = findAstChildrenByTokenName1 name ts
+
+qualifyClassName :: CompilationUnit -> Name
+qualifyClassName u@(CompilationUnit Nothing _ (Just _classDecl)) =
+  [className _classDecl]
+qualifyClassName u@(CompilationUnit (Just _packageName) _ (Just _classDecl)) =
+  _packageName ++ [className _classDecl]
+qualifyClassName _ = error "Can't qualify a compilation unit without a class"

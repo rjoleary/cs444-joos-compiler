@@ -26,6 +26,14 @@ noTwoLocalsSameName t = not $ all allUnique localNames
     locals = map flattenScope scopes
     localNames = map (map localName) locals
 
+noTwoClassesSameCanonicalName :: AstRulePredicate
+noTwoClassesSameCanonicalName t = allUnique qualified
+  where
+    unitNodes = subForest t
+    units = map (astCompilationUnit . rootLabel) unitNodes
+    classUnits = filter ((/= Nothing) . classDecl) units
+    qualified = map qualifyClassName classUnits
+
 typeLinkingRules :: [AstRule]
 typeLinkingRules =
   [ ("Class contains duplicate field names", noTwoFieldsSameName)
