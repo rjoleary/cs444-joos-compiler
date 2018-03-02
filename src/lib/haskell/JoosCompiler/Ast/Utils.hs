@@ -54,7 +54,7 @@ resolvePackage name (Node (AstWholeProgram (WholeProgram packages)) _) =
   where
     rootAList = zip (map (fromJust . packageName) packages) packages
     rootResults = lookup name rootAList
-    subResults =  map ((lookup name) . subPackages) packages
+    subResults = map ((lookup name) . subPackages) packages
     results :: [Package]
     results = catMaybes $ rootResults : subResults
 resolvePackage _ _ = error "resolvePackage not run on program"
