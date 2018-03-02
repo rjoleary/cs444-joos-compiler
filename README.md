@@ -103,7 +103,7 @@ ghci`.
 This snippet worked for me when I was testing things
 
 ```haskell
-:l src/lib/haskell/JoosCompiler/Ast.hs
+:l src/compiler/Main.hs
 
 :set prompt "> "
 
