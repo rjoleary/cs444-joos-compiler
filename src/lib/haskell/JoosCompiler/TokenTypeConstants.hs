@@ -30,6 +30,9 @@ kCompilationUnit = "CompilationUnit"
 kConstructorDeclaration :: String
 kConstructorDeclaration = "ConstructorDeclaration"
 
+kConstructorBody :: String
+kConstructorBody = "ConstructorBody"
+
 kExpression :: String
 kExpression = "Expression"
 

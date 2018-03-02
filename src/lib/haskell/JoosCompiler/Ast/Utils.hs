@@ -8,6 +8,10 @@ import           JoosCompiler.Treeify
 extractName :: [TaggedParseTree] -> Name
 extractName nameNodes = map (tokenString . rootLabel) nameNodes
 
+flattenScope :: Scope -> [Local]
+flattenScope (Scope locals (Just parent)) = locals ++ flattenScope parent
+flattenScope (Scope locals Nothing)       = locals
+
 findAstChildrenByTokenName :: String -> AstNode -> [AstNode]
 findAstChildrenByTokenName name t@(Node (AstTaggedToken label) children) =
   if name == tokenName label

@@ -7,14 +7,16 @@ import           JoosCompiler.TreeUtils
 
 data AstWrapper
   = AstClassDeclaration { astClass :: ClassDeclaration }
-  | AstBlock Block
-  | AstWholeProgram WholeProgram
+  | AstBlock { astBlock :: Block }
+  | AstWholeProgram { astWholeProgram :: WholeProgram }
   | AstCompilationUnit { astCompilationUnit :: CompilationUnit }
   | AstConstructor { astConstructor :: Method }
+  | AstConstructorBody { astConstructorBody :: Block }
   | AstField { astField :: Field }
   | AstImport { astImport :: ImportDeclaration }
   | AstLocalVariable { astLocalVariable :: Local }
   | AstMethod { astMethod :: Method }
+  | AstMethodBody { astMethodBody :: Block }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }
   | AstPackage { astPackage :: Package }

@@ -32,7 +32,8 @@ cstsToAst ts = grouped
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
-  | (tokenName label) == kBlock = blockTransformer
+  | (tokenName label) `elem` [kBlock, kConstructorBody, kMethodBody] =
+    blockTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     classDeclarationTransformer
   | (tokenName label) == kCompilationUnit = compilationUnitTransformer
