@@ -3,10 +3,15 @@ module NameResolution.HierarchyChecking
   ) where
 
 import JoosCompiler.Ast
+import JoosCompiler.Ast.NodeTypes
 
 -- Returns a error message if hierarchy checking fails.
 checkHierarchy :: AstNode -> Either String ()
 checkHierarchy ast = do
+    -- This check must be first; otherwise, the compiler might go into an infinite loop.
+    withError "The hierarchy must be acyclic"
+      True
+
     withError "A class must not extend an interface"
       True
 
@@ -25,9 +30,6 @@ checkHierarchy ast = do
     withError "An interface must not extend a class"
       True
 
-    withError "The hierarchy must be acyclic"
-      True
-
     withError "A class or interface must not declare two methods with the same signature"
       True
 
@@ -41,3 +43,12 @@ checkHierarchy ast = do
     withError err f
       | f == False = Left err
       | otherwise  = Right ()
+
+    indirectMethods :: ClassDeclaration -> [Method]
+    indirectMethods x = []
+
+    indirectExtends :: ClassDeclaration -> [ClassDeclaration]
+    indirectExtends x = []
+
+    indirectImplements :: ClassDeclaration -> [ClassDeclaration]
+    indirectImplements x = []
