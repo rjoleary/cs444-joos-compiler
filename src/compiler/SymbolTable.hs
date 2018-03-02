@@ -113,7 +113,7 @@ instance Show Symbol where
   show x = show (symbolType x) ++ " " ++ show (symbolCanonical x)
 
 instance Show Canonical where
-  show (Canonical name) = concatName name
+  show (Canonical name) = showName name
 
 -- Left: String containing and error mesesage
 -- Right: The created symbol table
@@ -128,7 +128,7 @@ createSymbolTable = createSymbolTable' (Canonical [])
     createSymbolTable' canonical ast@(AstCompilationUnit x@CompilationUnit {}) =
       packageTable --`merge` createSymbolTable'
       where
-        packageName = concatName $ fromMaybe ["_"] (cuPackage x) -- '_' is the unamed package
+        packageName = showName $ fromMaybe ["_"] (cuPackage x) -- '_' is the unamed package
         packageTable =
           singleton (createSymbol PackageSymbol packageName canonical ast)
         --importsTable = singleton (Symbol Import )

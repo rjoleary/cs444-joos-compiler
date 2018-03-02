@@ -9,11 +9,6 @@ type SubPackages = [(Name, Package)]
 
 type PackageCompilationUnits = [(String, CompilationUnit)]
 
-concatName :: Name -> String
-concatName []     = ""
-concatName [x]    = x
-concatName (x:xs) = x ++ "." ++ (concatName xs)
-
 showName :: [String] -> String
 showName l = intercalate "." l
 
@@ -145,10 +140,19 @@ instance Show ClassDeclaration where
 data Method = Method
   { methodType       :: Type
   , methodModifiers  :: [Modifier]
-  , methodName       :: Name
+  , methodName       :: Name -- TODO: shouldn't this be a string?
   , formalParameters :: [Local]
   , statements       :: [Statement]
   } deriving (Eq, Show)
+
+-- Creates a method signature from the method name and parameter types. The
+-- return type is omitted.
+-- TODO: types must be canonical beforehand
+methodSignature :: Method -> String
+methodSignature x = name ++ "(" ++ intercalate "," parameterTypes ++ ")"
+  where
+    name           = showName (methodName x)
+    parameterTypes = map (show . localType) (formalParameters x)
 
 data Expression
   = MethodInvocation { functionName :: Name
@@ -191,7 +195,14 @@ data InnerType
   | Int
   | Short
   | NamedType { unNamedType :: Name }
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show InnerType where
+  show Byte          = "byte"
+  show Char          = "char"
+  show Int           = "int"
+  show Short         = "short"
+  show (NamedType x) = showName x
 
 data Type
   = Void
@@ -200,12 +211,9 @@ data Type
   deriving (Eq)
 
 instance Show Type where
-  show (Type _type _isArray) =
-    show _type ++
-    (if _isArray
-       then "[]"
-       else "")
-  show Void = "Void"
+  show Void           = "void"
+  show (Type x False) = show x
+  show (Type x True)  = show (Type x False) ++ "[]"
 
 data Operator
   = Plus
