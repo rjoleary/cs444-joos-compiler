@@ -135,12 +135,12 @@ instance Show ClassDeclaration where
     ") Fields(" ++
     (intercalate ", " $ map (showName . fieldName) fields) ++
     ") Methods(" ++
-    (intercalate ", " (map (showName . methodName) _methods)) ++ ")"
+    (intercalate ", " (map methodName _methods)) ++ ")"
 
 data Method = Method
   { methodType       :: Type
   , methodModifiers  :: [Modifier]
-  , methodName       :: Name -- TODO: shouldn't this be a string?
+  , methodName       :: String
   , formalParameters :: [Local]
   , statements       :: [Statement]
   } deriving (Eq, Show)
@@ -151,7 +151,7 @@ data Method = Method
 methodSignature :: Method -> String
 methodSignature x = name ++ "(" ++ intercalate "," parameterTypes ++ ")"
   where
-    name           = showName (methodName x)
+    name           = methodName x
     parameterTypes = map (show . localType) (formalParameters x)
 
 data Expression
@@ -198,6 +198,7 @@ data InnerType
   deriving (Eq)
 
 instance Show InnerType where
+  show Boolean          = "byte"
   show Byte          = "byte"
   show Char          = "char"
   show Int           = "int"

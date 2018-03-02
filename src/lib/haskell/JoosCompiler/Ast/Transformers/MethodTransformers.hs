@@ -65,8 +65,8 @@ getMethodModifiers :: [AstNode] -> AstWrapper
 getMethodModifiers ts =
   rootLabel $ head $ findDirectChildren1 isModifiers isMethod ts
 
-getMethodName :: TaggedParseTree -> Name
-getMethodName (Node _ ts) = extractName [nameNode]
+getMethodName :: TaggedParseTree -> String
+getMethodName (Node _ ts) = head $ extractName [nameNode]
   where
     methodHeader = head ts
     declaratorNode = subForest methodHeader !! 2
