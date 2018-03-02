@@ -1,5 +1,6 @@
 module JoosCompiler.Ast.Utils where
 
+import           Data.List
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
@@ -33,6 +34,9 @@ findAstChildByTokenName1 name ts
   | otherwise = head matches
   where
     matches = findAstChildrenByTokenName1 name ts
+
+isProperPrefixOf :: Eq a => [a] -> [a] -> Bool
+isProperPrefixOf l1 l2 = l1 `isPrefixOf` l2 && (length l1) < (length l2)
 
 qualifyClassName :: CompilationUnit -> Name
 qualifyClassName u@(CompilationUnit Nothing _ (Just _classDecl)) =

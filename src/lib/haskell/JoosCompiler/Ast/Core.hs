@@ -4,6 +4,7 @@ import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.SecondaryProcessing.PackageGrouping
 import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
+import           JoosCompiler.Ast.SecondaryProcessing.SubPackaging
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
@@ -25,10 +26,11 @@ cstToAst t = ast2
     transformer = getTransformer t
 
 cstsToAst :: [TaggedParseTree] -> AstNode
-cstsToAst ts = grouped
+cstsToAst ts = subPackaged
   where
     transformed = map cstToAst ts
     grouped = groupByPackage transformed
+    subPackaged = subPackage grouped
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)

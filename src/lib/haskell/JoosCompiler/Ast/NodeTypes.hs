@@ -25,6 +25,7 @@ data WholeProgram = WholeProgram
 
 data Package = Package
   { packageName             :: Maybe Name
+  , subPackages             :: [Package]
   , packageCompilationUnits :: [CompilationUnit]
   } deriving (Eq, Show)
 

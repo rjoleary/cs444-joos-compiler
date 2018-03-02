@@ -16,6 +16,6 @@ groupByPackage unitNodes = Node program unitNodes
     packages = map groupUnitsByPackageName packageNames
     program = AstWholeProgram $ WholeProgram packages
     groupUnitsByPackageName :: Maybe Name -> Package
-    groupUnitsByPackageName packageName = Package packageName filtered
+    groupUnitsByPackageName packageName = Package packageName [] packageUnits
       where
-        filtered = filter ((== packageName) . cuPackage) compilationUnits
+        packageUnits = filter ((== packageName) . cuPackage) compilationUnits
