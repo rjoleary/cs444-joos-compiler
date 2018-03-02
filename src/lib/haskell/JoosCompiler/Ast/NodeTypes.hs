@@ -5,10 +5,19 @@ import           Data.Maybe
 
 type Name = [String]
 
+type SubPackages = [(Name, Package)]
+
 concatName :: Name -> String
 concatName []     = ""
 concatName [x]    = x
 concatName (x:xs) = x ++ "." ++ (concatName xs)
+
+showName :: [String] -> String
+showName l = intercalate "." l
+
+extractClassName :: Maybe ClassDeclaration -> String
+extractClassName Nothing  = "N/A"
+extractClassName (Just c) = className c
 
 data Modifier
   = Public
@@ -25,7 +34,7 @@ data WholeProgram = WholeProgram
 
 data Package = Package
   { packageName             :: Maybe Name
-  , subPackages             :: [Package]
+  , subPackages             :: SubPackages
   , packageCompilationUnits :: [CompilationUnit]
   } deriving (Eq)
 
@@ -34,7 +43,8 @@ instance Show Package where
     (showName $ fromMaybe ["_"] name) ++
     (if length subs > 0
        then " subs(" ++
-            (intercalate ", " $ map (showName . fromJust . packageName) subs) ++
+            (intercalate ", " $
+             map (showName . fromJust . packageName) $ map snd subs) ++
             ")"
        else "")
 
@@ -201,10 +211,3 @@ data Operator
   | Mod
   | Negate
   deriving (Eq, Show)
-
-showName :: [String] -> String
-showName l = intercalate "." l
-
-extractClassName :: Maybe ClassDeclaration -> String
-extractClassName Nothing  = "N/A"
-extractClassName (Just c) = className c
