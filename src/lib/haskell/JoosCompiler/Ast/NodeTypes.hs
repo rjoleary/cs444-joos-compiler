@@ -197,7 +197,7 @@ data InnerType
   deriving (Eq)
 
 instance Show InnerType where
-  show Boolean       = "byte"
+  show Boolean       = "boolean"
   show Byte          = "byte"
   show Char          = "char"
   show Int           = "int"
