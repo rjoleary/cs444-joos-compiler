@@ -3,6 +3,16 @@ module JoosCompiler.Ast
   , AstWrapper(..)
   , AstNode(..)
   , wholeProgramTransformer
+  , isBlock
+  , isClassDeclaration
+  , isField
+  , isImport
+  , isLocalVariable
+  , isMethod
+  , isModifier
+  , isModifiers
+  , isPackage
+  , isType
   ) where
 
 import           JoosCompiler.Ast.Core

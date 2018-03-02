@@ -79,29 +79,41 @@ on the table:
 -}
 module SymbolTable where
 
-import Data.Maybe
-import qualified Data.Map.Strict as Map
-import JoosCompiler.Ast
-import JoosCompiler.Ast.NodeTypes
+import qualified Data.Map.Strict            as Map
+import           Data.Maybe
+import           JoosCompiler.Ast
+import           JoosCompiler.Ast.NodeTypes
 
 type SymbolTable = Map.Map Canonical Symbol
 
-data SymbolType = Package | Import | Class | Interface | Field | Constructor | Method | Parameter | Local deriving(Show)
+data SymbolType
+  = Package
+  | Import
+  | Class
+  | Interface
+  | Field
+  | Constructor
+  | Method
+  | Parameter
+  | Local
+  deriving (Show)
 
-data Canonical = Canonical Name deriving (Eq, Ord)
+data Canonical =
+  Canonical Name
+  deriving (Eq, Ord)
 
 data Symbol = Symbol
-    { symbolType      :: SymbolType
-    , symbolName      :: String     -- Concatenated with dots '.'
-    , symbolCanonical :: Canonical
-    , symbolNode      :: AstWrapper
-    }
+  { symbolType      :: SymbolType
+  , symbolName      :: String -- Concatenated with dots '.'
+  , symbolCanonical :: Canonical
+  , symbolNode      :: AstWrapper
+  }
 
 instance Show Symbol where
-    show x = show (symbolType x) ++ " " ++ show (symbolCanonical x)
+  show x = show (symbolType x) ++ " " ++ show (symbolCanonical x)
 
 instance Show Canonical where
-    show (Canonical name) = concatName name
+  show (Canonical name) = concatName name
 
 -- Left: String containing and error mesesage
 -- Right: The created symbol table
@@ -111,33 +123,28 @@ createSymbolTable :: AstWrapper -> SymbolTableResult
 createSymbolTable = createSymbolTable' (Canonical [])
   where
     createSymbolTable' :: Canonical -> AstWrapper -> SymbolTableResult
-
     createSymbolTable' canonical ast@(AstWholeProgram (WholeProgram xs)) =
-        foldl merge empty $ map (createSymbolTable' canonical . AstCompilationUnit) xs
-
-    createSymbolTable' canonical ast@(AstCompilationUnit x@CompilationUnit{}) = packageTable --`merge` createSymbolTable'
+      foldl merge empty $
+      map (createSymbolTable' canonical . AstCompilationUnit) xs
+    createSymbolTable' canonical ast@(AstCompilationUnit x@CompilationUnit {}) =
+      packageTable --`merge` createSymbolTable'
       where
         packageName = concatName $ fromMaybe ["_"] (package x) -- '_' is the unamed package
-        packageTable = singleton (createSymbol Package packageName canonical ast)
+        packageTable =
+          singleton (createSymbol Package packageName canonical ast)
         --importsTable = singleton (Symbol Import )
-
     --createSymbolTable' canonical (ClassDeclaration ast) = Right (Map.singleton)
-
     createSymbolTable' _ _ = empty
-
     createSymbol :: SymbolType -> String -> Canonical -> AstWrapper -> Symbol
     createSymbol symbolType name (Canonical prefix) ast =
-        (Symbol symbolType name (Canonical (prefix ++ [name])) ast)
-
+      (Symbol symbolType name (Canonical (prefix ++ [name])) ast)
     empty :: SymbolTableResult
     empty = Right Map.empty
-
     singleton :: Symbol -> SymbolTableResult
     singleton symbol = Right $ Map.singleton (symbolCanonical symbol) symbol
-
     merge :: SymbolTableResult -> SymbolTableResult -> SymbolTableResult
     err@(Left _) `merge` _ = err
     _ `merge` err@(Left _) = err
     (Right x) `merge` (Right y)
-      | Map.null (Map.intersection x y)  = Right (Map.union x y)
-      | otherwise                        = Left "Symbol conflict"
+      | Map.null (Map.intersection x y) = Right (Map.union x y)
+      | otherwise = Left "Symbol conflict"

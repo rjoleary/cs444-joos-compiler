@@ -1,7 +1,7 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-GHC = stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
+GHC = stack build --only-dependencies && stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
 
 DOC_INPUT := $(sort $(wildcard ./docs/*.md))
 DOC_OUTPUT := $(patsubst %.md,%.pdf,${DOC_INPUT})
@@ -28,7 +28,7 @@ HS_BUILD := ghc_build
 
 HS_TEST := test/haskell
 
-HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${HS_TEST}"
+HS_INCLUDE := "${HS_LIB}:${LEXER_SRC}:${COMPILER_SRC}:${HS_TEST}"
 
 ALL_HS_FILES := ${HS_LIB_FILES} ${LEXER_FILES} ${WEEDER_FILES} ${COMPILER_FILES}
 
