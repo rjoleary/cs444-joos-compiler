@@ -21,7 +21,7 @@ classDeclarationTransformer transformedChildren t@(Node label _) =
   , interfaces = _interfaces
   , classFields = vars
   , methods = _methods
-  , constructor = _constructor
+  , constructors = _constructors
   }
   where
     _isInterface = (kInterfaceDeclaration == tokenName label)
@@ -31,7 +31,7 @@ classDeclarationTransformer transformedChildren t@(Node label _) =
     _interfaces = getInterfaceNames t
     vars = map astField $ getClassFields transformedChildren
     _methods = getClassMethods transformedChildren
-    _constructor = Nothing
+    _constructors = getClassConstructors transformedChildren
 
 getClassFields :: [AstNode] -> [AstWrapper]
 getClassFields ts = map rootLabel fieldNodes
@@ -42,6 +42,11 @@ getClassMethods :: [AstNode] -> [Method]
 getClassMethods ts = map (astMethod . rootLabel) methodNodes
   where
     methodNodes = findChildren1 isMethod ts
+
+getClassConstructors :: [AstNode] -> [Method]
+getClassConstructors ts = map (astConstructor . rootLabel) constructorNodes
+  where
+    constructorNodes = findChildren1 isConstructor ts
 
 getSuperName :: TaggedParseTree -> Name
 getSuperName t = extractName nameParts

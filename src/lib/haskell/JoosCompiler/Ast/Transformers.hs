@@ -1,6 +1,7 @@
 module JoosCompiler.Ast.Transformers
   ( classDeclarationTransformer
   , compilationUnitTransformer
+  , constructorTransformer
   , blockTransformer
   , cstTransformer
   , fieldTransformer

@@ -10,6 +10,7 @@ data AstWrapper
   | AstBlock Block
   | AstWholeProgram WholeProgram
   | AstCompilationUnit { astCompilationUnit :: CompilationUnit }
+  | AstConstructor { astConstructor :: Method }
   | AstField { astField :: Field }
   | AstImport { astImport :: ImportDeclaration }
   | AstLocalVariable { astLocalVariable :: Local }
@@ -34,6 +35,10 @@ isBlock _            = False
 isClassDeclaration :: AstWrapper -> Bool
 isClassDeclaration (AstClassDeclaration _) = True
 isClassDeclaration _                       = False
+
+isConstructor :: AstWrapper -> Bool
+isConstructor (AstConstructor _) = True
+isConstructor _                  = False
 
 isField :: AstWrapper -> Bool
 isField (AstField _) = True

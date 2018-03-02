@@ -36,6 +36,7 @@ getTransformer t@(Node label _)
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     classDeclarationTransformer
   | (tokenName label) == kCompilationUnit = compilationUnitTransformer
+  | (tokenName label) == kConstructorDeclaration = constructorTransformer
   | (tokenName label) == kFieldDeclaration = fieldTransformer
   | (tokenName label) == kImportDeclaration = importTransformer
   | (tokenName label) == kLocalVariableDeclaration = localVariableTransformer

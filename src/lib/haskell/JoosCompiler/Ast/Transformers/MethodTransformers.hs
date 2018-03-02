@@ -1,5 +1,6 @@
 module JoosCompiler.Ast.Transformers.MethodTransformers
-  ( methodTransformer
+  ( constructorTransformer
+  , methodTransformer
   ) where
 
 import           Data.Tree
@@ -9,6 +10,21 @@ import           JoosCompiler.Ast.Utils
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
+
+constructorTransformer :: Transformer
+constructorTransformer transformedChildren t@(Node label _) =
+  AstConstructor $
+  Method
+  { methodType = Void
+  , methodModifiers = _modifiers
+  , methodName = []
+  , formalParameters = _formalParams
+  , statements = _statements
+  }
+  where
+    _modifiers = astModifiers $ getMethodModifiers transformedChildren
+    _formalParams = getFormalParams transformedChildren
+    _statements = getStatements transformedChildren
 
 methodTransformer :: Transformer
 methodTransformer transformedChildren t@(Node label _) =

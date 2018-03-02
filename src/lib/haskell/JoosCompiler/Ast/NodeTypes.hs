@@ -96,7 +96,7 @@ data ClassDeclaration = ClassDeclaration
   , interfaces     :: [Name]
   , classFields    :: [Field]
   , methods        :: [Method]
-  , constructor    :: Maybe Method
+  , constructors   :: [Method]
   }
 
 instance Show ClassDeclaration where

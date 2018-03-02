@@ -27,6 +27,9 @@ kClassDeclaration = "ClassDeclaration"
 kCompilationUnit :: String
 kCompilationUnit = "CompilationUnit"
 
+kConstructorDeclaration :: String
+kConstructorDeclaration = "ConstructorDeclaration"
+
 kExpression :: String
 kExpression = "Expression"
 
