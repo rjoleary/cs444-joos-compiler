@@ -52,11 +52,8 @@ resolvePackage name (Node (AstWholeProgram (WholeProgram packages)) _) =
     0 -> Nothing
     _ -> Just $ head results
   where
-    rootAList = zip (map (fromJust . packageName) packages) packages
-    rootResults = lookup name rootAList
-    subResults = map ((lookup name) . subPackages) packages
     results :: [Package]
-    results = catMaybes $ rootResults : subResults
+    results = catMaybes $ map ((lookup name) . subPackages) packages
 resolvePackage _ _ = error "resolvePackage not run on program"
 
 resolveClass :: Name -> AstNode -> Maybe ClassDeclaration

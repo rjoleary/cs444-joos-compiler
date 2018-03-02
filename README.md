@@ -111,12 +111,13 @@ import Data.Tree
 import JoosCompiler.Ast.Utils
 import JoosCompiler.TokenTypeConstants
 
-classname <- readFile "test/joos_classname.txt"
-source <- readFile "test/joos_input.txt"
-tokens <- readFile "test/joos_tokens.txt"
-contents <- readFile "test/joos_parse.txt"
-let tree = treeify contents
-let taggedTree = tagTree tree tokens source
-let ast = cstsToAst [taggedTree]
+let filesnames = [ "./test/positive/big_package/Main.java"
+                 , "./test/positive/big_package/Thing2.java"
+                 , "./test/positive/big_package/Thing.java"
+                 ]
+
+taggedTrees <- mapM taggedTreeFromFile filenames
+
+let ast = cstsToAst taggedTrees
 putStr $ drawTree $ fmap show ast
 ```
