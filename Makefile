@@ -7,7 +7,6 @@ DOC_INPUT := $(sort $(wildcard ./docs/*.md))
 DOC_OUTPUT := $(patsubst %.md,%.pdf,${DOC_INPUT})
 
 HS_LIB   := src/lib/haskell
-# This is not matching all files for some reason
 HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs \
 			${HS_LIB}/*/*.hs \
 			${HS_LIB}/*/*/*.hs \

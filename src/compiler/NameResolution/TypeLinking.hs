@@ -10,7 +10,7 @@ import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.TreeUtils
 
 noTwoFieldsSameName :: AstRulePredicate
-noTwoFieldsSameName t = not $ any allUnique classFieldNames
+noTwoFieldsSameName t = not $ all allUnique classFieldNames
   where
     classNodes = findChildren isClassDeclaration t
     _classFields = map (classFields . astClass . rootLabel) classNodes
