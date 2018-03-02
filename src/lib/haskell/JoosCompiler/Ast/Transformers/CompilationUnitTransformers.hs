@@ -2,6 +2,7 @@ module JoosCompiler.Ast.Transformers.CompilationUnitTransformers
   ( compilationUnitTransformer
   ) where
 
+import           Data.Maybe
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
@@ -14,8 +15,12 @@ compilationUnitTransformer transformedChildren t =
   CompilationUnit
   { cuPackage = getPackage transformedChildren
   , imports = getImports transformedChildren
-  , classDecl = getClassDecl transformedChildren
+  , classDecl = _classDecl
+  , cuClassName = _className
   }
+  where
+    _classDecl = getClassDecl transformedChildren
+    _className = className $ fromJust _classDecl
 
 getPackage :: [AstNode] -> Maybe Name
 getPackage ts

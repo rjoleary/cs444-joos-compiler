@@ -16,6 +16,8 @@ groupByPackage unitNodes = Node program unitNodes
     packages = map groupUnitsByPackageName packageNames
     program = AstWholeProgram $ WholeProgram packages
     groupUnitsByPackageName :: Maybe Name -> Package
-    groupUnitsByPackageName packageName = Package packageName [] packageUnits
+    groupUnitsByPackageName packageName =
+      Package packageName [] packageUnitsAList
       where
         packageUnits = filter ((== packageName) . cuPackage) compilationUnits
+        packageUnitsAList = zip (map cuClassName packageUnits) packageUnits

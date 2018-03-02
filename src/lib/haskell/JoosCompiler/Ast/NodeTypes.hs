@@ -7,6 +7,8 @@ type Name = [String]
 
 type SubPackages = [(Name, Package)]
 
+type PackageCompilationUnits = [(String, CompilationUnit)]
+
 concatName :: Name -> String
 concatName []     = ""
 concatName [x]    = x
@@ -35,11 +37,11 @@ data WholeProgram = WholeProgram
 data Package = Package
   { packageName             :: Maybe Name
   , subPackages             :: SubPackages
-  , packageCompilationUnits :: [CompilationUnit]
+  , packageCompilationUnits :: PackageCompilationUnits
   } deriving (Eq)
 
 instance Show Package where
-  show (Package name subs units) =
+  show (Package name subs _) =
     (showName $ fromMaybe ["_"] name) ++
     (if length subs > 0
        then " subs(" ++
@@ -49,14 +51,15 @@ instance Show Package where
        else "")
 
 data CompilationUnit
-  = CompilationUnit { cuPackage :: Maybe Name
-                    , imports   :: [ImportDeclaration]
-                    , classDecl :: Maybe ClassDeclaration }
+  = CompilationUnit { cuPackage   :: Maybe Name
+                    , imports     :: [ImportDeclaration]
+                    , classDecl   :: Maybe ClassDeclaration
+                    , cuClassName :: String }
   | EmptyFile
   deriving (Eq)
 
 instance Show CompilationUnit where
-  show (CompilationUnit p i c) =
+  show (CompilationUnit p i c _) =
     "CompilationUnit(p=" ++
     (showName $ fromMaybe ["N/A"] p) ++
     " i=[" ++
