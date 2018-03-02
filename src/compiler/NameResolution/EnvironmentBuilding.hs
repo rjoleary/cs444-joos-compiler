@@ -1,4 +1,4 @@
-module NameResolution.TypeLinking
+module NameResolution.EnvironmentBuilding
   ( typeLinkingRules
   ) where
 

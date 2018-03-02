@@ -8,7 +8,7 @@ import           Data.Tree
 import           JoosCompiler.Ast
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
-import           NameResolution.TypeLinking
+import           NameResolution.EnvironmentBuilding
 import           SymbolTable
 import           System.Environment
 
