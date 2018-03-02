@@ -9,6 +9,7 @@ import           JoosCompiler.Ast
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
 import           NameResolution.EnvironmentBuilding
+import           NameResolution.HierarchyChecking
 import           SymbolTable
 import           System.Environment
 
@@ -22,17 +23,30 @@ checkRules rules t = map getRuleString $ filter checkRule rules
 
 main :: IO ()
 main = do
+
+  -- AST generation
   filenames <- getArgs
   taggedTrees <- mapM taggedTreeFromFile filenames
   let ast = cstsToAst taggedTrees
   putStrLn $ drawTree (fmap show ast)
+
+  -- Symbol table
   let symbolTable = createSymbolTable (rootLabel ast)
   case symbolTable of
     Right symbolTable' -> putStrLn (show symbolTable')
     Left err           -> putStrLn err
+
+  -- Type linking
   let failedRules = checkRules typeLinkingRules ast
   putStrLn $ intercalate "\n" failedRules
   when (length failedRules > 0) $ exitError "See failed rules above"
+
+  -- Hierarchy checking
+  let hierarchy = checkHierarchy ast
+  case hierarchy of
+    Right _  -> return ()
+    Left err -> exitError err
+
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""
