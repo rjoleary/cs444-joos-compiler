@@ -12,11 +12,11 @@ import           JoosCompiler.Treeify
 localVariableTransformer :: Transformer
 localVariableTransformer transformedChildren t =
   AstLocalVariable $
-  Field
-  { fieldType = _type
-  , fieldModifiers = [] -- Local variables have no modifiers
-  , fieldName = name
-  , fieldValue = _value
+  Local
+  { localType = _type
+  , localModifiers = [] -- Local variables have no modifiers
+  , localName = name
+  , localValue = _value
   }
   where
     _type = getType transformedChildren

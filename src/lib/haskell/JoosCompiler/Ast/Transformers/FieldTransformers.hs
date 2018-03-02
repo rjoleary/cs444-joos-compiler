@@ -14,7 +14,6 @@ fieldTransformer transformedChildren t =
   , fieldModifiers = _fieldModifiers
   , fieldName = name
   , fieldValue = _value
-  , isClassField = True
   }
   where
     _type = getType transformedChildren

@@ -12,7 +12,7 @@ data AstWrapper
   | AstCompilationUnit { astCompilationUnit :: CompilationUnit }
   | AstField { astField :: Field }
   | AstImport { astImport :: ImportDeclaration }
-  | AstLocalVariable { astLocalVariable :: Field }
+  | AstLocalVariable { astLocalVariable :: Local }
   | AstMethod { astMethod :: Method }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }

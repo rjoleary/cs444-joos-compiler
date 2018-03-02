@@ -27,18 +27,17 @@ methodTransformer transformedChildren t@(Node label _) =
     _formalParams = getFormalParams transformedChildren
     _statements = getStatements transformedChildren
 
-getFormalParams :: [AstNode] -> [Field]
-getFormalParams ts = map convertToField formalParamNodes
+getFormalParams :: [AstNode] -> [Local]
+getFormalParams ts = map convertToLocal formalParamNodes
   where
     formalParamNodes = findAstChildrenByTokenName1 kFormalParameter ts
-    convertToField :: AstNode -> Field
-    convertToField paramNode =
-      Field
-      { fieldType = _type
-      , fieldModifiers = []
-      , fieldName = [_name]
-      , fieldValue = (Literal "3")
-      , isClassField = True
+    convertToLocal :: AstNode -> Local
+    convertToLocal paramNode =
+      Local
+      { localType = _type
+      , localModifiers = []
+      , localName = [_name]
+      , localValue = (Literal "3")
       }
       where
         typeNode = (subForest paramNode) !! 0

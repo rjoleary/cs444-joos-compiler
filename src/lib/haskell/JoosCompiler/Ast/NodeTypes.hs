@@ -61,11 +61,26 @@ data Field = Field
   , fieldModifiers :: [Modifier]
   , fieldName      :: Name
   , fieldValue     :: Expression
-  , isClassField   :: Bool
   }
 
 instance Show Field where
-  show (Field _type _modifiers _name _ _) =
+  show (Field _type _modifiers _name _) =
+    m ++ show _type ++ " " ++ showName _name
+    where
+      m =
+        if length _modifiers > 0
+          then (intercalate " " $ map show _modifiers) ++ " "
+          else ""
+
+data Local = Local
+  { localType      :: Type
+  , localModifiers :: [Modifier]
+  , localName      :: Name
+  , localValue     :: Expression
+  }
+
+instance Show Local where
+  show (Local _type _modifiers _name _) =
     m ++ show _type ++ " " ++ showName _name
     where
       m =
@@ -107,7 +122,7 @@ data Method = Method
   { methodType       :: Type
   , methodModifiers  :: [Modifier]
   , methodName       :: Name
-  , formalParameters :: [Field]
+  , formalParameters :: [Local]
   , statements       :: [Statement]
   } deriving (Show)
 
@@ -123,7 +138,7 @@ data Expression
   deriving (Show)
 
 data Scope = Scope
-  { fields      :: [Field]
+  { scopeLocals :: [Local]
   , parentScope :: Maybe Scope
   } deriving (Show)
 

@@ -12,11 +12,11 @@ import           JoosCompiler.TreeUtils
 blockTransformer :: Transformer
 blockTransformer transformedChildren t = AstBlock $ Block $ scope
   where
-    _fields = getBlockFields transformedChildren
-    scope = Scope {fields = _fields, parentScope = Nothing}
+    _locals = getBlockLocals transformedChildren
+    scope = Scope {scopeLocals = _locals, parentScope = Nothing}
 
-getBlockFields :: [AstNode] -> [Field]
-getBlockFields ts = _fields
+getBlockLocals :: [AstNode] -> [Local]
+getBlockLocals ts = _locals
   where
     localVarNodes = findDirectChildren1 isLocalVariable isBlock ts
-    _fields = map (astLocalVariable . rootLabel) localVarNodes
+    _locals = map (astLocalVariable . rootLabel) localVarNodes
