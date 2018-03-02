@@ -46,15 +46,16 @@ qualifyClassName u@(CompilationUnit (Just _packageName) _ (Just _classDecl) _) =
   _packageName ++ [className _classDecl]
 qualifyClassName _ = error "Can't qualify a compilation unit without a class"
 
-resolvePackage :: Name -> AstNode -> Maybe Package
-resolvePackage name (Node (AstWholeProgram (WholeProgram packages)) _) =
+resolvePackageFromProgram :: Name -> AstNode -> Maybe Package
+resolvePackageFromProgram name (Node (AstWholeProgram (WholeProgram packages)) _) =
   case (length results) of
     0 -> Nothing
     _ -> Just $ head results
   where
     results :: [Package]
     results = catMaybes $ map ((lookup name) . subPackages) packages
-resolvePackage _ _ = error "resolvePackage not run on program"
+resolvePackageFromProgram _ _ =
+  error "resolvePackageFromProgram not run on program"
 
 resolveClass :: Name -> AstNode -> Maybe ClassDeclaration
 resolveClass [] program = Nothing
@@ -65,6 +66,6 @@ resolveClass name program
   where
     _className = last name
     _packageName = init name
-    package = resolvePackage _packageName program
+    package = resolvePackageFromProgram _packageName program
     units = packageCompilationUnits $ fromJust package
     unit = lookup _className units
