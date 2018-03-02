@@ -13,7 +13,7 @@ HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs \
 			${HS_LIB}/*/*/*/*.hs))
 
 COMPILER_SRC  := src/compiler
-COMPILER_FILES := $(sort $(wildcard ${COMPILER_SRC}/*.hs))
+COMPILER_FILES := $(sort $(wildcard ${COMPILER_SRC}/*.hs ${COMPILER_SRC}/*/*.hs))
 COMPILER_MAIN := ${COMPILER_SRC}/Main.hs
 
 LEXER_SRC  := src/lexer
