@@ -15,11 +15,7 @@ subPackage t@(Node oldProgram children) = Node newProgram children
   where
     packages = programPackages $ astWholeProgram oldProgram
     newPackages = map injectSubPackages packages
-    newPackageNames = map (fromJust . packageName) newPackages
-    newPackagesAList = zip newPackageNames newPackages
-    unpackagedUnits = getUnpackagedUnits children
-    rootPackage = Package Nothing newPackagesAList unpackagedUnits
-    newProgram = AstWholeProgram $ WholeProgram [rootPackage]
+    newProgram = AstWholeProgram $ WholeProgram newPackages
     injectSubPackages :: Package -> Package
     injectSubPackages p@(Package _packageName _ packageUnits) =
       Package _packageName subPackagesAList packageUnits
@@ -28,15 +24,8 @@ subPackage t@(Node oldProgram children) = Node newProgram children
         subPackageNames = map (fromJust . packageName) subPackages
         subPackagesAList = zip subPackageNames subPackages -- AList = association list
 
-getUnpackagedUnits :: [AstNode] -> PackageCompilationUnits
-getUnpackagedUnits ts = zip classNames filtered
-  where
-    units = map (astCompilationUnit . rootLabel) ts
-    _filtered = filter ((== Nothing) . cuPackage) units
-    filtered = filter ((/= Nothing) . classDecl) _filtered
-    classNames = map (className . fromJust . classDecl) filtered
-
 isSubPackageOf :: Package -> Package -> Bool
 isSubPackageOf (Package (Just name1) _ _) (Package (Just name2) _ _) =
   name2 `isProperPrefixOf` name1
+isSubPackageOf (Package (Just _) _ _) (Package Nothing _ _) = True
 isSubPackageOf _ _ = False
