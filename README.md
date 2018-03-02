@@ -117,6 +117,6 @@ tokens <- readFile "test/joos_tokens.txt"
 contents <- readFile "test/joos_parse.txt"
 let tree = treeify contents
 let taggedTree = tagTree tree tokens source
-let ast = cstToAst taggedTree
+let ast = cstsToAst [taggedTree]
 putStr $ drawTree $ fmap show ast
 ```
