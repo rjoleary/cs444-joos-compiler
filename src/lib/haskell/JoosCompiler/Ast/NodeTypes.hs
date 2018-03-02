@@ -19,12 +19,17 @@ data Modifier
   | Native
   deriving (Show)
 
-data WholeProgram =
-  WholeProgram [CompilationUnit]
-  deriving (Show)
+data WholeProgram = WholeProgram
+  { programPackages :: [Package]
+  } deriving (Show)
+
+data Package = Package
+  { packageName             :: Maybe Name
+  , packageCompilationUnits :: [CompilationUnit]
+  } deriving (Show)
 
 data CompilationUnit
-  = CompilationUnit { package   :: Maybe Name
+  = CompilationUnit { cuPackage :: Maybe Name
                     , imports   :: [ImportDeclaration]
                     , classDecl :: Maybe ClassDeclaration }
   | EmptyFile
@@ -39,7 +44,7 @@ instance Show CompilationUnit where
   show EmptyFile = "EmptyFile"
 
 data PackageDeclaration = PackageDeclaration
-  { packageName :: Name
+  { packageDeclarationName :: Name
   } deriving (Show)
 
 data ImportDeclaration = ImportDeclaration

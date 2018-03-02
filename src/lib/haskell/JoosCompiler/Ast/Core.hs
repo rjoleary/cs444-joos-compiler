@@ -2,6 +2,7 @@ module JoosCompiler.Ast.Core where
 
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
+import           JoosCompiler.Ast.SecondaryProcessing.PackageGrouping
 import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.TokenTypeConstants
@@ -22,6 +23,12 @@ cstToAst t = ast2
     ast1 = cstToAstTransform transformer t
     ast2 = injectScopesIntoChildrenBlocks ast1
     transformer = getTransformer t
+
+cstsToAst :: [TaggedParseTree] -> AstNode
+cstsToAst ts = grouped
+  where
+    transformed = map cstToAst ts
+    grouped = groupByPackage transformed
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)

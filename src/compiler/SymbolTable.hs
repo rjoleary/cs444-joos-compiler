@@ -87,7 +87,7 @@ import           JoosCompiler.Ast.NodeTypes
 type SymbolTable = Map.Map Canonical Symbol
 
 data SymbolType
-  = Package
+  = PackageSymbol
   | Import
   | Class
   | Interface
@@ -124,14 +124,13 @@ createSymbolTable = createSymbolTable' (Canonical [])
   where
     createSymbolTable' :: Canonical -> AstWrapper -> SymbolTableResult
     createSymbolTable' canonical ast@(AstWholeProgram (WholeProgram xs)) =
-      foldl merge empty $
-      map (createSymbolTable' canonical . AstCompilationUnit) xs
+      foldl merge empty $ map (createSymbolTable' canonical . AstPackage) xs
     createSymbolTable' canonical ast@(AstCompilationUnit x@CompilationUnit {}) =
       packageTable --`merge` createSymbolTable'
       where
-        packageName = concatName $ fromMaybe ["_"] (package x) -- '_' is the unamed package
+        packageName = concatName $ fromMaybe ["_"] (cuPackage x) -- '_' is the unamed package
         packageTable =
-          singleton (createSymbol Package packageName canonical ast)
+          singleton (createSymbol PackageSymbol packageName canonical ast)
         --importsTable = singleton (Symbol Import )
     --createSymbolTable' canonical (ClassDeclaration ast) = Right (Map.singleton)
     createSymbolTable' _ _ = empty

@@ -9,14 +9,15 @@ data AstWrapper
   = AstClassDeclaration { astClass :: ClassDeclaration }
   | AstBlock Block
   | AstWholeProgram WholeProgram
-  | AstCompilationUnit CompilationUnit
+  | AstCompilationUnit { astCompilationUnit :: CompilationUnit }
   | AstField { astField :: Field }
   | AstImport { astImport :: ImportDeclaration }
   | AstLocalVariable { astLocalVariable :: Field }
   | AstMethod { astMethod :: Method }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }
-  | AstPackage { astPackage :: PackageDeclaration }
+  | AstPackage { astPackage :: Package }
+  | AstPackageDeclaration { astPackageDeclaration :: PackageDeclaration }
   | AstStatement { astStatement :: Statement }
   | AstTaggedToken { astTaggedToken :: TaggedToken }
   | AstType { astType :: Type }
@@ -67,6 +68,10 @@ getModifiers ts = rootLabel $ head $ findChildren1 isModifiers ts
 isPackage :: AstWrapper -> Bool
 isPackage (AstPackage _) = True
 isPackage _              = False
+
+isPackageDeclaration :: AstWrapper -> Bool
+isPackageDeclaration (AstPackageDeclaration _) = True
+isPackageDeclaration _                         = False
 
 isType :: AstWrapper -> Bool
 isType (AstType _) = True

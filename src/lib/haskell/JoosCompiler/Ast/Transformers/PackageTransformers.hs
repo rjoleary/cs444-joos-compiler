@@ -11,7 +11,7 @@ import           JoosCompiler.Treeify
 
 packageTransformer :: Transformer
 packageTransformer _ t =
-  AstPackage $ PackageDeclaration {packageName = getPackageName t}
+  AstPackageDeclaration $ PackageDeclaration $ getPackageName t
 
 getPackageName :: TaggedParseTree -> Name
 getPackageName t = extractName nameNodes

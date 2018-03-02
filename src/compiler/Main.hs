@@ -23,15 +23,13 @@ checkRules rules t = map getRuleString $ filter checkRule rules
 main :: IO ()
 main = do
   filenames <- getArgs
-  astForest <- mapM astFromFile filenames
-  let ast = Node (wholeProgramTransformer astForest) (astForest)
+  taggedTrees <- mapM taggedTreeFromFile filenames
+  let ast = cstsToAst taggedTrees
   putStrLn $ drawTree (fmap show ast)
-
   let symbolTable = createSymbolTable (rootLabel ast)
   case symbolTable of
     Right symbolTable' -> putStrLn (show symbolTable')
     Left err           -> putStrLn err
-
   let failedRules = checkRules typeLinkingRules ast
   putStrLn $ intercalate "\n" failedRules
   when (length failedRules > 0) $ exitError "See failed rules above"
@@ -41,13 +39,12 @@ stripSuffix ".java" = ""
 stripSuffix (x:xs)  = x : (stripSuffix xs)
 stripSuffix ""      = error "Filename does not end in .java"
 
-astFromFile :: String -> IO AstNode
-astFromFile filename = do
+taggedTreeFromFile :: String -> IO TaggedParseTree
+taggedTreeFromFile filename = do
   let basename = stripSuffix filename
   source <- readFile filename
   tokens <- readFile (basename ++ ".tokens")
   parse <- readFile (basename ++ ".parse")
   let tree = treeify parse
   let taggedTree = tagTree tree tokens source
-  let ast = cstToAst taggedTree
-  return ast
+  return taggedTree

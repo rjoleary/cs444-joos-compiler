@@ -1,8 +1,8 @@
 module JoosCompiler.Ast
   ( cstToAst
+  , cstsToAst
   , AstWrapper(..)
   , AstNode(..)
-  , wholeProgramTransformer
   , isBlock
   , isClassDeclaration
   , isField
@@ -18,5 +18,4 @@ module JoosCompiler.Ast
 import           JoosCompiler.Ast.Core
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
-import           JoosCompiler.Ast.Transformers.WholeProgramTransformers
 import           JoosCompiler.Treeify

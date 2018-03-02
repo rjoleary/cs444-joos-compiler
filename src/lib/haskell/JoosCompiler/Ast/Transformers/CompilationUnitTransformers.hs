@@ -12,19 +12,20 @@ compilationUnitTransformer :: Transformer
 compilationUnitTransformer transformedChildren t =
   AstCompilationUnit $
   CompilationUnit
-  { package = getPackage transformedChildren
+  { cuPackage = getPackage transformedChildren
   , imports = getImports transformedChildren
   , classDecl = getClassDecl transformedChildren
   }
 
 getPackage :: [AstNode] -> Maybe Name
 getPackage ts
-  | (length packageNodes) > 0 = Just packageName
+  | (length packageDeclarationNodes) > 0 = Just packageName
   | otherwise = Nothing
   where
-    packageNodes = findChildren1 isPackage ts
-    package = head packageNodes
-    packageName = [] -- packageName $ astPackage $ rootLabel package
+    packageDeclarationNodes = findChildren1 isPackageDeclaration ts
+    _astPackageDeclaration = rootLabel $ head packageDeclarationNodes
+    packageDeclaration = astPackageDeclaration $ _astPackageDeclaration
+    packageName = packageDeclarationName $ packageDeclaration
 
 getImports :: [AstNode] -> [ImportDeclaration]
 getImports ts = imports
