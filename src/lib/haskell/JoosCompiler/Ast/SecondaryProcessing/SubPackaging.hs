@@ -23,5 +23,5 @@ subPackage t@(Node oldProgram children) = Node newProgram children
 
 isSubPackageOf :: Package -> Package -> Bool
 isSubPackageOf (Package (Just name1) _ _) (Package (Just name2) _ _) =
-  name1 `isProperPrefixOf` name2
+  name2 `isProperPrefixOf` name1
 isSubPackageOf _ _ = False

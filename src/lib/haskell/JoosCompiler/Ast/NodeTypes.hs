@@ -27,7 +27,16 @@ data Package = Package
   { packageName             :: Maybe Name
   , subPackages             :: [Package]
   , packageCompilationUnits :: [CompilationUnit]
-  } deriving (Eq, Show)
+  } deriving (Eq)
+
+instance Show Package where
+  show (Package name subs units) =
+    (showName $ fromMaybe ["_"] name) ++
+    (if length subs > 0
+       then " subs(" ++
+            (intercalate ", " $ map (showName . fromJust . packageName) subs) ++
+            ")"
+       else "")
 
 data CompilationUnit
   = CompilationUnit { cuPackage :: Maybe Name
