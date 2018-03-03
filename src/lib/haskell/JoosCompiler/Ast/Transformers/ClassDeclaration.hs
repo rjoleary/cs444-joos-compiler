@@ -54,7 +54,8 @@ getClassConstructors ts = map (astConstructor . rootLabel) constructorNodes
 getSuperName :: TaggedParseTree -> Name
 getSuperName t = extractName nameParts
   where
-    nameNodes = findChildrenByTokenName kName t
+    superNodes = findChildrenByTokenName kSuper t
+    nameNodes = findChildrenByTokenName1 kName superNodes
     parentNameNode = head $ nameNodes
     nameParts =
       if length nameNodes > 0
