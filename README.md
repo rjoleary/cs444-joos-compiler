@@ -121,3 +121,7 @@ taggedTrees <- mapM taggedTreeFromFile filenames
 let ast = cstsToAst taggedTrees
 putStr $ drawTree $ fmap show ast
 ```
+
+### Changing the test set
+
+    make TESTSET=test/marmoset/a2 test.positive
