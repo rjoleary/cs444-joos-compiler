@@ -1,5 +1,5 @@
 module NameResolution.EnvironmentBuilding
-  ( typeLinkingRules
+  ( environmentBuildingRules
   ) where
 
 import           AstRule
@@ -34,8 +34,8 @@ noTwoClassesSameCanonicalName t = not $ allUnique qualified
     classUnits = filter ((/= Nothing) . classDecl) units
     qualified = map qualifyClassName classUnits
 
-typeLinkingRules :: [AstRule]
-typeLinkingRules =
+environmentBuildingRules :: [AstRule]
+environmentBuildingRules =
   [ ("Class contains duplicate field names", noTwoFieldsSameName)
   , ( "Duplicate identifier for locals in overlapping scopes"
     , noTwoLocalsSameName)

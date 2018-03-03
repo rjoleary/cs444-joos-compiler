@@ -38,6 +38,10 @@ isClassDeclaration :: AstWrapper -> Bool
 isClassDeclaration (AstClassDeclaration _) = True
 isClassDeclaration _                       = False
 
+isCompilationUnit :: AstWrapper -> Bool
+isCompilationUnit (AstCompilationUnit _) = True
+isCompilationUnit _                  = False
+
 isConstructor :: AstWrapper -> Bool
 isConstructor (AstConstructor _) = True
 isConstructor _                  = False

@@ -10,6 +10,7 @@ import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
+import           NameResolution.TypeLinking
 import           SymbolTable
 import           System.Environment
 
@@ -29,6 +30,11 @@ main = do
   taggedTrees <- mapM taggedTreeFromFile filenames
   let ast = cstsToAst taggedTrees
   putStrLn $ drawTree (fmap show ast)
+
+  -- Type linking
+  let failedRules = checkRules environmentBuildingRules ast
+  putStrLn $ intercalate "\n" failedRules
+  when (length failedRules > 0) $ exitError "See failed rules above"
 
   -- Symbol table
   let symbolTable = createSymbolTable (rootLabel ast)
