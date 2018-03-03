@@ -165,6 +165,9 @@ isMethodPublic x = Public `elem` methodModifiers x
 isMethodProtected :: Method -> Bool
 isMethodProtected x = Protected `elem` methodModifiers x
 
+isMethodStatic :: Method -> Bool
+isMethodStatic x = Static `elem` methodModifiers x
+
 data Expression
   = MethodInvocation { functionName :: Name
                      , arguments    :: [Expression] }

@@ -3,6 +3,8 @@ module NameResolution.HierarchyChecking
   ) where
 
 import Data.Tree
+import Data.List
+import Data.Function
 import Data.List.Unique
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
@@ -43,23 +45,29 @@ checkHierarchy ast = do
     withErrorFor types "A class must not declare two constructors with the same parameter types"
       (allUnique . map methodSignature . constructors)
 
-    withError "A class or interface must not inherit two methods with the same signature but different return types"
-      True -- TODO
+    --withErrorFor types "A class or interface must not inherit two methods with the same signature but different return types"
+      --(\t ->
+        --let returnAndSignature = map (\x -> (show $ methodType x, methodSignature x)) $ indirectMethods t
+        --in and $ map (\x -> all (==head x) x) $ map (map fst) $ groupBy (snd `on` (==)) $ sortBy snd $ returnAndSignature
+      --)
 
     -- TODO: everything after this point has no tests
     withErrorFor classes "A class that contains any abstract methods must be abstract"
       (\x -> (not $ hasAbstractMethod x) || isAbstractClass x)
 
-    withError "A nonstatic method must not replace a static method"
-      True -- TODO
+    withErrorFor classes "A nonstatic method must not replace a static method"
+      (\clazz ->
+        let staticMethods = map methodSignature $ filter isMethodStatic $ indirectMethods clazz
+        in and $ map (not . (`elem` staticMethods)) $ map methodSignature $ filter (not . isMethodStatic) $ methods clazz
+      )
 
     withError "A method must not replace a method with a different return type"
       True -- TODO
 
     withErrorFor classes "A protected method must not replace a public method"
       (\clazz ->
-        let finalMethods = map methodSignature $ filter isMethodPublic $ indirectMethods clazz
-        in and $ map (not . (`elem` finalMethods)) $ map methodSignature $ filter isMethodProtected $ methods clazz
+        let protectedMethods = map methodSignature $ filter isMethodPublic $ indirectMethods clazz
+        in and $ map (not . (`elem` protectedMethods)) $ map methodSignature $ filter isMethodProtected $ methods clazz
       )
 
     withErrorFor classes "A method must not replace a final method"
