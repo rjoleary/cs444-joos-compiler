@@ -67,7 +67,7 @@ getInterfaceNames t = map extractName nameNodesList
   where
     interfaceNodes = findChildrenByTokenName kInterfaceTypeList t
     parentNameNodes =
-      mconcat $
+      map head $
       map (findDirectChildrenByTokenName1 kName kInterfaceTypeList) $
       map subForest interfaceNodes
     nameNodesList = map (findChildrenByTokenName kIdentifier) parentNameNodes
