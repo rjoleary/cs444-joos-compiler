@@ -60,7 +60,7 @@ checkHierarchy ast = do
     -- TODO: make smart
     dumbResolve :: Name -> ClassDeclaration
     dumbResolve []   = dumbResolve ["Object"] -- TODO: make Object the default super
-    dumbResolve name = head $ filter (\x -> className x == last name) $ classes
+    dumbResolve name = head $ filter (\x -> className x == last name) $ types
       where head (x:_) = x
             head []    = error ("Could not resolve '" ++ showName name ++ "', type linking should have caught this")
 
