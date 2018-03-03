@@ -93,6 +93,9 @@ kName = "Name"
 kNative :: String
 kNative = "native"
 
+kObject :: String
+kObject = "Object"
+
 kPackageDeclaration :: String
 kPackageDeclaration = "PackageDeclaration"
 

@@ -27,7 +27,10 @@ classDeclarationTransformer transformedChildren t@(Node label _) =
     _isInterface = (kInterfaceDeclaration == tokenName label)
     modifiers = astModifiers $ getClassModifiers transformedChildren
     _className = getClassNameFromDeclaration t
-    _super = getSuperName t
+    _superTemp = getSuperName t
+    _super
+      | _superTemp == [] = [kObject]
+      | otherwise = _superTemp
     _interfaces = getInterfaceNames t
     vars = map astField $ getClassFields transformedChildren
     _methods = getClassMethods transformedChildren
