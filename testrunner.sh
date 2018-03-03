@@ -1,6 +1,7 @@
 #!/bin/bash
 
 COMPILER=${COMPILER-./joosc}
+STDLIB=$(find test/stdlib/2.0 -name *.java)
 
 RUN=0
 PASSED=0
@@ -31,7 +32,7 @@ runtests() {
         RUN=$((RUN+1))
         echo -n "$RUN: $testname... "
         rm -f test/joos_{input,tokens,tree}.txt
-        $COMPILER $files > /dev/null
+        $COMPILER $files $STDLIB > /dev/null
         case $? in
             $PASS_CODE)
                 PASSED=$((PASSED+1))
