@@ -1,0 +1,4 @@
+#!/bin/bash
+
+STDLIB=$(find test/stdlib/2.0 -name *.java)
+./joosc "$@" $STDLIB
