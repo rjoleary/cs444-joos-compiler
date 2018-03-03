@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::env::args;
 use std::fs::File;
 use std::io::Read;
 use std::process::exit;
@@ -46,7 +47,7 @@ type Tokens = Vec<Terminal>;
 
 fn main() {
     let (grammar, table) = read_grammar("def/joos.lr1").unwrap();
-    let mut tokens = read_tokens("test/joos_tokens.txt").unwrap();
+    let mut tokens = read_tokens(args().nth(1).unwrap().as_str()).unwrap();
     let mut augmented = vec!["BOF".to_string()];
     augmented.append(&mut tokens);
     augmented.push("EOF".to_string());

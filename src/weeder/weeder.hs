@@ -1,6 +1,7 @@
 import           Control.Monad
 import           Data.List
 import           Data.Tree
+import           System.Environment
 import           JoosCompiler.Exit
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
@@ -228,10 +229,11 @@ taggedWeed tree classname = or $ map (\f -> f classname tree) taggedRules
 
 main :: IO ()
 main = do
-  classname <- readFile "test/joos_classname.txt"
-  source <- readFile "test/joos_input.txt"
-  tokens <- readFile "test/joos_tokens.txt"
-  contents <- readFile "test/joos_parse.txt"
+  args <- getArgs
+  let classname = args!!0
+  source <- readFile (args!!1)
+  tokens <- readFile (args!!2)
+  contents <- readFile (args!!3)
   let tree = treeify contents
   let taggedTree = tagTree tree tokens source
   putStrLn $ drawTree (fmap show taggedTree)

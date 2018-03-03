@@ -3,6 +3,8 @@
 HIGHLIGHT_BEGIN=$(tput setf 2)
 HIGHLIGHT_END=$(tput sgr0)
 
+# TODO: check for whitespace
+
 # Check extensions.
 for FILE; do
     echo "$FILE" | grep '\.java$'; ret="$?"
@@ -16,11 +18,10 @@ done
 for FILE; do
     TOKENS="${FILE%.java}.tokens"
     PARSE="${FILE%.java}.parse"
+    CLASSNAME="$(basename "$FILE" .java)"
 
     # Lexer
-    cp "$FILE" test/joos_input.txt
-    bin/lexer > "$TOKENS"; ret="$?"
-    cp "$TOKENS" test/joos_tokens.txt
+    bin/lexer "$FILE" > "$TOKENS"; ret="$?"
     case "$ret" in
         0) ;;
         42) exit 42; ;;
@@ -28,8 +29,7 @@ for FILE; do
     esac
 
     # Parser
-    bin/parser > "$PARSE"; ret="$?"
-    cp "$PARSE" test/joos_parse.txt
+    bin/parser "$TOKENS" > "$PARSE"; ret="$?"
     case "$ret" in
         0) ;;
         42) exit 42; ;;
@@ -37,8 +37,7 @@ for FILE; do
     esac
 
     # Weeder
-    echo -n "$(basename "$FILE" .java)" > test/joos_classname.txt
-    bin/weeder > /dev/null; ret="$?"
+    bin/weeder "$CLASSNAME" "$FILE" "$TOKENS" "$PARSE"; ret="$?"
     case "$ret" in
         0) ;;
         42) exit 42; ;;

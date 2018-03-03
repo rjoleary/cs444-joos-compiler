@@ -1,5 +1,6 @@
 import           Control.Applicative
 import           Control.Monad
+import           System.Environment
 import           Data.Char           (isAscii, isDigit, isLetter, isSpace)
 import           Data.Maybe
 import           JoosCompiler.Exit
@@ -49,7 +50,8 @@ asLexeme t@(Token Identifier _)
 
 main :: IO ()
 main = do
-  contents <- readFile "test/joos_input.txt"
+  args <- getArgs
+  contents <- readFile (head args)
   let nonAscii = any (not . isAscii) contents
   when (nonAscii) (exitError "Invalid non-ascii characters")
   (tokens, s) <- maybeToIO (runParser token (zipWith CharTag contents [0 ..]))
