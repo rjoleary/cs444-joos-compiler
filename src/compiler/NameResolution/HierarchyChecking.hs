@@ -19,11 +19,11 @@ checkHierarchy ast = do
     withError "The hierarchy must be acyclic"
       True -- TODO
 
-    --withError "A class must not extend an interface"
-      --(and $ map (not . isInterface . dumbResolve . super) $ classes)
+    withError "A class must not extend an interface"
+      (and $ map (not . isInterface . dumbResolve . super) $ classes)
 
-    --withError "A class must not implement a class"
-      --(and $ map (and . map (isInterface . dumbResolve) . implements) $ classes)
+    withError "A class must not implement a class"
+      (and $ map (and . map (isInterface . dumbResolve) . implements) $ classes)
 
     withError "An interface must not be repeated in an implements or extends clause"
       (and $ map (allUnique . implements) $ types)
@@ -31,8 +31,8 @@ checkHierarchy ast = do
     withError "A class must not extend a final class"
       True -- TODO
 
-    --withError "An interface must not extend a class"
-      --(and $ map (and . map (isInterface . dumbResolve) . implements) $ interfaces)
+    withError "An interface must not extend a class"
+      (and $ map (and . map (isInterface . dumbResolve) . implements) $ interfaces)
 
     withError "A class or interface must not declare two methods with the same signature"
       (and $ map (allUnique . map methodSignature . methods) $ types)
@@ -59,8 +59,10 @@ checkHierarchy ast = do
 
     -- TODO: make smart
     dumbResolve :: Name -> ClassDeclaration
+    dumbResolve []   = dumbResolve ["Object"] -- TODO: make Object the default super
     dumbResolve name = head $ filter (\x -> className x == last name) $ classes
-    dumbResolve []   = dumbResolve ["Object"]
+      where head (x:_) = x
+            head []    = error ("Could not resolve '" ++ showName name ++ "', type linking should have caught this")
 
     classes = filter (not . isInterface) $ types
     interfaces = filter isInterface $ types
