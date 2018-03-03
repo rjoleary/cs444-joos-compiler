@@ -1,6 +1,7 @@
 #!/bin/bash
 
 COMPILER=${COMPILER-./stdjoosc}
+TESTSET=${TESTSET-test}
 
 RUN=0
 PASSED=0
@@ -55,8 +56,8 @@ find 'test' -name '*.ast' -delete
 find 'test' -name '*.tokens' -delete
 find 'test' -name '*.parse' -delete
 
-POSITIVE_TESTS=$(echo test/positive/*)
-NEGATIVE_TESTS=$(echo test/negative/*)
+POSITIVE_TESTS=$(echo $TESTSET/positive/*)
+NEGATIVE_TESTS=$(echo $TESTSET/negative/*)
 
 case "$1" in
     positive)
