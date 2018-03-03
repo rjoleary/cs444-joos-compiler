@@ -45,11 +45,11 @@ checkHierarchy ast = do
     withErrorFor types "A class must not declare two constructors with the same parameter types"
       (allUnique . map methodSignature . constructors)
 
-    --withErrorFor types "A class or interface must not inherit two methods with the same signature but different return types"
-      --(\t ->
-        --let returnAndSignature = map (\x -> (show $ methodType x, methodSignature x)) $ indirectMethods t
-        --in and $ map (\x -> all (==head x) x) $ map (map fst) $ groupBy (snd `on` (==)) $ sortBy snd $ returnAndSignature
-      --)
+    withErrorFor types "A class or interface must not inherit two methods with the same signature but different return types"
+      (\t ->
+        let returnAndSignature = map (\x -> (show $ methodType x, methodSignature x)) $ indirectMethods t
+        in and $ map (\x -> all (==head x) x) $ map (map fst) $ groupBy (\x y -> snd x == snd y) $ sortBy (\x y -> snd x `compare` snd y) $ returnAndSignature
+      )
 
     -- TODO: everything after this point has no tests
     withErrorFor classes "A class that contains any abstract methods must be abstract"
