@@ -54,5 +54,5 @@ sed "/AstTaggedToken/ n; s/Ast.*/$HIGHLIGHT_BEGIN\\0$HIGHLIGHT_END/" "$AST"
 case "$ret" in
     0) ;;
     42) exit 42; ;;
-    *) echo "Exiting due to AST error"; exit $ret; ;;
+    *) echo "Exiting due to compiler error"; exit 42; ;; # TODO: should return $ret
 esac
