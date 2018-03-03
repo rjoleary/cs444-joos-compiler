@@ -47,8 +47,8 @@ checkHierarchy ast = do
       True -- TODO
 
     -- TODO: everything after this point has no tests
-    withError "A class that contains any abstract methods must be abstract"
-      True -- TODO
+    withErrorFor classes "A class that contains any abstract methods must be abstract"
+      (\x -> (not $ hasAbstractMethod x) || isAbstractClass x)
 
     withError "A nonstatic method must not replace a static method"
       True -- TODO
@@ -98,3 +98,10 @@ checkHierarchy ast = do
     classes = filter (not . isInterface) $ types
     interfaces = filter isInterface $ types
     types = map (astClass . rootLabel) $ findChildren isClassDeclaration ast
+
+    isAbstractClass :: ClassDeclaration -> Bool
+    isAbstractClass = (Abstract `elem`) . classModifiers
+
+    hasAbstractMethod :: ClassDeclaration -> Bool
+    hasAbstractMethod c =
+      any (Abstract `elem`) $ map methodModifiers $ methods c
