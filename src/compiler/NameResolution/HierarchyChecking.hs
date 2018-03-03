@@ -26,7 +26,7 @@ checkHierarchy ast = do
       (and . map (isInterface . dumbResolve) . implements)
 
     withErrorFor types "An interface must not be repeated in an implements or extends clause"
-      (allUnique . map dumbResolve . implements)
+      (allUnique . map (className . dumbResolve) . implements)
 
     withErrorFor classes "A class must not extend a final class"
       (not . isClassFinal . dumbResolve . super)
@@ -41,6 +41,22 @@ checkHierarchy ast = do
       (allUnique . map methodSignature . constructors)
 
     withError "A class or interface must not inherit two methods with the same signature but different return types"
+      True -- TODO
+
+    -- TODO: everything after this point has no tests
+    withError "A class that contains any abstract methods must be abstract"
+      True -- TODO
+
+    withError "A nonstatic method must not replace a static method"
+      True -- TODO
+
+    withError "A method must not replace a method with a different return type"
+      True -- TODO
+
+    withError "A protected method must not replace a public method"
+      True -- TODO
+
+    withError "A method must not replace a final method"
       True -- TODO
 
   where
