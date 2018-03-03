@@ -16,8 +16,11 @@ implements = JoosCompiler.Ast.NodeTypes.interfaces
 checkHierarchy :: AstNode -> Either String ()
 checkHierarchy ast = do
     -- This check must be first; otherwise, the compiler might go into an infinite loop.
-    withError "The hierarchy must be acyclic"
-      True -- TODO
+    -- TODO: Hierarchy might not actually be acyclic.
+    withErrorFor classes "The hierarchy must be acyclic"
+      (\x -> (length $ take 1000 (indirectExtends x)) /= 1000)
+    withErrorFor types "The hierarchy must be acyclic"
+      (\x -> (length $ take 1000 (indirectImplements x)) /= 1000)
 
     withErrorFor classes "A class must not extend an interface"
       (not . isInterface . dumbResolve . super)
@@ -67,13 +70,17 @@ checkHierarchy ast = do
     withErrorFor xs err f = withError err $ and $ map f $ xs
 
     indirectMethods :: ClassDeclaration -> [Method]
-    indirectMethods x = []
+    indirectMethods x = concatMap methods (indirectExtends x ++ indirectImplements x)
 
+    -- TODO: Object will be canonicalized to java.lang.Object
     indirectExtends :: ClassDeclaration -> [ClassDeclaration]
-    indirectExtends x = []
+    indirectExtends ClassDeclaration{className="Object"} = []
+    indirectExtends x = supers ++ concatMap (indirectExtends) supers
+      where supers = [dumbResolve $ super x]
 
     indirectImplements :: ClassDeclaration -> [ClassDeclaration]
-    indirectImplements x = []
+    indirectImplements x = implementers ++ concatMap indirectImplements implementers
+      where implementers = map dumbResolve $ implements x
 
     -- TODO: make smart
     dumbResolve :: Name -> ClassDeclaration
