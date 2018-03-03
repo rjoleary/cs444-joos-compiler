@@ -118,6 +118,9 @@ data ClassDeclaration = ClassDeclaration
   , constructors   :: [Method]
   } deriving (Eq)
 
+isClassFinal :: ClassDeclaration -> Bool
+isClassFinal x = Final `elem` classModifiers x
+
 instance Show ClassDeclaration where
   show (ClassDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
     show _modifiers ++

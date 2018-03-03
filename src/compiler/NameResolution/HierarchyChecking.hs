@@ -19,34 +19,36 @@ checkHierarchy ast = do
     withError "The hierarchy must be acyclic"
       True -- TODO
 
-    withError "A class must not extend an interface"
-      (and $ map (not . isInterface . dumbResolve . super) $ classes)
+    withErrorFor classes "A class must not extend an interface"
+      (not . isInterface . dumbResolve . super)
 
-    withError "A class must not implement a class"
-      (and $ map (and . map (isInterface . dumbResolve) . implements) $ classes)
+    withErrorFor classes "A class must not implement a class"
+      (and . map (isInterface . dumbResolve) . implements)
 
-    withError "An interface must not be repeated in an implements or extends clause"
-      (and $ map (allUnique . implements) $ types)
+    withErrorFor types "An interface must not be repeated in an implements or extends clause"
+      (allUnique . map dumbResolve . implements)
 
-    withError "A class must not extend a final class"
-      True -- TODO
+    withErrorFor classes "A class must not extend a final class"
+      (not . isClassFinal . dumbResolve . super)
 
-    withError "An interface must not extend a class"
-      (and $ map (and . map (isInterface . dumbResolve) . implements) $ interfaces)
+    withErrorFor interfaces "An interface must not extend a class"
+      (and . map (isInterface . dumbResolve) . implements)
 
-    withError "A class or interface must not declare two methods with the same signature"
-      (and $ map (allUnique . map methodSignature . methods) $ types)
+    withErrorFor types "A class or interface must not declare two methods with the same signature"
+      (allUnique . map methodSignature . methods)
 
-    withError "A class must not declare two constructors with the same parameter types"
-      (and $ map (allUnique . map methodSignature . constructors) $ types)
+    withErrorFor types "A class must not declare two constructors with the same parameter types"
+      (allUnique . map methodSignature . constructors)
 
     withError "A class or interface must not inherit two methods with the same signature but different return types"
       True -- TODO
 
   where
-    withError err f
-      | f == False = Left err
+    withError err x
+      | x == False = Left err
       | otherwise  = Right ()
+
+    withErrorFor xs err f = withError err $ and $ map f $ xs
 
     indirectMethods :: ClassDeclaration -> [Method]
     indirectMethods x = []
