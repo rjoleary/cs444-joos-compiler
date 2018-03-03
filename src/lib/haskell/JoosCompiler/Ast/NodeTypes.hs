@@ -156,6 +156,15 @@ methodSignature x = name ++ "(" ++ intercalate "," parameterTypes ++ ")"
     name = methodName x
     parameterTypes = map (show . localType) (formalParameters x)
 
+isMethodFinal :: Method -> Bool
+isMethodFinal x = Final `elem` methodModifiers x
+
+isMethodPublic :: Method -> Bool
+isMethodPublic x = Public `elem` methodModifiers x
+
+isMethodProtected :: Method -> Bool
+isMethodProtected x = Protected `elem` methodModifiers x
+
 data Expression
   = MethodInvocation { functionName :: Name
                      , arguments    :: [Expression] }

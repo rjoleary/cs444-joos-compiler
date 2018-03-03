@@ -56,11 +56,17 @@ checkHierarchy ast = do
     withError "A method must not replace a method with a different return type"
       True -- TODO
 
-    withError "A protected method must not replace a public method"
-      True -- TODO
+    withErrorFor classes "A protected method must not replace a public method"
+      (\clazz ->
+        let finalMethods = map methodSignature $ filter isMethodPublic $ indirectMethods clazz
+        in and $ map (not . (`elem` finalMethods)) $ map methodSignature $ filter isMethodProtected $ methods clazz
+      )
 
-    withError "A method must not replace a final method"
-      True -- TODO
+    withErrorFor classes "A method must not replace a final method"
+      (\clazz ->
+        let finalMethods = map methodSignature $ filter isMethodFinal $ indirectMethods clazz
+        in and $ map (not . (`elem` finalMethods)) $ map methodSignature $ methods clazz
+      )
 
   where
     withError err x
