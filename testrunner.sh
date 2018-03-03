@@ -15,6 +15,8 @@ runtests() {
     local FAIL_CODE=$2
     shift 2
 
+    local PROCESSES=""
+
     for testname in "$@" ; do
         if echo "$testname" | grep IGNORE > /dev/null; then
             echo "IGNORED $testname"
@@ -29,10 +31,14 @@ runtests() {
             local files=$testname
         fi
 
+        $COMPILER $files > /dev/null &
+        PROCESSES="$PROCESSES $!"
+    done
+
+    for process in $PROCESSES ; do
         RUN=$((RUN+1))
         echo -n "$RUN: $testname... "
-        rm -f test/joos_{input,tokens,tree}.txt
-        $COMPILER $files > /dev/null
+        wait $process > /dev/null
         case $? in
             $PASS_CODE)
                 PASSED=$((PASSED+1))
@@ -55,6 +61,11 @@ runtests() {
 find 'test' -name '*.ast' -delete
 find 'test' -name '*.tokens' -delete
 find 'test' -name '*.parse' -delete
+
+echo 'Building stdlib...'
+runtests 0 42 'test/positive/Empty.java'
+export SKIP_STDLIB=1
+echo 'Running tests...'
 
 POSITIVE_TESTS=$(echo $TESTSET/positive/*)
 NEGATIVE_TESTS=$(echo $TESTSET/negative/*)

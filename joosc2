@@ -20,6 +20,11 @@ for FILE; do
     PARSE="${FILE%.java}.parse"
     CLASSNAME="$(basename "$FILE" .java)"
 
+    # Reuse existing stdlib parse if the flag is set.
+    if [ "$SKIP_STDLIB" != "" ] && [[ "$FILE" == test/stdlib/* ]]; then
+      continue
+    fi
+
     # Lexer
     bin/lexer "$FILE" > "$TOKENS"; ret="$?"
     case "$ret" in
