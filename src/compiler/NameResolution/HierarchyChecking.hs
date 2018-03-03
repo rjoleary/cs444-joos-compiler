@@ -2,42 +2,46 @@ module NameResolution.HierarchyChecking
   ( checkHierarchy
   ) where
 
+import Data.Tree
+import Data.List.Unique
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
+import JoosCompiler.Ast.Utils
+import JoosCompiler.TreeUtils
+
+-- TODO: fix name conflicts in records
+implements = JoosCompiler.Ast.NodeTypes.interfaces
 
 -- Returns a error message if hierarchy checking fails.
 checkHierarchy :: AstNode -> Either String ()
 checkHierarchy ast = do
     -- This check must be first; otherwise, the compiler might go into an infinite loop.
     withError "The hierarchy must be acyclic"
-      True
+      True -- TODO
 
-    withError "A class must not extend an interface"
-      True
+    --withError "A class must not extend an interface"
+      --(and $ map (not . isInterface . dumbResolve . super) $ classes)
 
-    withError "A class must not implement a class"
-      True
+    --withError "A class must not implement a class"
+      --(and $ map (and . map (isInterface . dumbResolve) . implements) $ classes)
 
-    withError "An interface must not be repeated in an implements clause"
-      True
-
-    withError "An interface must not be repeated in an extends clause"
-      True
+    withError "An interface must not be repeated in an implements or extends clause"
+      (and $ map (allUnique . implements) $ types)
 
     withError "A class must not extend a final class"
-      True
+      True -- TODO
 
-    withError "An interface must not extend a class"
-      True
+    --withError "An interface must not extend a class"
+      --(and $ map (and . map (isInterface . dumbResolve) . implements) $ interfaces)
 
     withError "A class or interface must not declare two methods with the same signature"
-      True
+      (and $ map (allUnique . map methodSignature . methods) $ types)
 
     withError "A class must not declare two constructors with the same parameter types"
-      True
+      (and $ map (allUnique . map methodSignature . constructors) $ types)
 
-    withError "A class or interface must not inherit two methods with the same signature"
-      True
+    withError "A class or interface must not inherit two methods with the same signature but different return types"
+      True -- TODO
 
   where
     withError err f
@@ -52,3 +56,12 @@ checkHierarchy ast = do
 
     indirectImplements :: ClassDeclaration -> [ClassDeclaration]
     indirectImplements x = []
+
+    -- TODO: make smart
+    dumbResolve :: Name -> ClassDeclaration
+    dumbResolve name = head $ filter (\x -> className x == last name) $ classes
+    dumbResolve []   = dumbResolve ["Object"]
+
+    classes = filter (not . isInterface) $ types
+    interfaces = filter isInterface $ types
+    types = map (astClass . rootLabel) $ findChildren isClassDeclaration ast
