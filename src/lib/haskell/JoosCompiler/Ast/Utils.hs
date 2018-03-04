@@ -1,7 +1,6 @@
 module JoosCompiler.Ast.Utils where
 
 import           Data.List
-import           Data.Maybe
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
@@ -46,26 +45,26 @@ qualifyTypeName u@(CompilationUnit (Just _packageName) _ (Just _typeDecl) _) =
   _packageName ++ [typeName _typeDecl]
 qualifyTypeName _ = error "Can't qualify a compilation unit without a class"
 
-resolvePackageFromProgram :: Name -> AstNode -> Maybe Package
-resolvePackageFromProgram name (Node (AstWholeProgram (WholeProgram packages)) _) =
-  case (length results) of
-    0 -> Nothing
-    _ -> Just $ head results
-  where
-    results :: [Package]
-    results = catMaybes $ map ((lookup name) . subPackages) packages
-resolvePackageFromProgram _ _ =
-  error "resolvePackageFromProgram not run on program"
+-- resolvePackageFromProgram :: Name -> AstNode -> Maybe Package
+-- resolvePackageFromProgram name (Node (AstWholeProgram (WholeProgram packages)) _) =
+--   case (length results) of
+--     0 -> Nothing
+--     _ -> Just $ head results
+--   where
+--     results :: [Package]
+--     results = catMaybes $ map ((lookup name) . subPackages) packages
+-- resolvePackageFromProgram _ _ =
+--   error "resolvePackageFromProgram not run on program"
 
-resolveType :: Name -> AstNode -> Maybe TypeDeclaration
-resolveType [] program = Nothing
-resolveType [x] program = Nothing
-resolvetype name program
-  | unit == Nothing = Nothing
-  | otherwise = typeDecl $ fromJust unit
-  where
-    _typeName = last name
-    _packageName = init name
-    package = resolvePackageFromProgram _packageName program
-    units = packageCompilationUnits $ fromJust package
-    unit = lookup _typeName units
+-- resolveType :: Name -> AstNode -> Maybe TypeDeclaration
+-- resolveType [] program = Nothing
+-- resolveType [x] program = Nothing
+-- resolvetype name program
+--   | unit == Nothing = Nothing
+--   | otherwise = typeDecl $ fromJust unit
+--   where
+--     _typeName = last name
+--     _packageName = init name
+--     package = resolvePackageFromProgram _packageName program
+--     units = packageCompilationUnits $ fromJust package
+--     unit = lookup _typeName units

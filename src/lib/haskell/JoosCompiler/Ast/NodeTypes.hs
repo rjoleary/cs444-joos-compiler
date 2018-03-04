@@ -5,7 +5,10 @@ import           Data.Maybe
 
 type Name = [String]
 
-type SubPackages = [(Name, Package)]
+data SubPackage = SubPackage (Maybe Package) SubPackageMap
+  deriving (Eq)
+type SubPackageMapEntry = (String, SubPackage)
+type SubPackageMap = [SubPackageMapEntry]
 
 type PackageCompilationUnits = [(String, CompilationUnit)]
 
@@ -30,18 +33,19 @@ data WholeProgram = WholeProgram
   } deriving (Eq, Show)
 
 data Package = Package
-  { packageName             :: Maybe Name
-  , subPackages             :: SubPackages
+  { packageName             :: Name
+  , subPackages             :: SubPackageMap
   , packageCompilationUnits :: PackageCompilationUnits
   } deriving (Eq)
 
 instance Show Package where
   show (Package name subs _) =
-    (showName $ fromMaybe ["_"] name) ++
+    "n=" ++
+    (showName name) ++
     (if length subs > 0
        then " subs(" ++
             (intercalate ", " $
-             map (showName . fromJust . packageName) $ map snd subs) ++
+             map fst subs) ++
             ")"
        else "")
 

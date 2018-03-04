@@ -26,11 +26,11 @@ cstToAst t = ast2
     transformer = getTransformer t
 
 cstsToAst :: [TaggedParseTree] -> AstNode
-cstsToAst ts = subPackaged
+cstsToAst ts = grouped
   where
     transformed = map cstToAst ts
     grouped = groupByPackage transformed
-    subPackaged = subPackage grouped
+    --subPackaged = subPackage grouped
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
