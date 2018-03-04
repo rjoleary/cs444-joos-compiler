@@ -17,6 +17,7 @@ runtests() {
 
     local PROCESSES=""
 
+    # Execute all the tests in parallel.
     for testname in "$@" ; do
         if echo "$testname" | grep IGNORE > /dev/null; then
             echo "IGNORED $testname"
@@ -31,14 +32,22 @@ runtests() {
             local files=$testname
         fi
 
-        $COMPILER $files > /dev/null &
-        PROCESSES="$PROCESSES $!"
+        $COMPILER $files > "$testname.stdout" 2> "$testname.stderr" &
+        PROCESSES="$PROCESSES $testname $!"
     done
 
-    for process in $PROCESSES ; do
+    accumulatetests $PROCESSES
+}
+
+accumulatetests() {
+    while [ "$#" != 0 ]; do
+        local testname=$1
+        local process=$2
+        shift 2
+
         RUN=$((RUN+1))
         echo -n "$RUN: $testname... "
-        wait $process > /dev/null
+        wait $process
         case $? in
             $PASS_CODE)
                 PASSED=$((PASSED+1))
@@ -53,6 +62,7 @@ runtests() {
                 echo ERROR
                 ;;
         esac
+        cat "$testname.stderr" | sed 's/^/  /'
     done
 }
 
@@ -61,6 +71,8 @@ runtests() {
 find 'test' -name '*.ast' -delete
 find 'test' -name '*.tokens' -delete
 find 'test' -name '*.parse' -delete
+find 'test' -name '*.stdout' -delete
+find 'test' -name '*.stderr' -delete
 
 echo 'Building stdlib...'
 runtests 0 42 'test/positive/Empty.java'

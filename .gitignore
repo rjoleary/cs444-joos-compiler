@@ -12,3 +12,5 @@ bin/
 *.tokens
 *.parse
 *.tree
+*.stdout
+*.stderr
