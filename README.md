@@ -121,6 +121,8 @@ taggedTrees <- mapM taggedTreeFromFile filenames
 
 let ast = cstsToAst taggedTrees
 
+let program = astWholeProgram $ rootLabel ast
+
 putStr $ drawTree $ fmap show ast
 ```
 
