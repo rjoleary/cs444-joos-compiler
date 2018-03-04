@@ -6,7 +6,7 @@ import           Data.Maybe
 type Name = [String]
 
 data SubPackage = SubPackage (Maybe Package) SubPackageMap
-  deriving (Eq)
+  deriving (Eq, Show)
 type SubPackageMapEntry = (String, SubPackage)
 type SubPackageMap = [SubPackageMapEntry]
 
@@ -29,7 +29,7 @@ data Modifier
   deriving (Eq, Show)
 
 data WholeProgram = WholeProgram
-  { programPackages :: [Package]
+  { programPackages :: SubPackage
   } deriving (Eq, Show)
 
 data Package = Package

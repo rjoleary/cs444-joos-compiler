@@ -123,8 +123,9 @@ createSymbolTable :: AstWrapper -> SymbolTableResult
 createSymbolTable = createSymbolTable' (Canonical [])
   where
     createSymbolTable' :: Canonical -> AstWrapper -> SymbolTableResult
-    createSymbolTable' canonical ast@(AstWholeProgram (WholeProgram xs)) =
-      foldl merge empty $ map (createSymbolTable' canonical . AstPackage) xs
+    -- createSymbolTable' canonical ast@(AstWholeProgram (WholeProgram xs)) =
+    --   foldl merge empty $ map (createSymbolTable' canonical . AstPackage) xs
+
     createSymbolTable' canonical ast@(AstCompilationUnit x@CompilationUnit {}) =
       packageTable --`merge` createSymbolTable'
       where
@@ -133,17 +134,23 @@ createSymbolTable = createSymbolTable' (Canonical [])
           singleton (createSymbol PackageSymbol packageName canonical ast)
         --importsTable = singleton (Symbol Import )
     --createSymbolTable' canonical (TypeDeclaration ast) = Right (Map.singleton)
+
     createSymbolTable' _ _ = empty
     createSymbol :: SymbolType -> String -> Canonical -> AstWrapper -> Symbol
     createSymbol symbolType name (Canonical prefix) ast =
       (Symbol symbolType name (Canonical (prefix ++ [name])) ast)
+
     empty :: SymbolTableResult
     empty = Right Map.empty
+
     singleton :: Symbol -> SymbolTableResult
     singleton symbol = Right $ Map.singleton (symbolCanonical symbol) symbol
+
     merge :: SymbolTableResult -> SymbolTableResult -> SymbolTableResult
+
     err@(Left _) `merge` _ = err
     _ `merge` err@(Left _) = err
+
     (Right x) `merge` (Right y)
       | Map.null (Map.intersection x y) = Right (Map.union x y)
       | otherwise = Left "Symbol conflict"

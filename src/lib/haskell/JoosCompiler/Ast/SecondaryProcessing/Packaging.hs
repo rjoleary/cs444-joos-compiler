@@ -1,33 +1,24 @@
-module JoosCompiler.Ast.SecondaryProcessing.SubPackaging
+module JoosCompiler.Ast.SecondaryProcessing.Packaging
   (
-    -- subPackageFromProgram
+    packageProgram
   ) where
 
+import           Data.Maybe
 import           Data.List
+import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Ast.Utils
 
--- subPackage :: [Package] -> SubPackageMap
--- subPackage t@(Node oldProgram children) = ()
---   where
---     packages = programPackages $ astWholeProgram oldProgram
---     newPackages = map injectSubPackages packages
---     newProgram = AstWholeProgram $ WholeProgram newPackages
---     injectSubPackages :: Package -> Package
---     injectSubPackages p@(Package _packageName _ packageUnits) =
---       Package _packageName subPackagesMap packageUnits
---       where
---         subPackages = filter (`isSubPackageOf` p) packages
---         subPackageNames = map (fromJust . packageName) subPackages
---         subPackagesMap = zip subPackageNames subPackages -- AList = association list
+packageProgram  :: [AstNode] -> AstNode
+packageProgram unitNodes = Node program unitNodes
+  where
+    groupedByPackages = groupByPackage unitNodes
+    subPackageMap = subPackageFromPackages groupedByPackages
+    program = AstWholeProgram $ WholeProgram subPackageMap
 
--- subPackageProgram  :: AstNode -> AstNode
--- subPackageProgram program = subPackageFromPackages packages
-
-
-subPackagefromPackages :: [Package] -> SubPackage
-subPackagefromPackages packages = SubPackage defaultPackage subPackageMap
+subPackageFromPackages :: [Package] -> SubPackage
+subPackageFromPackages packages = SubPackage defaultPackage subPackageMap
   where
     defaultPackageMatches = filter ((==) [] . packageName) packages
     defaultPackage = if length defaultPackageMatches > 0
@@ -68,3 +59,18 @@ trimPackageName (oldName, p) = (newName, p)
 isSubPackageOf :: Package -> Package -> Bool
 isSubPackageOf (Package name1 _ _) (Package name2 _ _) =
   name2 `isProperPrefixOf` name1
+
+-- Assumes that root nodes are CompilationUnits
+groupByPackage :: [AstNode] -> [Package]
+groupByPackage unitNodes = packages
+  where
+    compilationUnits = map (astCompilationUnit . rootLabel) unitNodes
+    packageNames = map cuPackage compilationUnits
+    packages = map groupUnitsByPackageName packageNames
+    groupUnitsByPackageName :: Maybe Name -> Package
+    groupUnitsByPackageName maybePackageName =
+      Package _packageName [] packageUnitsAList
+      where
+        _packageName = fromMaybe [] maybePackageName
+        packageUnits = filter ((== maybePackageName) . cuPackage) compilationUnits
+        packageUnitsAList = zip (map cuTypeName packageUnits) packageUnits
