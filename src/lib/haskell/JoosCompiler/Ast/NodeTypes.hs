@@ -12,9 +12,9 @@ type PackageCompilationUnits = [(String, CompilationUnit)]
 showName :: [String] -> String
 showName l = intercalate "." l
 
-extractClassName :: Maybe ClassDeclaration -> String
-extractClassName Nothing  = "N/A"
-extractClassName (Just c) = className c
+extractTypeName :: Maybe TypeDeclaration -> String
+extractTypeName Nothing  = "N/A"
+extractTypeName (Just c) = typeName c
 
 data Modifier
   = Public
@@ -46,10 +46,10 @@ instance Show Package where
        else "")
 
 data CompilationUnit
-  = CompilationUnit { cuPackage   :: Maybe Name
-                    , imports     :: [ImportDeclaration]
-                    , classDecl   :: Maybe ClassDeclaration
-                    , cuClassName :: String }
+  = CompilationUnit { cuPackage  :: Maybe Name
+                    , imports    :: [ImportDeclaration]
+                    , typeDecl   :: Maybe TypeDeclaration
+                    , cuTypeName :: String }
   | EmptyFile
   deriving (Eq)
 
@@ -59,7 +59,7 @@ instance Show CompilationUnit where
     (showName $ fromMaybe ["N/A"] p) ++
     " i=[" ++
     (intercalate ", " $ map (showName . importName) i) ++
-    "]" ++ " c=" ++ extractClassName c ++ ")"
+    "]" ++ " c=" ++ extractTypeName c ++ ")"
   show EmptyFile = "EmptyFile"
 
 data PackageDeclaration = PackageDeclaration
@@ -107,8 +107,9 @@ instance Show Local where
           then (intercalate " " $ map show _modifiers) ++ " "
           else ""
 
-data ClassDeclaration = ClassDeclaration
-  { className      :: String
+-- A type is a class or an interface
+data TypeDeclaration = TypeDeclaration
+  { typeName       :: String
   , classModifiers :: [Modifier]
   , isInterface    :: Bool
   , super          :: Name
@@ -118,11 +119,11 @@ data ClassDeclaration = ClassDeclaration
   , constructors   :: [Method]
   } deriving (Eq)
 
-isClassFinal :: ClassDeclaration -> Bool
+isClassFinal :: TypeDeclaration -> Bool
 isClassFinal x = Final `elem` classModifiers x
 
-instance Show ClassDeclaration where
-  show (ClassDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
+instance Show TypeDeclaration where
+  show (TypeDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
     show _modifiers ++
     " " ++
     (if _isInterface

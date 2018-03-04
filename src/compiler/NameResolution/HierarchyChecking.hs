@@ -31,7 +31,7 @@ checkHierarchy ast = do
       (and . map (isInterface . dumbResolve) . implements)
 
     withErrorFor types "An interface must not be repeated in an implements or extends clause"
-      (allUnique . map (className . dumbResolve) . implements)
+      (allUnique . map (typeName . dumbResolve) . implements)
 
     withErrorFor classes "A class must not extend a final class"
       (not . isClassFinal . dumbResolve . super)
@@ -53,7 +53,7 @@ checkHierarchy ast = do
 
     -- TODO: everything after this point has no tests
     withErrorFor classes "A class that contains any abstract methods must be abstract"
-      (\x -> (not $ hasAbstractMethod x) || isAbstractClass x)
+      (\x -> (not $ hasAbstractMethod x) || isAbstractType x)
 
     withErrorFor classes "A nonstatic method must not replace a static method"
       (\clazz ->
@@ -83,33 +83,33 @@ checkHierarchy ast = do
 
     withErrorFor xs err f = withError err $ and $ map f $ xs
 
-    indirectMethods :: ClassDeclaration -> [Method]
+    indirectMethods :: TypeDeclaration -> [Method]
     indirectMethods x = concatMap methods (indirectExtends x ++ indirectImplements x)
 
     -- TODO: Object will be canonicalized to java.lang.Object
-    indirectExtends :: ClassDeclaration -> [ClassDeclaration]
-    indirectExtends ClassDeclaration{className="Object"} = []
+    indirectExtends :: TypeDeclaration -> [TypeDeclaration]
+    indirectExtends TypeDeclaration{typeName="Object"} = []
     indirectExtends x = supers ++ concatMap (indirectExtends) supers
       where supers = [dumbResolve $ super x]
 
-    indirectImplements :: ClassDeclaration -> [ClassDeclaration]
+    indirectImplements :: TypeDeclaration -> [TypeDeclaration]
     indirectImplements x = implementers ++ concatMap indirectImplements implementers
       where implementers = map dumbResolve $ implements x
 
     -- TODO: make smart
-    dumbResolve :: Name -> ClassDeclaration
+    dumbResolve :: Name -> TypeDeclaration
     dumbResolve []   = dumbResolve ["Object"] -- TODO: make Object the default super
-    dumbResolve name = head $ filter (\x -> className x == last name) $ types
+    dumbResolve name = head $ filter (\x -> typeName x == last name) $ types
       where head (x:_) = x
             head []    = error ("Could not resolve '" ++ showName name ++ "', type linking should have caught this")
 
     classes = filter (not . isInterface) $ types
     interfaces = filter isInterface $ types
-    types = map (astClass . rootLabel) $ findChildren isClassDeclaration ast
+    types = map (astClass . rootLabel) $ findChildren isTypeDeclaration ast
 
-    isAbstractClass :: ClassDeclaration -> Bool
-    isAbstractClass = (Abstract `elem`) . classModifiers
+    isAbstractType :: TypeDeclaration -> Bool
+    isAbstractType = (Abstract `elem`) . classModifiers
 
-    hasAbstractMethod :: ClassDeclaration -> Bool
+    hasAbstractMethod :: TypeDeclaration -> Bool
     hasAbstractMethod c =
       any (Abstract `elem`) $ map methodModifiers $ methods c

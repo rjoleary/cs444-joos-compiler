@@ -13,7 +13,7 @@ import           JoosCompiler.TreeUtils
 noTwoFieldsSameName :: AstRulePredicate
 noTwoFieldsSameName t = not $ all allUnique classFieldNames
   where
-    classNodes = findChildren isClassDeclaration t
+    classNodes = findChildren isTypeDeclaration t
     _classFields = map (classFields . astClass . rootLabel) classNodes
     classFieldNames = map (map fieldName) _classFields
 
@@ -26,13 +26,13 @@ noTwoLocalsSameName t = not $ all allUnique localNames
     locals = map flattenScope scopes
     localNames = map (map localName) locals
 
-noTwoClassesSameCanonicalName :: AstRulePredicate
-noTwoClassesSameCanonicalName t = not $ allUnique qualified
+noTwoTypesSameCanonicalName :: AstRulePredicate
+noTwoTypesSameCanonicalName t = not $ allUnique qualified
   where
     unitNodes = subForest t
     units = map (astCompilationUnit . rootLabel) unitNodes
-    classUnits = filter ((/= Nothing) . classDecl) units
-    qualified = map qualifyClassName classUnits
+    typeUnits = filter ((/= Nothing) . typeDecl) units
+    qualified = map qualifyTypeName typeUnits
 
 environmentBuildingRules :: [AstRule]
 environmentBuildingRules =
@@ -40,5 +40,5 @@ environmentBuildingRules =
   , ( "Duplicate identifier for locals in overlapping scopes"
     , noTwoLocalsSameName)
   , ( "Duplicate fully-qualified class/interface name"
-    , noTwoClassesSameCanonicalName)
+    , noTwoTypesSameCanonicalName)
   ]

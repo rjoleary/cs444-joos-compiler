@@ -6,7 +6,7 @@ import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
 
 data AstWrapper
-  = AstClassDeclaration { astClass :: ClassDeclaration }
+  = AstTypeDeclaration { astClass :: TypeDeclaration }
   | AstBlock { astBlock :: Block }
   | AstWholeProgram { astWholeProgram :: WholeProgram }
   | AstCompilationUnit { astCompilationUnit :: CompilationUnit }
@@ -34,13 +34,13 @@ isBlock :: AstWrapper -> Bool
 isBlock (AstBlock _) = True
 isBlock _            = False
 
-isClassDeclaration :: AstWrapper -> Bool
-isClassDeclaration (AstClassDeclaration _) = True
-isClassDeclaration _                       = False
+isTypeDeclaration :: AstWrapper -> Bool
+isTypeDeclaration (AstTypeDeclaration _) = True
+isTypeDeclaration _                      = False
 
 isCompilationUnit :: AstWrapper -> Bool
 isCompilationUnit (AstCompilationUnit _) = True
-isCompilationUnit _                  = False
+isCompilationUnit _                      = False
 
 isConstructor :: AstWrapper -> Bool
 isConstructor (AstConstructor _) = True

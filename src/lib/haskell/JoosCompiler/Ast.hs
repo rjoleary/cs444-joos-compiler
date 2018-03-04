@@ -4,7 +4,7 @@ module JoosCompiler.Ast
   , AstWrapper(..)
   , AstNode(..)
   , isBlock
-  , isClassDeclaration
+  , isTypeDeclaration
   , isField
   , isImport
   , isLocalVariable

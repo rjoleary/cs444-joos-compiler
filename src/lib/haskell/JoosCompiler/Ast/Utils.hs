@@ -39,12 +39,12 @@ findAstChildByTokenName1 name ts
 isProperPrefixOf :: Eq a => [a] -> [a] -> Bool
 isProperPrefixOf l1 l2 = l1 `isPrefixOf` l2 && (length l1) < (length l2)
 
-qualifyClassName :: CompilationUnit -> Name
-qualifyClassName u@(CompilationUnit Nothing _ (Just _classDecl) _) =
-  [className _classDecl]
-qualifyClassName u@(CompilationUnit (Just _packageName) _ (Just _classDecl) _) =
-  _packageName ++ [className _classDecl]
-qualifyClassName _ = error "Can't qualify a compilation unit without a class"
+qualifyTypeName :: CompilationUnit -> Name
+qualifyTypeName u@(CompilationUnit Nothing _ (Just _typeDecl) _) =
+  [typeName _typeDecl]
+qualifyTypeName u@(CompilationUnit (Just _packageName) _ (Just _typeDecl) _) =
+  _packageName ++ [typeName _typeDecl]
+qualifyTypeName _ = error "Can't qualify a compilation unit without a class"
 
 resolvePackageFromProgram :: Name -> AstNode -> Maybe Package
 resolvePackageFromProgram name (Node (AstWholeProgram (WholeProgram packages)) _) =
@@ -57,15 +57,15 @@ resolvePackageFromProgram name (Node (AstWholeProgram (WholeProgram packages)) _
 resolvePackageFromProgram _ _ =
   error "resolvePackageFromProgram not run on program"
 
-resolveClass :: Name -> AstNode -> Maybe ClassDeclaration
-resolveClass [] program = Nothing
-resolveClass [x] program = Nothing
-resolveClass name program
+resolveType :: Name -> AstNode -> Maybe TypeDeclaration
+resolveType [] program = Nothing
+resolveType [x] program = Nothing
+resolvetype name program
   | unit == Nothing = Nothing
-  | otherwise = classDecl $ fromJust unit
+  | otherwise = typeDecl $ fromJust unit
   where
-    _className = last name
+    _typeName = last name
     _packageName = init name
     package = resolvePackageFromProgram _packageName program
     units = packageCompilationUnits $ fromJust package
-    unit = lookup _className units
+    unit = lookup _typeName units

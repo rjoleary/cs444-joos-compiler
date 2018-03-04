@@ -37,7 +37,7 @@ getTransformer t@(Node label _)
   | (tokenName label) `elem` [kBlock, kConstructorBody, kMethodBody] =
     blockTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
-    classDeclarationTransformer
+    typeDeclarationTransformer
   | (tokenName label) == kCompilationUnit = compilationUnitTransformer
   | (tokenName label) == kConstructorDeclaration = constructorTransformer
   | (tokenName label) == kFieldDeclaration = fieldTransformer

@@ -1,5 +1,5 @@
 module JoosCompiler.Ast.Transformers
-  ( classDeclarationTransformer
+  ( typeDeclarationTransformer
   , compilationUnitTransformer
   , constructorTransformer
   , blockTransformer
@@ -16,7 +16,7 @@ module JoosCompiler.Ast.Transformers
   ) where
 
 import           JoosCompiler.Ast.Transformers.BlockTransformers
-import           JoosCompiler.Ast.Transformers.ClassDeclaration
+import           JoosCompiler.Ast.Transformers.TypeDeclaration
 import           JoosCompiler.Ast.Transformers.CompilationUnitTransformers
 import           JoosCompiler.Ast.Transformers.FieldTransformers
 import           JoosCompiler.Ast.Transformers.ImportTransformers

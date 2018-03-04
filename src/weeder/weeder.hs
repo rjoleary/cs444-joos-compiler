@@ -115,7 +115,7 @@ classnameSameAsFilename :: ClassName -> TaggedParseTree -> Bool
 classnameSameAsFilename classname tree
   | (tokenName (rootLabel tree)) `elem`
       [kClassDeclaration, kInterfaceDeclaration] =
-    classname /= getClassNameFromDeclaration tree
+    classname /= getTypeNameFromDeclaration tree
   | otherwise = any (classnameSameAsFilename classname) $ subForest tree
 
 -- 10 An interface method cannot be static, final, or native.

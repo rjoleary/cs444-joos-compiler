@@ -132,7 +132,7 @@ createSymbolTable = createSymbolTable' (Canonical [])
         packageTable =
           singleton (createSymbol PackageSymbol packageName canonical ast)
         --importsTable = singleton (Symbol Import )
-    --createSymbolTable' canonical (ClassDeclaration ast) = Right (Map.singleton)
+    --createSymbolTable' canonical (TypeDeclaration ast) = Right (Map.singleton)
     createSymbolTable' _ _ = empty
     createSymbol :: SymbolType -> String -> Canonical -> AstWrapper -> Symbol
     createSymbol symbolType name (Canonical prefix) ast =

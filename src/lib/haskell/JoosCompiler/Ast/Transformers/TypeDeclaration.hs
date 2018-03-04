@@ -1,5 +1,5 @@
-module JoosCompiler.Ast.Transformers.ClassDeclaration
-  ( classDeclarationTransformer
+module JoosCompiler.Ast.Transformers.TypeDeclaration
+  ( typeDeclarationTransformer
   ) where
 
 import           Data.Tree
@@ -10,11 +10,11 @@ import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
 
-classDeclarationTransformer :: Transformer
-classDeclarationTransformer transformedChildren t@(Node label _) =
-  AstClassDeclaration $
-  ClassDeclaration
-  { className = _className
+typeDeclarationTransformer :: Transformer
+typeDeclarationTransformer transformedChildren t@(Node label _) =
+  AstTypeDeclaration $
+  TypeDeclaration
+  { typeName = _typeName
   , classModifiers = modifiers
   , isInterface = _isInterface
   , super = _super
@@ -26,23 +26,23 @@ classDeclarationTransformer transformedChildren t@(Node label _) =
   where
     _isInterface = (kInterfaceDeclaration == tokenName label)
     modifiers = astModifiers $ getClassModifiers transformedChildren
-    _className = getClassNameFromDeclaration t
+    _typeName = getTypeNameFromDeclaration t
     _superTemp = getSuperName t
     _super
       | _superTemp == [] = [kObject]
       | otherwise = _superTemp
     _interfaces = getInterfaceNames t
-    vars = map astField $ getClassFields transformedChildren
-    _methods = getClassMethods transformedChildren
+    vars = map astField $ getTypeFields transformedChildren
+    _methods = getTypeMethods transformedChildren
     _constructors = getClassConstructors transformedChildren
 
-getClassFields :: [AstNode] -> [AstWrapper]
-getClassFields ts = map rootLabel fieldNodes
+getTypeFields :: [AstNode] -> [AstWrapper]
+getTypeFields ts = map rootLabel fieldNodes
   where
     fieldNodes = mconcat $ map (findDirectChildren isField isMethod) ts
 
-getClassMethods :: [AstNode] -> [Method]
-getClassMethods ts = map (astMethod . rootLabel) methodNodes
+getTypeMethods :: [AstNode] -> [Method]
+getTypeMethods ts = map (astMethod . rootLabel) methodNodes
   where
     methodNodes = findChildren1 isMethod ts
 

@@ -15,12 +15,12 @@ compilationUnitTransformer transformedChildren t =
   CompilationUnit
   { cuPackage = getPackage transformedChildren
   , imports = getImports transformedChildren
-  , classDecl = _classDecl
-  , cuClassName = _className
+  , typeDecl = _typeDecl
+  , cuTypeName = _typeName
   }
   where
-    _classDecl = getClassDecl transformedChildren
-    _className = className $ fromJust _classDecl
+    _typeDecl = getTypeDecl transformedChildren
+    _typeName = typeName $ fromJust _typeDecl
 
 getPackage :: [AstNode] -> Maybe Name
 getPackage ts
@@ -38,10 +38,10 @@ getImports ts = imports
     importNodes = findChildren1 isImport ts
     imports = map (astImport . rootLabel) importNodes
 
-getClassDecl :: [AstNode] -> Maybe ClassDeclaration
-getClassDecl ts
-  | length classDeclNodes > 0 = Just classDecl
+getTypeDecl :: [AstNode] -> Maybe TypeDeclaration
+getTypeDecl ts
+  | length typeDeclNodes > 0 = Just typeDecl
   | otherwise = Nothing
   where
-    classDeclNodes = findChildren1 isClassDeclaration ts
-    classDecl = astClass $ rootLabel $ head $ classDeclNodes
+    typeDeclNodes = findChildren1 isTypeDeclaration ts
+    typeDecl = astClass $ rootLabel $ head $ typeDeclNodes

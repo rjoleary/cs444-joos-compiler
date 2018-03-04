@@ -115,8 +115,8 @@ tagTree :: UntaggedParseTree -> JoosTokens -> JoosSource -> TaggedParseTree
 tagTree tree tokens source =
   insertTokenStrings (tagTree'' tree (parseTokens tokens)) source
 
-getClassNameFromDeclaration :: TaggedParseTree -> ClassName
-getClassNameFromDeclaration tree = tokenString $ rootLabel identifierNode
+getTypeNameFromDeclaration :: TaggedParseTree -> ClassName
+getTypeNameFromDeclaration tree = tokenString $ rootLabel identifierNode
   where
     identifierNode = head $ findChildrenByTokenName kIdentifier tree
 

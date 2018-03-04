@@ -23,7 +23,7 @@ noSingleTypeImportClashesWithClass t = not $ all noClashPresent compilationUnits
     noClashPresent unit = all (/= cName) importNames
       where
         _imports = imports unit
-        cName = cuClassName unit
+        cName = cuTypeName unit
         simpleImports = filter (not . onDemand) _imports
         importNames = map (last . importName) simpleImports
 

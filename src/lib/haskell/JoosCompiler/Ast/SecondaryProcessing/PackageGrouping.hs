@@ -20,4 +20,4 @@ groupByPackage unitNodes = Node program unitNodes
       Package packageName [] packageUnitsAList
       where
         packageUnits = filter ((== packageName) . cuPackage) compilationUnits
-        packageUnitsAList = zip (map cuClassName packageUnits) packageUnits
+        packageUnitsAList = zip (map cuTypeName packageUnits) packageUnits
