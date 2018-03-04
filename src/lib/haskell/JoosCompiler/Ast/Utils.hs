@@ -1,6 +1,7 @@
 module JoosCompiler.Ast.Utils where
 
 import           Data.List
+import           Data.Maybe
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
@@ -45,16 +46,20 @@ qualifyTypeName u@(CompilationUnit (Just _packageName) _ (Just _typeDecl) _) =
   _packageName ++ [typeName _typeDecl]
 qualifyTypeName _ = error "Can't qualify a compilation unit without a class"
 
--- resolvePackageFromProgram :: Name -> AstNode -> Maybe Package
--- resolvePackageFromProgram name (Node (AstWholeProgram (WholeProgram packages)) _) =
---   case (length results) of
---     0 -> Nothing
---     _ -> Just $ head results
---   where
---     results :: [Package]
---     results = catMaybes $ map ((lookup name) . subPackages) packages
--- resolvePackageFromProgram _ _ =
---   error "resolvePackageFromProgram not run on program"
+resolvePackage :: Name -> AstNode -> Maybe Package
+resolvePackage _name (Node (AstWholeProgram (WholeProgram subPackage)) _) =
+  resolvePackageInner _name subPackage
+  where
+    resolvePackageInner :: Name -> SubPackage -> Maybe Package
+    resolvePackageInner [] (SubPackage p _) = p
+    resolvePackageInner name (SubPackage _ m)
+      | result == Nothing = Nothing
+      | otherwise = resolvePackageInner tailOfName $ fromJust result
+      where
+        headOfname = head name
+        tailOfName = tail name
+        result = lookup headOfname m
+resolvePackage _ _ = error "resolvePackage not run on program"
 
 -- resolveType :: Name -> AstNode -> Maybe TypeDeclaration
 -- resolveType [] program = Nothing

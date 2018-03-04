@@ -105,13 +105,14 @@ This snippet worked for me when I was testing things
 ```haskell
 :l src/compiler/Main.hs
 
+:set +m
 :set prompt "> "
 
 import Data.Tree
 import JoosCompiler.Ast.Utils
 import JoosCompiler.TokenTypeConstants
 
-let filesnames = [ "./test/positive/big_package/Main.java"
+let filenames = [ "./test/positive/big_package/Main.java"
                  , "./test/positive/big_package/Thing2.java"
                  , "./test/positive/big_package/Thing.java"
                  ]
@@ -119,6 +120,7 @@ let filesnames = [ "./test/positive/big_package/Main.java"
 taggedTrees <- mapM taggedTreeFromFile filenames
 
 let ast = cstsToAst taggedTrees
+
 putStr $ drawTree $ fmap show ast
 ```
 
