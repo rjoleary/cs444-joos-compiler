@@ -25,9 +25,28 @@ data AstWrapper
   | AstStatement { astStatement :: Statement }
   | AstTaggedToken { astTaggedToken :: TaggedToken }
   | AstType { astType :: Type }
-  deriving (Show)
 
 type AstNode = Tree AstWrapper
+
+instance Show AstWrapper where
+  show (AstTypeDeclaration x) = show x
+  show (AstBlock x) = show x
+  show (AstWholeProgram x) = show x
+  show (AstCompilationUnit x) = show x
+  show (AstConstructor x) = show x
+  show (AstConstructorBody x) = show x
+  show (AstField x) = show x
+  show (AstImport x) = show x
+  show (AstLocalVariable x) = show x
+  show (AstMethod x) = show x
+  show (AstMethodBody x) = show x
+  show (AstModifier x) = show x
+  show (AstModifiers x) = show x
+  show (AstPackage x) = show x
+  show (AstPackageDeclaration x) = show x
+  show (AstStatement x) = show x
+  show (AstTaggedToken x) = show x
+  show (AstType x) = show x
 
 children :: AstWrapper -> [AstWrapper]
 children (AstTypeDeclaration x) = (map AstField $ classFields x) ++
@@ -44,8 +63,8 @@ children (AstConstructorBody x) = error "AstConstructorBody not in final AST"
 children (AstField x)           = [] -- TODO: expression
 children (AstImport x)          = []
 children (AstLocalVariable x)   = [] -- TODO: expression
-children (AstMethod x)          = (map AstLocalVariable $ formalParameters x) ++
-                                  (map AstStatement $ statements x)
+children (AstMethod x)          = (map AstLocalVariable $ methodParameters x) ++
+                                  (map AstStatement $ methodStatements x)
 children (AstMethodBody x)      = error "AstMethodBody not in final AST"
 children (AstModifier x)        = error "AstModifier not in final AST"
 children (AstModifiers x)       = error "AstModifiers not in final AST"

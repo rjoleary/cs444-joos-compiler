@@ -50,7 +50,7 @@ checkHierarchy ast = do
     ruleFor types "A type must not replace or inherit two method with the same signature but different return types"
       (\t ->
         let ms  = methods t ++ indirectMethods t -- TODO: resolve types
-            ret = methodType
+            ret = methodReturn
             sig = methodSignature
         in and [ (sig x == sig y) `implies` (ret x == ret y) | (x:rest) <- tails ms, y <- rest ]
       )

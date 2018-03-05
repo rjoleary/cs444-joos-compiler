@@ -142,15 +142,18 @@ instance Show TypeDeclaration where
     (showName _super) ++
     ") Fields(" ++
     (intercalate ", " $ map (showName . fieldName) fields) ++
-    ") Methods(" ++ (intercalate ", " (map methodName _methods)) ++ ")"
+    ")"
 
 data Method = Method
-  { methodType       :: Type
+  { methodReturn     :: Type
   , methodModifiers  :: [Modifier]
   , methodName       :: String
-  , formalParameters :: [Local]
-  , statements       :: [Statement]
-  } deriving (Eq, Show)
+  , methodParameters :: [Local]
+  , methodStatements :: [Statement]
+  } deriving (Eq)
+
+instance Show Method where
+  show m@Method{methodReturn=r} = show r ++ " " ++ methodSignature m
 
 -- Creates a method signature from the method name and parameter types. The
 -- return type is omitted.
@@ -159,7 +162,7 @@ methodSignature :: Method -> String
 methodSignature x = name ++ "(" ++ intercalate "," parameterTypes ++ ")"
   where
     name = methodName x
-    parameterTypes = map (show . localType) (formalParameters x)
+    parameterTypes = map (show . localType) (methodParameters x)
 
 isMethodFinal :: Method -> Bool
 isMethodFinal x = Final `elem` methodModifiers x

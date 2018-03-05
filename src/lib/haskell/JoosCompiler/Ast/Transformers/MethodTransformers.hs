@@ -15,11 +15,11 @@ constructorTransformer :: Transformer
 constructorTransformer transformedChildren t@(Node label _) =
   AstConstructor $
   Method
-  { methodType = Void
+  { methodReturn = Void
   , methodModifiers = _modifiers
   , methodName = []
-  , formalParameters = _formalParams
-  , statements = _statements
+  , methodParameters = _formalParams
+  , methodStatements = _statements
   }
   where
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
@@ -30,11 +30,11 @@ methodTransformer :: Transformer
 methodTransformer transformedChildren t@(Node label _) =
   AstMethod $
   Method
-  { methodType = _type
+  { methodReturn = _type
   , methodModifiers = _modifiers
   , methodName = _name
-  , formalParameters = _formalParams
-  , statements = _statements
+  , methodParameters = _formalParams
+  , methodStatements = _statements
   }
   where
     _type = getMethodType transformedChildren

@@ -14,11 +14,11 @@ abstractMethodTransformer :: Transformer
 abstractMethodTransformer transformedChildren t@(Node label _) =
   AstMethod $
   Method
-  { methodType = _type
+  { methodReturn = _type
   , methodModifiers = _modifiers
   , methodName = _name
-  , formalParameters = _formalParams
-  , statements = []
+  , methodParameters = _formalParams
+  , methodStatements = []
   }
   where
     _type = getMethodType transformedChildren
