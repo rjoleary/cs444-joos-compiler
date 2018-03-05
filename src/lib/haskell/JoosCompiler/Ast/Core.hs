@@ -42,6 +42,7 @@ getTransformer t@(Node label _)
   | (tokenName label) == kImportDeclaration = importTransformer
   | (tokenName label) == kLocalVariableDeclaration = localVariableTransformer
   | (tokenName label) == kMethodDeclaration = methodTransformer
+  | (tokenName label) == kAbstractMethodDeclaration = abstractMethodTransformer
   | (tokenName label) == kModifier = modifierTransformer
   | (tokenName label) == kModifiers = modifiersTransformer
   | (tokenName label) == kPackageDeclaration = packageTransformer

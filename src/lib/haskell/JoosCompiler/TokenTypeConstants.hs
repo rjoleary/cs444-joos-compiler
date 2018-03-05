@@ -75,6 +75,9 @@ kMethodBody = "MethodBody"
 kMethodDeclaration :: String
 kMethodDeclaration = "MethodDeclaration"
 
+kAbstractMethodDeclaration :: String
+kAbstractMethodDeclaration = "AbstractMethodDeclaration"
+
 kMethodHeader :: String
 kMethodHeader = "MethodHeader"
 

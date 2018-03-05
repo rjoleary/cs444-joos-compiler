@@ -7,6 +7,7 @@ module JoosCompiler.Ast.Transformers
   , fieldTransformer
   , importTransformer
   , localVariableTransformer
+  , abstractMethodTransformer
   , methodTransformer
   , modifierTransformer
   , modifiersTransformer
@@ -15,6 +16,7 @@ module JoosCompiler.Ast.Transformers
   , typeTransformer
   ) where
 
+import           JoosCompiler.Ast.Transformers.AbstractMethodTransformers
 import           JoosCompiler.Ast.Transformers.BlockTransformers
 import           JoosCompiler.Ast.Transformers.TypeDeclaration
 import           JoosCompiler.Ast.Transformers.CompilationUnitTransformers
