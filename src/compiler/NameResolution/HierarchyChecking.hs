@@ -14,15 +14,14 @@ import JoosCompiler.TreeUtils
 -- TODO: fix name conflicts in records
 implements = JoosCompiler.Ast.NodeTypes.interfaces
 
+type TypeHierarchy = Tree TypeDeclaration
+
 -- Returns a error message if hierarchy checking fails.
 checkHierarchy :: AstNode -> Either String ()
 checkHierarchy ast = do
     -- This check must be first; otherwise, the compiler might go into an infinite loop.
-    -- TODO: Hierarchy might not actually be acyclic.
-    withErrorFor classes "The hierarchy must be acyclic"
-      (\x -> (length $ take 1000 (indirectExtends x)) /= 1000)
     withErrorFor types "The hierarchy must be acyclic"
-      (\x -> (length $ take 1000 (indirectImplements x)) /= 1000)
+      (null . drop (length types) . levels . typeHierarchy)
 
     withErrorFor classes "A class must not extend an interface"
       (not . isInterface . dumbResolve . super)
@@ -95,6 +94,14 @@ checkHierarchy ast = do
     indirectImplements :: TypeDeclaration -> [TypeDeclaration]
     indirectImplements x = implementers ++ concatMap indirectImplements implementers
       where implementers = map dumbResolve $ implements x
+
+    typeHierarchy :: TypeDeclaration -> TypeHierarchy
+    typeHierarchy x = typeHierarchy' x
+      where
+        typeHierarchy' TypeDeclaration{typeName="Object"} = createNode []
+        typeHierarchy' TypeDeclaration{isInterface=True}  = createNode $ implements x
+        typeHierarchy' TypeDeclaration{}                  = createNode $ super x:implements x
+        createNode xs = Node x $ map (typeHierarchy . dumbResolve) xs
 
     -- TODO: make smart
     dumbResolve :: Name -> TypeDeclaration
