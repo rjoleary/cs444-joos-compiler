@@ -236,6 +236,6 @@ main = do
   contents <- readFile (args!!3)
   let tree = treeify contents
   let taggedTree = tagTree tree tokens source
-  putStrLn $ drawTree (fmap show taggedTree)
+  --putStrLn $ drawTree (fmap show taggedTree)
   when (untaggedWeed tree) $ exitError "Bad weed"
   when (taggedWeed taggedTree classname) $ exitError "Bad weed"

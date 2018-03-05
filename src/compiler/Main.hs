@@ -8,6 +8,7 @@ import           Data.Tree
 import           JoosCompiler.Ast
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
+import           JoosCompiler.Ast.Transformers.Types
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
@@ -29,11 +30,11 @@ main = do
   filenames <- getArgs
   taggedTrees <- mapM taggedTreeFromFile filenames
   let ast = cstsToAst taggedTrees
-  putStrLn $ drawTree (fmap show ast)
+  --putStrLn $ drawTree (fmap show ast)
 
-  -- Type linking
+  -- Environment building
   let failedRules = checkRules environmentBuildingRules ast
-  putStrLn $ intercalate "\n" failedRules
+  --putStrLn $ intercalate "\n" failedRules
   when (length failedRules > 0) $ exitError "See failed rules above"
 
   -- Symbol table
@@ -44,11 +45,15 @@ main = do
 
   -- Type linking
   let failedRules = checkRules typeLinkingRules ast
-  putStrLn $ intercalate "\n" failedRules
+  --putStrLn $ intercalate "\n" failedRules
   when (length failedRules > 0) $ exitError "See failed rules above"
 
+  -- Simplify the AST
+  let ast2 = asTree $ asAst ast
+  putStrLn $ drawTree (fmap show ast2)
+
   -- Hierarchy checking
-  let hierarchy = checkHierarchy ast
+  let hierarchy = checkHierarchy ast2
   case hierarchy of
     Right _  -> return ()
     Left err -> exitError err

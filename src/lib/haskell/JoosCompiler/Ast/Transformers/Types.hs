@@ -1,6 +1,7 @@
 module JoosCompiler.Ast.Transformers.Types where
 
 import           Data.Tree
+import           Data.Maybe
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
@@ -27,6 +28,40 @@ data AstWrapper
   deriving (Show)
 
 type AstNode = Tree AstWrapper
+
+children :: AstWrapper -> [AstWrapper]
+children (AstTypeDeclaration x) = (map AstField $ classFields x) ++
+                                  (map AstMethod $ methods x) ++
+                                  (map AstMethod $ constructors x)
+children (AstBlock x)           = []
+children (AstWholeProgram x)    = (map AstPackage $ findPackages $ programPackages x)
+  where findPackages (SubPackage x []) = maybeToList x
+        findPackages (SubPackage x xs) = maybeToList x ++ concatMap (findPackages . snd) xs
+children (AstCompilationUnit x) = (map AstImport $ imports x) ++
+                                  (map AstTypeDeclaration $ maybeToList $ typeDecl x)
+children (AstConstructor x)     = error "AstConstructor not in final AST"
+children (AstConstructorBody x) = error "AstConstructorBody not in final AST"
+children (AstField x)           = [] -- TODO: expression
+children (AstImport x)          = []
+children (AstLocalVariable x)   = [] -- TODO: expression
+children (AstMethod x)          = (map AstLocalVariable $ formalParameters x) ++
+                                  (map AstStatement $ statements x)
+children (AstMethodBody x)      = error "AstMethodBody not in final AST"
+children (AstModifier x)        = error "AstModifier not in final AST"
+children (AstModifiers x)       = error "AstModifiers not in final AST"
+children (AstPackage x)         = map (AstCompilationUnit . snd) $ packageCompilationUnits x
+children (AstPackageDeclaration x) = error "AstPackageDeclartion not in final AST"
+children (AstStatement x)       = [] -- TODO
+children (AstTaggedToken x)     = error "AstTaggedToken not in final AST"
+children (AstType x)            = []
+
+-- Convert to Data.Tree representation.
+asTree :: AstWrapper -> AstNode
+asTree x = Node x (map asTree $ children x)
+
+-- Convert to AstWrapper representation.
+asAst :: AstNode -> AstWrapper
+asAst = rootLabel
 
 type Transformer = [AstNode] -> TaggedParseTree -> AstWrapper
 
