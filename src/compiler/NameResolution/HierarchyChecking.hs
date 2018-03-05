@@ -44,17 +44,16 @@ checkHierarchy ast = do
     ruleFor types "A class must not declare two constructors with the same parameter types"
       (allUnique . map methodSignature . constructors)
 
-    ruleFor types "A class or interface must not inherit two methods with the same signature but different return types"
+    -- This performs two checks from A2:
+    -- * "A method must not replace a method with a different return type"
+    -- * "A class or interface must not inherit two methods with the same signature but different return types"
+    ruleFor types "A type must not replace or inherit two method with the same signature but different return types"
       (\t ->
-        let methods = indirectMethods t -- TODO: resolve types
-            ret     = methodType
-            sig     = methodSignature
-        in and [ (sig x == sig y) `implies` (ret x == ret y) | (x:rest) <- tails methods, y <- rest ]
+        let ms  = methods t ++ indirectMethods t -- TODO: resolve types
+            ret = methodType
+            sig = methodSignature
+        in and [ (sig x == sig y) `implies` (ret x == ret y) | (x:rest) <- tails ms, y <- rest ]
       )
-
-    -- TODO: everything after this point has no tests
-    ruleFor classes "A method must not replace a method with a different return type"
-      (const True) -- TODO
 
     ruleFor concreteClasses "A class that contains any abstract methods must be abstract"
       (and . map (not . isMethodAbstract) . foldMethods)
