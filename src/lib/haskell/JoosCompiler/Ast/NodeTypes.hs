@@ -173,6 +173,9 @@ isMethodProtected x = Protected `elem` methodModifiers x
 isMethodStatic :: Method -> Bool
 isMethodStatic x = Static `elem` methodModifiers x
 
+isMethodAbstract :: Method -> Bool
+isMethodAbstract x = Abstract `elem` methodModifiers x
+
 data Expression
   = MethodInvocation { functionName :: Name
                      , arguments    :: [Expression] }
