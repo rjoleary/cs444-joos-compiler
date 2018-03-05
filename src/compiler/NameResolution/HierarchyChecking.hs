@@ -20,67 +20,65 @@ type TypeHierarchy = Tree TypeDeclaration
 checkHierarchy :: AstNode -> Either String ()
 checkHierarchy ast = do
     -- This check must be first; otherwise, the compiler might go into an infinite loop.
-    withErrorFor types "The hierarchy must be acyclic"
+    ruleFor types "The hierarchy must be acyclic"
       (null . drop (length types) . levels . typeHierarchy)
 
-    withErrorFor classes "A class must not extend an interface"
+    ruleFor classes "A class must not extend an interface"
       (not . isInterface . dumbResolve . super)
 
-    withErrorFor classes "A class must not implement a class"
+    ruleFor classes "A class must not implement a class"
       (and . map (isInterface . dumbResolve) . implements)
 
-    withErrorFor types "An interface must not be repeated in an implements or extends clause"
+    ruleFor types "An interface must not be repeated in an implements or extends clause"
       (allUnique . map (typeName . dumbResolve) . implements)
 
-    withErrorFor classes "A class must not extend a final class"
+    ruleFor classes "A class must not extend a final class"
       (not . isClassFinal . dumbResolve . super)
 
-    withErrorFor interfaces "An interface must not extend a class"
+    ruleFor interfaces "An interface must not extend a class"
       (and . map (isInterface . dumbResolve) . implements)
 
-    withErrorFor types "A class or interface must not declare two methods with the same signature"
+    ruleFor types "A class or interface must not declare two methods with the same signature"
       (allUnique . map methodSignature . methods)
 
-    withErrorFor types "A class must not declare two constructors with the same parameter types"
+    ruleFor types "A class must not declare two constructors with the same parameter types"
       (allUnique . map methodSignature . constructors)
 
-    withErrorFor types "A class or interface must not inherit two methods with the same signature but different return types"
+    ruleFor types "A class or interface must not inherit two methods with the same signature but different return types"
       (\t ->
         let returnAndSignature = map (\x -> (show $ methodType x, methodSignature x)) $ indirectMethods t
         in and $ map (\x -> all (==head x) x) $ map (map fst) $ groupBy (\x y -> snd x == snd y) $ sortBy (\x y -> snd x `compare` snd y) $ returnAndSignature
       )
 
     -- TODO: everything after this point has no tests
-    withErrorFor classes "A class that contains any abstract methods must be abstract"
+    ruleFor classes "A class that contains any abstract methods must be abstract"
       (\x -> (not $ hasAbstractMethod x) || isAbstractType x)
 
-    withErrorFor classes "A nonstatic method must not replace a static method"
+    ruleFor classes "A nonstatic method must not replace a static method"
       (\clazz ->
         let staticMethods = map methodSignature $ filter isMethodStatic $ indirectMethods clazz
         in and $ map (not . (`elem` staticMethods)) $ map methodSignature $ filter (not . isMethodStatic) $ methods clazz
       )
 
-    withError "A method must not replace a method with a different return type"
-      True -- TODO
+    ruleFor classes "A method must not replace a method with a different return type"
+      (const True) -- TODO
 
-    withErrorFor classes "A protected method must not replace a public method"
+    ruleFor classes "A protected method must not replace a public method"
       (\clazz ->
         let protectedMethods = map methodSignature $ filter isMethodPublic $ indirectMethods clazz
         in and $ map (not . (`elem` protectedMethods)) $ map methodSignature $ filter isMethodProtected $ methods clazz
       )
 
-    withErrorFor classes "A method must not replace a final method"
+    ruleFor classes "A method must not replace a final method"
       (\clazz ->
         let finalMethods = map methodSignature $ filter isMethodFinal $ indirectMethods clazz
         in and $ map (not . (`elem` finalMethods)) $ map methodSignature $ methods clazz
       )
 
   where
-    withError err x
-      | x == False = Left err
-      | otherwise  = Right ()
-
-    withErrorFor xs err f = withError err $ and $ map f $ xs
+    ruleFor types err f = asEither $ filter (not . f) $ types
+      where asEither (x:_) = Left ("Error with type " ++ typeName x ++ ", \"" ++ err ++ "\"")
+            asEither []    = Right ()
 
     indirectMethods :: TypeDeclaration -> [Method]
     indirectMethods x = concatMap methods (indirectExtends x ++ indirectImplements x)
