@@ -244,6 +244,14 @@ files are expected to compile successfully. They are run with `make test.positiv
 The directory `test/negative/` contains over 90 test files. Each one of these
 files are expected to fail compilation. They are run with `make test.negative`.
 
+### Parallelize tests
+
+Sequential: 126s
+
+Parallel: 22.44s
+
+Which is a 5.6x improvement
+
 ### Haskell Unit Tests
 
 Unit tests for the Lexer are written in Haskell and located in
