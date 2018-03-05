@@ -74,13 +74,13 @@ find 'test' -name '*.parse' -delete
 find 'test' -name '*.stdout' -delete
 find 'test' -name '*.stderr' -delete
 
+POSITIVE_TESTS=$(echo $TESTSET/positive/*)
+NEGATIVE_TESTS=$(echo $TESTSET/negative/*)
+
 echo 'Building stdlib...'
 runtests 0 42 'test/positive/Empty.java'
 export SKIP_STDLIB=1
 echo 'Running tests...'
-
-POSITIVE_TESTS=$(echo $TESTSET/positive/*)
-NEGATIVE_TESTS=$(echo $TESTSET/negative/*)
 
 case "$1" in
     positive)
