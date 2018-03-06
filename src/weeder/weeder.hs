@@ -176,7 +176,6 @@ castExpression tree =
       , "ConditionalOrExpression"
       , "ConditionalAndExpression"
       , "InclusiveOrExpression"
-      , "ExclusiveOrExpression"
       , "AndExpression"
       , "EqualityExpression"
       , "RelationalExpression"

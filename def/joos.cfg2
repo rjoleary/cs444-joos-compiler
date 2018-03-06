@@ -542,11 +542,8 @@ EqualityExpression      EqualityExpression != RelationalExpression
 AndExpression           EqualityExpression
 AndExpression           AndExpression & EqualityExpression
 
-ExclusiveOrExpression   AndExpression
-ExclusiveOrExpression   ExclusiveOrExpression ^ AndExpression
-
-InclusiveOrExpression   ExclusiveOrExpression
-InclusiveOrExpression   InclusiveOrExpression | ExclusiveOrExpression
+InclusiveOrExpression   AndExpression
+InclusiveOrExpression   InclusiveOrExpression | AndExpression
 
 
 ########## 15.23: Conditional-And Operator &&
