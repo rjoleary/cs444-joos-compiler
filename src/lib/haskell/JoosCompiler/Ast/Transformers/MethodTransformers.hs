@@ -52,7 +52,7 @@ getFormalParams ts = map convertToLocal formalParamNodes
       Local
       { localType = _type
       , localModifiers = []
-      , localName = [_name]
+      , localName = _name
       , localValue = (Literal "3")
       }
       where

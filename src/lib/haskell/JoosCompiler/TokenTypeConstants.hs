@@ -12,6 +12,9 @@ kBlock = "Block"
 kBlockStatement :: String
 kBlockStatement = "BlockStatement"
 
+kBlockStatements :: String
+kBlockStatements = "BlockStatements"
+
 kBoolean :: String
 kBoolean = "boolean"
 

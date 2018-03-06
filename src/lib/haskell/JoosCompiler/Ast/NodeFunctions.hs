@@ -27,7 +27,7 @@ instance Show Package where
     (showName name) ++
     (if length subs > 0
        then " subs(" ++
-            (intercalate ", " $
+            (commaDelimit $
              map fst subs) ++
             ")"
        else "")
@@ -37,7 +37,7 @@ instance Show CompilationUnit where
     "AstCompilationUnit(p=" ++
     (showName $ fromMaybe ["N/A"] p) ++
     " i=[" ++
-    (intercalate ", " $ map (showName . importName) i) ++
+    (commaDelimit $ map (showName . importName) i) ++
     "]" ++ " c=" ++ extractTypeName c ++ ")"
   show EmptyFile = "EmptyFile"
 
@@ -56,12 +56,12 @@ instance Show TypeDeclaration where
     " " ++
     name ++
     (if (length _interfaces) > 0
-       then " implements(" ++ (show $ map showName _interfaces) ++ ")"
+       then " implements(" ++ (commaDelimit $ map showName _interfaces) ++ ")"
        else "") ++
     " extends(" ++
     (showName _super) ++
     ") Fields(" ++
-    (intercalate ", " $ map (showName . fieldName) fields) ++
+    (commaDelimit $ map (showName . fieldName) fields) ++
     ")"
 
 instance Show Field where
@@ -78,14 +78,18 @@ instance Show Method where
   show m@Method{methodReturn=r} = "AstMethod: " ++ show r ++ " " ++ methodSignature m
 
 instance Show Block where
-  show Block{} = "AstBlock"
+  show Block{blockScope=s} = "AstBlock: Locals(" ++commaDelimit localNames ++ ")"
+    where
+      locals = scopeLocals s
+      localNames = map localName locals
+
 
 instance Show Statement where
   show Statement{} = "AstStatement"
 
 instance Show Local where
   show (Local _type _modifiers _name _) =
-    "AstLocal: " ++  m ++ show _type ++ " " ++ showName _name
+    "AstLocal: " ++  m ++ show _type ++ " " ++ _name
     where
       m =
         if length _modifiers > 0
@@ -143,6 +147,9 @@ extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"
 extractTypeName (Just c) = typeName c
 
+commaDelimit :: [String] -> String
+commaDelimit l = intercalate ", " l
+
 isClassFinal :: TypeDeclaration -> Bool
 isClassFinal x = Final `elem` classModifiers x
 
@@ -150,7 +157,7 @@ isClassFinal x = Final `elem` classModifiers x
 -- return type is omitted.
 -- TODO: types must be canonical beforehand
 methodSignature :: Method -> String
-methodSignature x = name ++ "(" ++ intercalate "," parameterTypes ++ ")"
+methodSignature x = name ++ "(" ++ commaDelimit parameterTypes ++ ")"
   where
     name = methodName x
     parameterTypes = map (show . localType) (methodParameters x)

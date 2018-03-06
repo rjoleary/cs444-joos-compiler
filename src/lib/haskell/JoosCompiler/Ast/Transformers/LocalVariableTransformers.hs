@@ -24,7 +24,8 @@ localVariableTransformer transformedChildren t =
     _value = Literal "3"
     -- TODO: _value = astExpression $ getExpression transformedChildren
 
-getVarName :: TaggedParseTree -> Name
-getVarName (Node _ children) = extractName [nameNode]
+getVarName :: TaggedParseTree -> String
+getVarName (Node _ _children) = name
   where
-    nameNode = children !! 1
+    nameNode = _children !! 1
+    name = head $ extractName [nameNode]

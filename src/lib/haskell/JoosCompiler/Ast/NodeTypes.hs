@@ -112,7 +112,7 @@ data Scope = Scope
 data Local = Local
   { localType      :: Type
   , localModifiers :: [Modifier]
-  , localName      :: Name
+  , localName      :: String
   , localValue     :: Expression
   } deriving (Eq)
 

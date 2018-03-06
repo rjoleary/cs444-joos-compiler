@@ -32,7 +32,7 @@ cstsToAst ts = packaged
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
-  | (tokenName label) `elem` [kBlock, kConstructorBody, kMethodBody] =
+  | (tokenName label) `elem` [kBlock, kConstructorBody, kMethodBody, kBlockStatements] =
     blockTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     typeDeclarationTransformer
