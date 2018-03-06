@@ -16,14 +16,14 @@ instance Show Modifier where
   show Native    = "native"
 
 instance Show WholeProgram where
-  show WholeProgram{} = "AstWholeProgram"
+  show WholeProgram{} = "WholeProgram"
 
 instance Show SubPackage where
-  show (SubPackage x y) = "AstSubpackage: " ++ show x ++ " " ++ show y
+  show (SubPackage x y) = "Subpackage: " ++ show x ++ " " ++ show y
 
 instance Show Package where
   show (Package name subs _) =
-    "AstPackage: n=" ++
+    "Package: n=" ++
     (showName name) ++
     (if length subs > 0
        then " subs(" ++
@@ -34,7 +34,7 @@ instance Show Package where
 
 instance Show CompilationUnit where
   show (CompilationUnit p i c _) =
-    "AstCompilationUnit(p=" ++
+    "CompilationUnit(p=" ++
     (showName $ fromMaybe ["N/A"] p) ++
     " i=[" ++
     (commaDelimit $ map (showName . importName) i) ++
@@ -47,7 +47,7 @@ instance Show ImportDeclaration where
 
 instance Show TypeDeclaration where
   show (TypeDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
-    "AstTypeDeclaration: " ++
+    "TypeDeclaration: " ++
     show _modifiers ++
     " " ++
     (if _isInterface
@@ -66,7 +66,7 @@ instance Show TypeDeclaration where
 
 instance Show Field where
   show (Field _type _modifiers _name _) =
-    "AstField: " ++
+    "Field: " ++
     m ++ show _type ++ " " ++ showName _name
     where
       m =
@@ -75,21 +75,21 @@ instance Show Field where
           else ""
 
 instance Show Method where
-  show m@Method{methodReturn=r} = "AstMethod: " ++ show r ++ " " ++ methodSignature m
+  show m@Method{methodReturn=r} = "Method: " ++ show r ++ " " ++ methodSignature m
 
 instance Show Block where
-  show Block{blockScope=s} = "AstBlock: Locals(" ++commaDelimit localNames ++ ")"
+  show Block{blockScope=s} = "Block: Locals(" ++commaDelimit localNames ++ ")"
     where
       locals = scopeLocals s
       localNames = map localName locals
 
 
 instance Show Statement where
-  show Statement{} = "AstStatement"
+  show Statement{} = "Statement"
 
 instance Show Local where
   show (Local _type _modifiers _name _) =
-    "AstLocal: " ++  m ++ show _type ++ " " ++ _name
+    "Local: " ++  m ++ show _type ++ " " ++ _name
     where
       m =
         if length _modifiers > 0
