@@ -5,15 +5,13 @@ module JoosCompiler.Ast.Transformers.BlockTransformers
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
-import           JoosCompiler.Ast.Utils
-import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.TreeUtils
 
 blockTransformer :: Transformer
-blockTransformer transformedChildren t = AstBlock $ Block $ scope
+blockTransformer transformedChildren t = AstBlock $ Block $ _scope
   where
     _locals = getBlockLocals transformedChildren
-    scope = Scope {scopeLocals = _locals, parentScope = Nothing}
+    _scope = Scope {scopeLocals = _locals, parentScope = Nothing}
 
 getBlockLocals :: [AstNode] -> [Local]
 getBlockLocals ts = _locals

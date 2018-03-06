@@ -16,14 +16,14 @@ instance Show Modifier where
   show Native    = "native"
 
 instance Show WholeProgram where
-  show WholeProgram{} = "WholeProgram"
+  show WholeProgram{} = "AstWholeProgram"
 
 instance Show SubPackage where
-  show (SubPackage x y) = show x ++ " " ++ show y
+  show (SubPackage x y) = "AstSubpackage: " ++ show x ++ " " ++ show y
 
 instance Show Package where
   show (Package name subs _) =
-    "n=" ++
+    "AstPackage: n=" ++
     (showName name) ++
     (if length subs > 0
        then " subs(" ++
@@ -34,7 +34,7 @@ instance Show Package where
 
 instance Show CompilationUnit where
   show (CompilationUnit p i c _) =
-    "CompilationUnit(p=" ++
+    "AstCompilationUnit(p=" ++
     (showName $ fromMaybe ["N/A"] p) ++
     " i=[" ++
     (intercalate ", " $ map (showName . importName) i) ++
@@ -47,6 +47,7 @@ instance Show ImportDeclaration where
 
 instance Show TypeDeclaration where
   show (TypeDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
+    "AstTypeDeclaration: " ++
     show _modifiers ++
     " " ++
     (if _isInterface
@@ -65,6 +66,7 @@ instance Show TypeDeclaration where
 
 instance Show Field where
   show (Field _type _modifiers _name _) =
+    "AstField: " ++
     m ++ show _type ++ " " ++ showName _name
     where
       m =
@@ -73,17 +75,17 @@ instance Show Field where
           else ""
 
 instance Show Method where
-  show m@Method{methodReturn=r} = show r ++ " " ++ methodSignature m
+  show m@Method{methodReturn=r} = "AstMethod: " ++ show r ++ " " ++ methodSignature m
 
 instance Show Block where
-  show Block{} = "Block"
+  show Block{} = "AstBlock"
 
 instance Show Statement where
-  show Statement{} = "Statement"
+  show Statement{} = "AstStatement"
 
 instance Show Local where
   show (Local _type _modifiers _name _) =
-    m ++ show _type ++ " " ++ showName _name
+    "AstLocal: " ++  m ++ show _type ++ " " ++ showName _name
     where
       m =
         if length _modifiers > 0
@@ -171,4 +173,3 @@ isMethodStatic x = Static `elem` methodModifiers x
 
 isMethodAbstract :: Method -> Bool
 isMethodAbstract x = Abstract `elem` methodModifiers x
-
