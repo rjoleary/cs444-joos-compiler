@@ -83,6 +83,7 @@ import qualified Data.Map.Strict            as Map
 import           Data.Maybe
 import           JoosCompiler.Ast
 import           JoosCompiler.Ast.NodeTypes
+import           JoosCompiler.Ast.NodeFunctions
 
 type SymbolTable = Map.Map Canonical Symbol
 

@@ -8,6 +8,7 @@ import Data.Function
 import Data.List.Unique
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
+import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.Utils
 import JoosCompiler.TreeUtils
 

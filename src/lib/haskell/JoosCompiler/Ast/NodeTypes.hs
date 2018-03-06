@@ -5,19 +5,8 @@ import           Data.Maybe
 
 type Name = [String]
 
-data SubPackage = SubPackage (Maybe Package) SubPackageMap
-  deriving (Eq, Show)
-type SubPackageMapEntry = (String, SubPackage)
-type SubPackageMap = [SubPackageMapEntry]
 
-type PackageCompilationUnits = [(String, CompilationUnit)]
-
-showName :: [String] -> String
-showName l = intercalate "." l
-
-extractTypeName :: Maybe TypeDeclaration -> String
-extractTypeName Nothing  = "N/A"
-extractTypeName (Just c) = typeName c
+---------- Packages, Types and Methods ----------
 
 data Modifier
   = Public
@@ -26,28 +15,28 @@ data Modifier
   | Abstract
   | Static
   | Native
-  deriving (Eq, Show)
+  deriving (Eq)
 
 data WholeProgram = WholeProgram
   { programPackages :: SubPackage
+  } deriving (Eq)
+
+data SubPackage = SubPackage (Maybe Package) SubPackageMap
+  deriving (Eq)
+type SubPackageMapEntry = (String, SubPackage)
+type SubPackageMap = [SubPackageMapEntry]
+
+data PackageDeclaration = PackageDeclaration
+  { packageDeclarationName :: Name
   } deriving (Eq, Show)
+
+type PackageCompilationUnits = [(String, CompilationUnit)]
 
 data Package = Package
   { packageName             :: Name
   , subPackages             :: SubPackageMap
   , packageCompilationUnits :: PackageCompilationUnits
   } deriving (Eq)
-
-instance Show Package where
-  show (Package name subs _) =
-    "n=" ++
-    (showName name) ++
-    (if length subs > 0
-       then " subs(" ++
-            (intercalate ", " $
-             map fst subs) ++
-            ")"
-       else "")
 
 data CompilationUnit
   = CompilationUnit { cuPackage  :: Maybe Name
@@ -57,61 +46,12 @@ data CompilationUnit
   | EmptyFile
   deriving (Eq)
 
-instance Show CompilationUnit where
-  show (CompilationUnit p i c _) =
-    "CompilationUnit(p=" ++
-    (showName $ fromMaybe ["N/A"] p) ++
-    " i=[" ++
-    (intercalate ", " $ map (showName . importName) i) ++
-    "]" ++ " c=" ++ extractTypeName c ++ ")"
-  show EmptyFile = "EmptyFile"
-
-data PackageDeclaration = PackageDeclaration
-  { packageDeclarationName :: Name
-  } deriving (Eq, Show)
-
 data ImportDeclaration = ImportDeclaration
   { importName :: Name
   , onDemand   :: Bool
-  } deriving (Eq, Show)
-
-data Block = Block
-  { blockScope :: Scope
-  } deriving (Eq, Show)
-
-data Field = Field
-  { fieldType      :: Type
-  , fieldModifiers :: [Modifier]
-  , fieldName      :: Name
-  , fieldValue     :: Expression
   } deriving (Eq)
 
-instance Show Field where
-  show (Field _type _modifiers _name _) =
-    m ++ show _type ++ " " ++ showName _name
-    where
-      m =
-        if length _modifiers > 0
-          then (intercalate " " $ map show _modifiers) ++ " "
-          else ""
-
-data Local = Local
-  { localType      :: Type
-  , localModifiers :: [Modifier]
-  , localName      :: Name
-  , localValue     :: Expression
-  } deriving (Eq)
-
-instance Show Local where
-  show (Local _type _modifiers _name _) =
-    m ++ show _type ++ " " ++ showName _name
-    where
-      m =
-        if length _modifiers > 0
-          then (intercalate " " $ map show _modifiers) ++ " "
-          else ""
-
--- A type is a class or an interface
+-- A type is a class or an interface.
 data TypeDeclaration = TypeDeclaration
   { typeName       :: String
   , classModifiers :: [Modifier]
@@ -123,27 +63,14 @@ data TypeDeclaration = TypeDeclaration
   , constructors   :: [Method]
   } deriving (Eq)
 
-isClassFinal :: TypeDeclaration -> Bool
-isClassFinal x = Final `elem` classModifiers x
+data Field = Field
+  { fieldType      :: Type
+  , fieldModifiers :: [Modifier]
+  , fieldName      :: Name
+  , fieldValue     :: Expression
+  } deriving (Eq)
 
-instance Show TypeDeclaration where
-  show (TypeDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
-    show _modifiers ++
-    " " ++
-    (if _isInterface
-       then "interface"
-       else "class") ++
-    " " ++
-    name ++
-    (if (length _interfaces) > 0
-       then " implements(" ++ (show $ map showName _interfaces) ++ ")"
-       else "") ++
-    " extends(" ++
-    (showName _super) ++
-    ") Fields(" ++
-    (intercalate ", " $ map (showName . fieldName) fields) ++
-    ")"
-
+-- The methodReturn for a constructor is always void.
 data Method = Method
   { methodReturn     :: Type
   , methodModifiers  :: [Modifier]
@@ -152,48 +79,17 @@ data Method = Method
   , methodStatements :: [Statement]
   } deriving (Eq)
 
-instance Show Method where
-  show m@Method{methodReturn=r} = show r ++ " " ++ methodSignature m
 
--- Creates a method signature from the method name and parameter types. The
--- return type is omitted.
--- TODO: types must be canonical beforehand
-methodSignature :: Method -> String
-methodSignature x = name ++ "(" ++ intercalate "," parameterTypes ++ ")"
-  where
-    name = methodName x
-    parameterTypes = map (show . localType) (methodParameters x)
+---------- Statements and Expressions ----------
 
-isMethodFinal :: Method -> Bool
-isMethodFinal x = Final `elem` methodModifiers x
+data Block = Block
+  { blockScope :: Scope
+  } deriving (Eq)
 
-isMethodPublic :: Method -> Bool
-isMethodPublic x = Public `elem` methodModifiers x
-
-isMethodProtected :: Method -> Bool
-isMethodProtected x = Protected `elem` methodModifiers x
-
-isMethodStatic :: Method -> Bool
-isMethodStatic x = Static `elem` methodModifiers x
-
-isMethodAbstract :: Method -> Bool
-isMethodAbstract x = Abstract `elem` methodModifiers x
-
-data Expression
-  = MethodInvocation { functionName :: Name
-                     , arguments    :: [Expression] }
-  | BinOpApplication { operator     :: Operator
-                     , leftOperand  :: Expression
-                     , rightOperand :: Expression }
-  | UnaryOpApplication { operator :: Operator
-                       , operand  :: Expression }
-  | Literal { value :: String }
-  deriving (Eq, Show)
-
-data Scope = Scope
-  { scopeLocals :: [Local]
-  , parentScope :: Maybe Scope
-  } deriving (Eq, Show)
+data Statement = Statement
+  { scope     :: Scope
+  , statement :: InnerStatement
+  } deriving (Eq)
 
 data InnerStatement
   = AssignStatement { assignedVar   :: Name
@@ -206,12 +102,32 @@ data InnerStatement
                 , thenStatement :: Statement
                 , elseStatement :: Maybe Statement }
   | EmptyStatement
-  deriving (Eq, Show)
+  deriving (Eq)
 
-data Statement = Statement
-  { scope     :: Scope
-  , statement :: InnerStatement
-  } deriving (Eq, Show)
+data Scope = Scope
+  { scopeLocals :: [Local]
+  , parentScope :: Maybe Scope
+  } deriving (Eq)
+
+data Local = Local
+  { localType      :: Type
+  , localModifiers :: [Modifier]
+  , localName      :: Name
+  , localValue     :: Expression
+  } deriving (Eq)
+
+data Expression
+  = MethodInvocation Name [Expression]
+  | BinaryOperation BinaryOperator Expression Expression
+  | UnaryOperation UnaryOperator Expression
+  | Literal String
+  deriving (Eq)
+
+data Type
+  = Void
+  | Type { innerType :: InnerType
+         , isArray   :: Bool }
+  deriving (Eq)
 
 data InnerType
   = Boolean
@@ -222,29 +138,26 @@ data InnerType
   | NamedType { unNamedType :: Name }
   deriving (Eq)
 
-instance Show InnerType where
-  show Boolean       = "boolean"
-  show Byte          = "byte"
-  show Char          = "char"
-  show Int           = "int"
-  show Short         = "short"
-  show (NamedType x) = showName x
-
-data Type
-  = Void
-  | Type { innerType :: InnerType
-         , isArray   :: Bool }
+data BinaryOperator
+  = Multiply
+  | Divide
+  | Modulus
+  | Add
+  | Subtract
+  | Less
+  | Greater
+  | LessEqual
+  | GreaterEqual
+  | InstanceOf
+  | Equality
+  | Inequality
+  | LazyAnd
+  | LazyOr
+  | And
+  | Or
+  | Assign
   deriving (Eq)
 
-instance Show Type where
-  show Void           = "void"
-  show (Type x False) = show x
-  show (Type x True)  = show (Type x False) ++ "[]"
-
-data Operator
-  = Plus
-  | Minus
-  | Divide
-  | Mod
-  | Negate
-  deriving (Eq, Show)
+data UnaryOperator
+  = Negate
+  deriving (Eq)
