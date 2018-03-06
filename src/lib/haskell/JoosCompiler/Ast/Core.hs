@@ -1,7 +1,6 @@
-module JoosCompiler.Ast.Core where
+module JoosCompiler.Ast.Core(cstsToAst) where
 
 import           Data.Tree
-import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.SecondaryProcessing.Packaging
 import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
 import           JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
