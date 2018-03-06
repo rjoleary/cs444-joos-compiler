@@ -5,6 +5,7 @@ public class Main {
 
     public static void main() {
         Thing x = new Thing();
+        Thing y = new Thing();
         util.doStuff("things");
     }
 }
