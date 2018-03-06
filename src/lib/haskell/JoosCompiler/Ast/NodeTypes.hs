@@ -47,7 +47,8 @@ data CompilationUnit
   deriving (Eq)
 
 data ImportDeclaration = ImportDeclaration
-  { importName :: Name
+  { importPackageName :: Name
+  , importTypeName :: Maybe String
   , onDemand   :: Bool
   } deriving (Eq)
 

@@ -1,7 +1,7 @@
 module JoosCompiler.Ast
   ( cstsToAst
   , AstWrapper(..)
-  , AstNode(..)
+  , AstNode
   , isBlock
   , isTypeDeclaration
   , isField

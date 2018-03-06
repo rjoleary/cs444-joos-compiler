@@ -6,6 +6,7 @@ import           AstRule
 import           Data.List.Unique
 import           Data.Tree
 import           JoosCompiler.Ast
+import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Ast.Utils

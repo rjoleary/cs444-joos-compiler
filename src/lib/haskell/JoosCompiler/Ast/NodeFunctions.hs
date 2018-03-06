@@ -42,8 +42,8 @@ instance Show CompilationUnit where
   show EmptyFile = "EmptyFile"
 
 instance Show ImportDeclaration where
-  show ImportDeclaration{importName=n, onDemand=True} = show n ++ ".*"
-  show ImportDeclaration{importName=n}                = show n
+  show i@ImportDeclaration{onDemand=True} = (showName $ importName i) ++ ".*"
+  show i                                  = showName $ importName i
 
 instance Show TypeDeclaration where
   show (TypeDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
@@ -139,6 +139,11 @@ instance Show UnaryOperator where
 
 
 ---------- Other Functions ----------
+
+importName :: ImportDeclaration -> Name
+importName ImportDeclaration{onDemand=False, importPackageName=p} = p
+importName ImportDeclaration{onDemand=True, importPackageName=p, importTypeName=t} =
+  p ++ [fromJust t]
 
 showName :: [String] -> String
 showName l = intercalate "." l

@@ -12,8 +12,18 @@ import           JoosCompiler.Treeify
 importTransformer :: Transformer
 importTransformer _ t =
   AstImport $
-  ImportDeclaration
-  {importName = getImportName t, onDemand = isOnDemandImport t}
+  ImportDeclaration { importPackageName = _packageName
+                    , importTypeName = _typeName
+                    , onDemand = _onDemand
+                    }
+  where
+    _onDemand = isOnDemandImport t
+    _packageName
+      | _onDemand = getImportName t
+      | otherwise = init $ getImportName t
+    _typeName
+      | _onDemand = Nothing
+      | otherwise = Just $ last $ getImportName t
 
 getImportName :: TaggedParseTree -> Name
 getImportName t = extractName nameNodes
