@@ -2,13 +2,20 @@ module JoosCompiler.Ast.Core where
 
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
-import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
 import           JoosCompiler.Ast.SecondaryProcessing.Packaging
+import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
+import           JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 import           JoosCompiler.Ast.Transformers
+
+-- Inspired by Flow
+-- http://taylor.fausak.me/2015/04/09/write-more-understandable-haskell-with-flow/
+infixl 0 |>
+(|>) :: a -> (a -> b) -> b
+x |> f = f x
 
 -- We first transform children so root has access to them
 cstToAstTransform :: Transformer -> TaggedParseTree -> AstNode
@@ -18,17 +25,20 @@ cstToAstTransform f t = Node transformedRoot transformedChildren
     transformedRoot = f transformedChildren t
 
 cstToAst :: TaggedParseTree -> AstNode
-cstToAst t = ast2
+cstToAst t = ast
   where
-    ast1 = cstToAstTransform transformer t
-    ast2 = injectScopesIntoChildrenBlocks ast1
+    ast = cstToAstTransform transformer t
     transformer = getTransformer t
 
 cstsToAst :: [TaggedParseTree] -> AstNode
-cstsToAst ts = packaged
+cstsToAst ts = finalProgram
   where
-    transformed = map cstToAst ts
-    packaged = packageProgram transformed
+    transformedCompilationUnits = map cstToAst ts
+    packagedProgram = packageProgram transformedCompilationUnits
+    finalProgram =
+      packagedProgram
+      |> injectScopesIntoChildrenBlocks
+      |> canonicalizeTypes
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
