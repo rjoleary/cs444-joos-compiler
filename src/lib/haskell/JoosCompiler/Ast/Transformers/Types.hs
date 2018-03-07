@@ -43,6 +43,7 @@ children (AstCompilationUnit x) = (map AstImport $ imports x) ++
                                   (map AstTypeDeclaration $ maybeToList $ typeDecl x)
 children (AstConstructor x)     = error "AstConstructor not in final AST"
 children (AstConstructorBody x) = error "AstConstructorBody not in final AST"
+children (AstExpression x)      = [] -- TODO: expression
 children (AstField x)           = [] -- TODO: expression
 children (AstImport x)          = []
 children (AstLocalVariable x)   = [] -- TODO: expression
@@ -53,7 +54,17 @@ children (AstModifier x)        = error "AstModifier not in final AST"
 children (AstModifiers x)       = error "AstModifiers not in final AST"
 children (AstPackage x)         = map (AstCompilationUnit . snd) $ packageCompilationUnits x
 children (AstPackageDeclaration x) = error "AstPackageDeclartion not in final AST"
-children (AstStatement x)       = [] -- TODO
+children (AstStatement x)       = innerStatement $ statement x
+  where
+    innerStatement x@BlockStatement{}      = map AstStatement $ blockStatements x
+    innerStatement x@AssignStatement{}     = [AstExpression $ assignedValue x]
+    innerStatement x@ExpressionStatement{} = [AstExpression $ statementExpression x]
+    innerStatement x@LoopStatement{}       = (AstExpression $ loopPredicate x) :
+                                             (map AstStatement $ loopStatements x)
+    innerStatement x@IfStatement{}         = (AstExpression $ ifPredicate x) :
+                                             (AstStatement $ ifThenStatement x) :
+                                             [AstStatement $ ifElseStatement x]
+    innerStatement x@EmptyStatement{}      = []
 children (AstTaggedToken x)     = error "AstTaggedToken not in final AST"
 children (AstType x)            = []
 

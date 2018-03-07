@@ -134,7 +134,7 @@ ifThenStatementTransformer = match . asRule
     match [("IfThenStatement", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("Statement", s)] =
       emptyScope IfStatement
         { ifPredicate = expressionTransformer e
-        , ifThenStatement = statementNoShortIfTransformer s
+        , ifThenStatement = statementTransformer s
         , ifElseStatement = emptyScope EmptyStatement }
 
 ifThenElseStatementTransformer :: TaggedParseTree -> Statement
@@ -169,7 +169,7 @@ whileStatementNoShortIfTransformer = match . asRule
     match [("WhileStatementNoShortIf", _), ("while", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s)] =
       emptyScope LoopStatement
         { loopPredicate  = expressionTransformer e
-        , loopStatements = [statementTransformer s] }
+        , loopStatements = [statementNoShortIfTransformer s] }
 
 forStatementTransformer :: TaggedParseTree -> Statement
 forStatementTransformer = match . asRule

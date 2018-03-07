@@ -85,7 +85,15 @@ instance Show Block where
 
 
 instance Show Statement where
-  show Statement{} = "Statement"
+  show Statement{statement=s} = show s
+
+instance Show InnerStatement where
+  show BlockStatement{} = "BlockStatement"
+  show AssignStatement{assignedVar=v} = "AssignStatement{assignedVar=" ++ showName v ++ "}"
+  show ExpressionStatement{} = "ExpressionStatement"
+  show LoopStatement{} = "LoopStatement"
+  show IfStatement{} = "IfStatement"
+  show EmptyStatement{} = "EmptyStatement"
 
 instance Show Local where
   show (Local _type _modifiers _name _) =
