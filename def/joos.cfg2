@@ -329,6 +329,7 @@ BlockStatement          Statement
 # Joos 1W does not support local finals.
 
 LocalVariableDeclarationStatement   LocalVariableDeclaration ;
+
 LocalVariableDeclaration            Type Identifier = Expression
 
 

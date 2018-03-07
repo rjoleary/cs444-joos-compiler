@@ -6,13 +6,14 @@ module JoosCompiler.Ast.Transformers.MethodTransformers
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
+import           JoosCompiler.Ast.Transformers.StatementAndExpressionTransformers
 import           JoosCompiler.Ast.Utils
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
 
 constructorTransformer :: Transformer
-constructorTransformer transformedChildren t@(Node label _) =
+constructorTransformer transformedChildren t@(Node label [modifiers, declaration, body]) =
   AstConstructor $
   Method
   { methodReturn = Void
@@ -24,10 +25,10 @@ constructorTransformer transformedChildren t@(Node label _) =
   where
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
     _formalParams = getFormalParams transformedChildren
-    _statements = getStatements transformedChildren
+    _statements = constructorBodyTransformer body
 
 methodTransformer :: Transformer
-methodTransformer transformedChildren t@(Node label _) =
+methodTransformer transformedChildren t@(Node label [header, body]) =
   AstMethod $
   Method
   { methodReturn = _type
@@ -41,7 +42,7 @@ methodTransformer transformedChildren t@(Node label _) =
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
     _name = getMethodName t
     _formalParams = getFormalParams transformedChildren
-    _statements = getStatements transformedChildren
+    _statements = methodBodyTransformer body
 
 getFormalParams :: [AstNode] -> [Local]
 getFormalParams ts = map convertToLocal formalParamNodes
