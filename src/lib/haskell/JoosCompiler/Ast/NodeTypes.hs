@@ -121,7 +121,6 @@ data Expression = Expression
   , innerExpression :: InnerExpression
   } deriving(Eq)
 
-
 data InnerExpression
   = MethodInvocation Name [Expression]
   | BinaryOperation BinaryOperator Expression Expression
