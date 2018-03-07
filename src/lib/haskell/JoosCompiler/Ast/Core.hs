@@ -1,6 +1,7 @@
 module JoosCompiler.Ast.Core(cstsToAst) where
 
 import           Data.Tree
+import           JoosCompiler.Ast.SecondaryProcessing.ExpressionTyping
 import           JoosCompiler.Ast.SecondaryProcessing.Packaging
 import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
 import           JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
@@ -38,6 +39,7 @@ cstsToAst ts = finalProgram
       packagedProgram
       |> injectScopesIntoChildrenBlocks
       |> canonicalizeTypes
+      |> typeAstExpressions
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)

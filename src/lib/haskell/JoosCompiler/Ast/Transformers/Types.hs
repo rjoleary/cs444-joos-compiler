@@ -14,6 +14,7 @@ data AstWrapper
   | AstCompilationUnit { astCompilationUnit :: CompilationUnit }
   | AstConstructor { astConstructor :: Method }
   | AstConstructorBody { astConstructorBody :: Block }
+  | AstExpression { astExpression :: Expression }
   | AstField { astField :: Field }
   | AstImport { astImport :: ImportDeclaration }
   | AstLocalVariable { astLocalVariable :: Local }
@@ -26,28 +27,9 @@ data AstWrapper
   | AstStatement { astStatement :: Statement }
   | AstTaggedToken { astTaggedToken :: TaggedToken }
   | AstType { astType :: Type }
+  deriving(Show)
 
 type AstNode = Tree AstWrapper
-
-instance Show AstWrapper where
-  show (AstTypeDeclaration x) = show x
-  show (AstBlock x) = show x
-  show (AstWholeProgram x) = show x
-  show (AstCompilationUnit x) = show x
-  show (AstConstructor x) = show x
-  show (AstConstructorBody x) = show x
-  show (AstField x) = show x
-  show (AstImport x) = show x
-  show (AstLocalVariable x) = show x
-  show (AstMethod x) = show x
-  show (AstMethodBody x) = show x
-  show (AstModifier x) = show x
-  show (AstModifiers x) = show x
-  show (AstPackage x) = show x
-  show (AstPackageDeclaration x) = show x
-  show (AstStatement x) = show x
-  show (AstTaggedToken x) = show x
-  show (AstType x) = show x
 
 children :: AstWrapper -> [AstWrapper]
 children (AstTypeDeclaration x) = (map AstField $ classFields x) ++

@@ -12,7 +12,6 @@ import           JoosCompiler.Ast.Transformers.Types
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
-import           SymbolTable
 import           System.Environment
 
 checkRules :: [AstRule] -> AstNode -> [String]
@@ -30,22 +29,11 @@ main = do
   filenames <- getArgs
   taggedTrees <- mapM taggedTreeFromFile filenames
   let ast = cstsToAst taggedTrees
-  --putStrLn $ drawTree (fmap show ast)
+  putStrLn $ drawTree (fmap show ast)
 
-  -- Environment building
-  let failedRules = checkRules environmentBuildingRules ast
-  --putStrLn $ intercalate "\n" failedRules
-  when (length failedRules > 0) $ exitError "See failed rules above"
-
-  -- Symbol table
-  let symbolTable = createSymbolTable (rootLabel ast)
-  case symbolTable of
-    Right symbolTable' -> putStrLn (show symbolTable')
-    Left err           -> putStrLn err
-
-  -- Type linking
-  let failedRules = checkRules typeLinkingRules ast
-  --putStrLn $ intercalate "\n" failedRules
+  -- Environment building & type linking
+  let failedRules = checkRules (environmentBuildingRules ++ typeLinkingRules) ast
+  putStrLn $ intercalate "\n" failedRules
   when (length failedRules > 0) $ exitError "See failed rules above"
 
   -- Simplify the AST

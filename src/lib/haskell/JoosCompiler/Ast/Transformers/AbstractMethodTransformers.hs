@@ -36,7 +36,7 @@ getFormalParams ts = map convertToLocal formalParamNodes
       { localType = _type
       , localModifiers = []
       , localName = _name
-      , localValue = (Literal "3")
+      , localValue = Expression _type (Literal _type "3")
       }
       where
         typeNode = (subForest paramNode) !! 0

@@ -19,7 +19,7 @@ fieldTransformer transformedChildren t =
     _type = getType transformedChildren
     _fieldModifiers = astModifiers $ getModifiers transformedChildren
     name = getFieldName t
-    _value = Literal "3"
+    _value = Expression _type $ Literal _type "3"
     -- TODO: _value = astExpression $ getExpression transformedChildren
 
 getFieldName :: TaggedParseTree -> Name

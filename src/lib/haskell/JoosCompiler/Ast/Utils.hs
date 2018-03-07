@@ -73,3 +73,8 @@ resolveTypeFromProgram name program
     package = resolvePackage program _packageName
     units = packageCompilationUnits $ fromJust package
     unit = lookup _typeName units
+
+-- TODO(Ahmed)
+resolveMethod :: Name -> Method
+resolveMethod _ = Method _type [] "method" [] []
+  where _type = Type Int False

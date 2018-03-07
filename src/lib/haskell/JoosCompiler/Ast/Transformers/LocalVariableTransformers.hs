@@ -21,7 +21,7 @@ localVariableTransformer transformedChildren t =
   where
     _type = getType transformedChildren
     name = getVarName t
-    _value = Literal "3"
+    _value = Expression _type $ Literal _type "3"
     -- TODO: _value = astExpression $ getExpression transformedChildren
 
 getVarName :: TaggedParseTree -> String

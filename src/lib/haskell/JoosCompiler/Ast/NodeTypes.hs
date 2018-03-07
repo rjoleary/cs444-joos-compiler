@@ -88,8 +88,7 @@ data Block = Block
   } deriving (Eq)
 
 data Statement = Statement
-  { scope     :: Scope
-  , statement :: InnerStatement
+  { statement :: InnerStatement
   } deriving (Eq)
 
 data InnerStatement
@@ -117,11 +116,17 @@ data Local = Local
   , localValue     :: Expression
   } deriving (Eq)
 
-data Expression
+data Expression = Expression
+  { expressionType  :: Type
+  , innerExpression :: InnerExpression
+  } deriving(Eq)
+
+
+data InnerExpression
   = MethodInvocation Name [Expression]
   | BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression
-  | Literal String
+  | Literal Type String
   deriving (Eq)
 
 data Type

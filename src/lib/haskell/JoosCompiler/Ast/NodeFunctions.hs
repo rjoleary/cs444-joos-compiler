@@ -97,10 +97,14 @@ instance Show Local where
           else ""
 
 instance Show Expression where
+  show Expression{innerExpression=e, expressionType=t} = show t ++ ": " ++ show e
+
+
+instance Show InnerExpression where
   show (MethodInvocation name args) = show name ++ "(...)"
   show (BinaryOperation op e1 e2)   = show op
   show (UnaryOperation op e)        = show op
-  show (Literal v)                  = v
+  show (Literal t v)                = show t ++ ": " ++ v
 
 instance Show Type where
   show Void           = "void"

@@ -10,7 +10,7 @@ import           JoosCompiler.TreeUtils
 
 statementTransformer :: Transformer
 statementTransformer transformedChildren t =
-  AstStatement $ Statement {scope = scope, statement = EmptyStatement}
+  AstStatement $ Statement {statement = EmptyStatement}
   where
     scope = createScope transformedChildren
 
