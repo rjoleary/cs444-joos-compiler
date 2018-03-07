@@ -320,120 +320,121 @@ unaryExpressionTransformer = match . asRule
   where
     match [("UnaryExpression", _), ("-", _), ("UnaryExpression", _)] =
       emptyType $ Literal Void "TODO" --TODO
-    match [("UnaryExpression", _), ("UnaryExpressionNotPlusMinus", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("UnaryExpression", _), ("UnaryExpressionNotPlusMinus", x)] =
+      unaryExpressionNotPlusMinusTransformer x
 
 unaryExpressionNotPlusMinusTransformer :: TaggedParseTree -> Expression
 unaryExpressionNotPlusMinusTransformer = match . asRule
   where
-    match [("UnaryExpressionNotPlusMinus", _), ("Primary", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("UnaryExpressionNotPlusMinus", _), ("Primary", x)] =
+      primaryTransformer x
     match [("UnaryExpressionNotPlusMinus", _), ("Name", _)] =
       emptyType $ Literal Void "TODO" --TODO
-    match [("UnaryExpressionNotPlusMinus", _), ("!", _), ("UnaryExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("UnaryExpressionNotPlusMinus", _), ("CastExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("UnaryExpressionNotPlusMinus", _), ("!", _), ("UnaryExpression", x)] =
+      emptyType $ UnaryOperation Negate (unaryExpressionTransformer x)
+    match [("UnaryExpressionNotPlusMinus", _), ("CastExpression", x)] =
+      castExpressionTransformer x
 
-caseExpressionTransformer :: TaggedParseTree -> Expression
-caseExpressionTransformer = match . asRule
+castExpressionTransformer :: TaggedParseTree -> Expression
+castExpressionTransformer = match . asRule
   where
-    match [("CastExpression", _), ("(", _), ("PrimitiveType", _), (")", _), ("UnaryExpression", _)] =
+    match [("CastExpression", _), ("(", _), ("PrimitiveType", t), (")", _), ("UnaryExpression", x)] =
       emptyType $ Literal Void "TODO" --TODO
-    match [("CastExpression", _), ("(", _), ("PrimitiveType", _), ("[", _), ("]", _), (")", _), ("UnaryExpression", _)] =
+    match [("CastExpression", _), ("(", _), ("PrimitiveType", t), ("[", _), ("]", _), (")", _), ("UnaryExpression", x)] =
       emptyType $ Literal Void "TODO" --TODO
-    match [("CastExpression", _), ("(", _), ("Expression", _), (")", _), ("UnaryExpressionNotPlusMinus", _)] =
+    match [("CastExpression", _), ("(", _), ("Expression", t), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
       emptyType $ Literal Void "TODO" --TODO
-    match [("CastExpression", _), ("(", _), ("Name", _), ("[", _), ("]", _), (")", _), ("UnaryExpressionNotPlusMinus", _)] =
+    match [("CastExpression", _), ("(", _), ("Name", t), ("[", _), ("]", _), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
       emptyType $ Literal Void "TODO" --TODO
 
 multiplicativeExpressionTransformer :: TaggedParseTree -> Expression
 multiplicativeExpressionTransformer = match . asRule
   where
-    match [("MultiplicativeExpression", _), ("UnaryExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("MultiplicativeExpression", _), ("MultiplicativeExpression", _), ("*", _), ("UnaryExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("MultiplicativeExpression", _), ("MultiplicativeExpression", _), ("/", _), ("UnaryExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("MultiplicativeExpression", _), ("MultiplicativeExpression", _), ("%", _), ("UnaryExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("MultiplicativeExpression", _), ("UnaryExpression", x)] =
+      unaryExpressionTransformer x
+    match [("MultiplicativeExpression", _), ("MultiplicativeExpression", x), ("*", _), ("UnaryExpression", y)] =
+      emptyType $ BinaryOperation Multiply (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
+    match [("MultiplicativeExpression", _), ("MultiplicativeExpression", x), ("/", _), ("UnaryExpression", y)] =
+      emptyType $ BinaryOperation Divide (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
+    match [("MultiplicativeExpression", _), ("MultiplicativeExpression", x), ("%", _), ("UnaryExpression", y)] =
+      emptyType $ BinaryOperation Modulus (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
 
 additiveExpressionTransformer :: TaggedParseTree -> Expression
 additiveExpressionTransformer = match . asRule
   where
-    match [("AdditiveExpression", _), ("MultiplicativeExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("AdditiveExpression", _), ("AdditiveExpression", _), ("+", _), ("MultiplicativeExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("AdditiveExpression", _), ("AdditiveExpression", _), ("-", _), ("MultiplicativeExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("AdditiveExpression", _), ("MultiplicativeExpression", x)] =
+      multiplicativeExpressionTransformer x
+    match [("AdditiveExpression", _), ("AdditiveExpression", x), ("+", _), ("MultiplicativeExpression", y)] =
+      emptyType $ BinaryOperation Add (additiveExpressionTransformer x) (multiplicativeExpressionTransformer y)
+    match [("AdditiveExpression", _), ("AdditiveExpression", x), ("-", _), ("MultiplicativeExpression", y)] =
+      emptyType $ BinaryOperation Subtract (additiveExpressionTransformer x) (multiplicativeExpressionTransformer y)
 
 relationalExpressionTransformer :: TaggedParseTree -> Expression
 relationalExpressionTransformer = match . asRule
   where
-    match [("RelationalExpression", _), ("AdditiveExpression", _)] =
+    match [("RelationalExpression", _), ("AdditiveExpression", x)] =
+      additiveExpressionTransformer x
+    match [("RelationalExpression", _), ("RelationalExpression", x), ("<", _), ("AdditiveExpression", y)] =
+      emptyType $ BinaryOperation Less (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+    match [("RelationalExpression", _), ("RelationalExpression", x), (">", _), ("AdditiveExpression", y)] =
+      emptyType $ BinaryOperation Greater (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+    match [("RelationalExpression", _), ("RelationalExpression", x), ("<=", _), ("AdditiveExpression", y)] =
+      emptyType $ BinaryOperation LessEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+    match [("RelationalExpression", _), ("RelationalExpression", x), (">=", _), ("AdditiveExpression", y)] =
+      emptyType $ BinaryOperation GreaterEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+    match [("RelationalExpression", _), ("RelationalExpression", x), ("instanceof", _), ("ReferenceType", y)] =
       emptyType $ Literal Void "TODO" --TODO
-    match [("RelationalExpression", _), ("RelationalExpression", _), ("<", _), ("AdditiveExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("RelationalExpression", _), ("RelationalExpression", _), (">", _), ("AdditiveExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("RelationalExpression", _), ("RelationalExpression", _), ("<=", _), ("AdditiveExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("RelationalExpression", _), ("RelationalExpression", _), (">=", _), ("AdditiveExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("RelationalExpression", _), ("RelationalExpression", _), ("instanceof", _), ("ReferenceType", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+      -- emptyType $ BinaryOperation InstanceOf (relationalExpressionTransformer x) (referenceTypeTransformer y)
 
 equalityExpressionTransformer :: TaggedParseTree -> Expression
 equalityExpressionTransformer = match . asRule
   where
-    match [("EqualityExpression", _), ("RelationalExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("EqualityExpression", _), ("EqualityExpression", _), ("==", _), ("RelationalExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("EqualityExpression", _), ("EqualityExpression", _), ("!=", _), ("RelationalExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("EqualityExpression", _), ("RelationalExpression", x)] =
+      relationalExpressionTransformer x
+    match [("EqualityExpression", _), ("EqualityExpression", x), ("==", _), ("RelationalExpression", y)] =
+      emptyType $ BinaryOperation Equality (equalityExpressionTransformer x) (relationalExpressionTransformer y)
+    match [("EqualityExpression", _), ("EqualityExpression", x), ("!=", _), ("RelationalExpression", y)] =
+      emptyType $ BinaryOperation Inequality (equalityExpressionTransformer x) (relationalExpressionTransformer y)
 
 andExpressionTransformer :: TaggedParseTree -> Expression
 andExpressionTransformer = match . asRule
   where
-    match [("AndExpression", _), ("EqualityExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("AndExpression", _), ("AndExpression", _), ("&", _), ("EqualityExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("AndExpression", _), ("EqualityExpression", x)] =
+      equalityExpressionTransformer x
+    match [("AndExpression", _), ("AndExpression", x), ("&", _), ("EqualityExpression", y)] =
+      emptyType $ BinaryOperation LazyAnd (andExpressionTransformer x) (equalityExpressionTransformer y)
 
 inclusiveOrExpressionTransformer :: TaggedParseTree -> Expression
 inclusiveOrExpressionTransformer = match . asRule
   where
-    match [("InclusiveOrExpression", _), ("AndExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("InclusiveOrExpression", _), ("InclusiveOrExpression", _), ("|", _), ("AndExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("InclusiveOrExpression", _), ("AndExpression", x)] =
+      andExpressionTransformer x
+    match [("InclusiveOrExpression", _), ("InclusiveOrExpression", x), ("|", _), ("AndExpression", y)] =
+      emptyType $ BinaryOperation LazyOr (inclusiveOrExpressionTransformer x) (andExpressionTransformer y)
 
 conditionalAndExpressionTransformer :: TaggedParseTree -> Expression
 conditionalAndExpressionTransformer = match . asRule
   where
-    match [("ConditionalAndExpression", _), ("InclusiveOrExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("ConditionalAndExpression", _), ("ConditionalAndExpression", _), ("&&", _), ("InclusiveOrExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("ConditionalAndExpression", _), ("InclusiveOrExpression", x)] =
+      inclusiveOrExpressionTransformer x
+    match [("ConditionalAndExpression", _), ("ConditionalAndExpression", x), ("&&", _), ("InclusiveOrExpression", y)] =
+      emptyType $ BinaryOperation And (conditionalAndExpressionTransformer x) (inclusiveOrExpressionTransformer y)
 
 conditionalOrExpressionTransformer :: TaggedParseTree -> Expression
 conditionalOrExpressionTransformer = match . asRule
   where
-    match [("ConditionalOrExpression", _), ("ConditionalAndExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("ConditionalOrExpression", _), ("ConditionalOrExpression", _), ("||", _), ("ConditionalAndExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("ConditionalOrExpression", _), ("ConditionalAndExpression", x)] =
+      conditionalAndExpressionTransformer x
+    match [("ConditionalOrExpression", _), ("ConditionalOrExpression", x), ("||", _), ("ConditionalAndExpression", y)] =
+      emptyType $ BinaryOperation Or (conditionalOrExpressionTransformer x) (conditionalAndExpressionTransformer y)
 
 assignmentExpressionTransformer :: TaggedParseTree -> Expression
 assignmentExpressionTransformer = match . asRule
   where
     match [("AssignmentExpression", _), ("Assignment", _)] =
       emptyType $ Literal Void "TODO" --TODO
-    match [("AssignmentExpression", _), ("ConditionalOrExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("AssignmentExpression", _), ("ConditionalOrExpression", x)] =
+      conditionalOrExpressionTransformer x
 
 assignmentTransformer :: TaggedParseTree -> Expression
 assignmentTransformer = match . asRule
@@ -448,5 +449,5 @@ assignmentTransformer = match . asRule
 expressionTransformer :: TaggedParseTree -> Expression
 expressionTransformer = match . asRule
   where
-    match [("Expression", _), ("AssignmentExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("Expression", _), ("AssignmentExpression", x)] =
+      assignmentExpressionTransformer x
