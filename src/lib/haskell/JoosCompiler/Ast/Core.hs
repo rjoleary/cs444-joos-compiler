@@ -38,7 +38,7 @@ cstsToAst ts = finalProgram
     finalProgram =
       packagedProgram
       |> injectScopesIntoChildrenBlocks
-      |> canonicalizeTypes
+      |> canonicalizeProgram
       |> typeAstExpressions
 
 getTransformer :: TaggedParseTree -> Transformer

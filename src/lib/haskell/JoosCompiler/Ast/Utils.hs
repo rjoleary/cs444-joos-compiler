@@ -46,19 +46,22 @@ qualifyTypeName u@(CompilationUnit (Just _packageName) _ (Just _typeDecl) _) =
   _packageName ++ [typeName _typeDecl]
 qualifyTypeName _ = error "Can't qualify a compilation unit without a class"
 
-resolvePackage :: WholeProgram -> Name -> Maybe Package
-resolvePackage (WholeProgram subPackage) _name =
-  resolvePackageInner _name subPackage
+resolvePackageFromProgram :: WholeProgram -> Name -> Maybe Package
+resolvePackageFromProgram (WholeProgram subPackage) _name =
+  lookupPackage _name subPackage
+
+lookupPackageFromSubPackageMap :: Name -> SubPackageMap -> Maybe Package
+lookupPackageFromSubPackageMap name m
+  | result == Nothing = Nothing
+  | otherwise = lookupPackage tailOfName $ fromJust result
   where
-    resolvePackageInner :: Name -> SubPackage -> Maybe Package
-    resolvePackageInner [] (SubPackage p _) = p
-    resolvePackageInner name (SubPackage _ m)
-      | result == Nothing = Nothing
-      | otherwise = resolvePackageInner tailOfName $ fromJust result
-      where
-        headOfname = head name
-        tailOfName = tail name
-        result = lookup headOfname m
+    headOfname = head name
+    tailOfName = tail name
+    result = lookup headOfname m
+
+lookupPackage :: Name -> SubPackage -> Maybe Package
+lookupPackage [] (SubPackage p _) = p
+lookupPackage name (SubPackage _ m) = lookupPackageFromSubPackageMap name m
 
 resolveTypeFromProgram :: Name -> WholeProgram -> Maybe TypeDeclaration
 resolveTypeFromProgram [] program = Nothing
@@ -70,7 +73,7 @@ resolveTypeFromProgram name program
   where
     _typeName = last name
     _packageName = init name
-    package = resolvePackage program _packageName
+    package = resolvePackageFromProgram program _packageName
     units = packageCompilationUnits $ fromJust package
     unit = lookup _typeName units
 
