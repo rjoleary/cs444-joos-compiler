@@ -10,14 +10,17 @@ import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Ast.Utils
 
 javaLang :: ImportDeclaration
-javaLang = ImportDeclaration { importPackageName = ["java", "lang"]
-                             , importTypeName = Nothing
-                             , onDemand = True
-                             }
+javaLang =
+  ImportDeclaration
+  { importPackageName = ["java", "lang"]
+  , importTypeName = Nothing
+  , onDemand = True
+  }
 
 -- Assumes the children are Compilation Units
 canonicalizeProgram :: AstNode -> AstNode
-canonicalizeProgram t@(Node p@(AstWholeProgram program) oldUnits) = Node p newUnits
+canonicalizeProgram t@(Node p@(AstWholeProgram program) oldUnits) =
+  Node p newUnits
   where
     newUnits = map (canonicalizeUnit program) oldUnits
 
@@ -27,16 +30,49 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
   where
     newUnitNode = f oldUnitNode
     f :: AstNode -> AstNode
-    f (Node (AstType Type{ innerType=NamedType{ unNamedType=oldTypeName }, isArray=_isArray }) children) =
-      Node (AstType $ Type { innerType = (NamedType newTypeName) , isArray = _isArray}) $ map f children
+    f (Node (AstField Field { fieldType = Type { innerType = NamedType {unNamedType = oldTypeName}
+                                               , isArray = _isArray
+                                               }
+                            , fieldModifiers = m
+                            , fieldName = n
+                            , fieldValue = v
+                            }) children) =
+      Node
+        (AstField
+           (Field
+            { fieldType = newType
+            , fieldModifiers = m
+            , fieldName = n
+            , fieldValue = v
+            })) $
+      map f children
       where
-      newTypeName = canonicalize program oldUnit oldTypeName
+        newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
+        newTypeName = canonicalize program oldUnit oldTypeName
+    f (Node (AstLocalVariable Local { localType = Type { innerType = NamedType {unNamedType = oldTypeName}
+                                                       , isArray = _isArray
+                                                       }
+                                    , localModifiers = m
+                                    , localName = n
+                                    , localValue = v
+                                    }) children) =
+      Node
+        (AstLocalVariable
+           (Local
+            { localType = newType
+            , localModifiers = m
+            , localName = n
+            , localValue = v
+            })) $
+      map f children
+      where
+        newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
+        newTypeName = canonicalize program oldUnit oldTypeName
     f (Node n children) = Node n $ map f children
-
 
 -- TODO(Ahmed) This probably handles the default package wrong
 --             Possibly on-demand too. No collision handling right now
-canonicalize :: WholeProgram -> CompilationUnit -> Name ->  Name
+canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
   -- If type is already canonical
   | (resolveTypeFromProgram name program /= Nothing) = name
@@ -47,27 +83,34 @@ canonicalize program unit name
   | (onDemandPackageContainingType /= Nothing) =
     packageName (fromJust onDemandPackageContainingType) ++ name
   | otherwise = name -- TODO
-    where
-      importsWithoutDefault = imports unit
-      _imports = importsWithoutDefault ++ [javaLang]
-      onDemandImports = filter (\i -> onDemand i) _imports
-      singleTypeImports = filter (\i -> not $ onDemand i) _imports
+  where
+    importsWithoutDefault = imports unit
+    _imports = importsWithoutDefault ++ [javaLang]
+    onDemandImports = filter (\i -> onDemand i) _imports
+    singleTypeImports = filter (\i -> not $ onDemand i) _imports
       -- HACK: This can fail, but if it fails then the program is wrong
-      onDemandPackages = map (fromJust . resolvePackageFromProgram program . importPackageName) onDemandImports
+    onDemandPackages =
+      map
+        (fromJust . resolvePackageFromProgram program . importPackageName)
+        onDemandImports
       -- HACK: This can fail, but if it fails then the program is wrong
-      singleTypePackages = map (fromJust . resolvePackageFromProgram program . importPackageName) singleTypeImports
-      singleTypePackageContainingType = find (typeIsInPackage name) singleTypePackages
-      onDemandPackageContainingType = find (typeIsInPackage name) onDemandPackages
+    singleTypePackages =
+      map
+        (fromJust . resolvePackageFromProgram program . importPackageName)
+        singleTypeImports
+    singleTypePackageContainingType =
+      find (typeIsInPackage name) singleTypePackages
+    onDemandPackageContainingType = find (typeIsInPackage name) onDemandPackages
 
 typeIsInPackage :: Name -> Package -> Bool
-typeIsInPackage [n] Package{packageCompilationUnits=units}
+typeIsInPackage [n] Package {packageCompilationUnits = units}
   | match == Nothing = False
   | otherwise = typeDecl (fromJust match) /= Nothing
   where
     match = lookup n units
-
-typeIsInPackage n Package{subPackages=subs}
-  | maybePackage /= Nothing && match /= Nothing = typeDecl (fromJust match) /= Nothing
+typeIsInPackage n Package {subPackages = subs}
+  | maybePackage /= Nothing && match /= Nothing =
+    typeDecl (fromJust match) /= Nothing
   | otherwise = False
   where
     pName = init n
