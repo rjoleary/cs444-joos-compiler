@@ -4,6 +4,7 @@ module JoosCompiler.Ast.Transformers.StatementAndExpressionTransformers
   ) where
 
 import Data.Tree
+import Debug.Trace
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Treeify
@@ -27,33 +28,33 @@ blockTransformer :: TaggedParseTree -> [Statement]
 blockTransformer = match . asRule
   where
     match [("Block", _), ("{", _), ("}", _)] =
-      [] -- TODO
+      []
     match [("Block", _), ("{", _), ("BlockStatements", x), ("}", _)] =
-      [] -- TODO
+      blockStatementsTransformer x
 
 constructorBodyTransformer :: TaggedParseTree -> [Statement]
 constructorBodyTransformer = match . asRule
   where
     match [("ConstructorBody", _), ("{", _), ("}", _)] =
-      [] -- TODO
-    match [("ConstructorBody", _), ("{", _), ("BlockStatements", _), ("}", _)] =
-      [] -- TODO
+      []
+    match [("ConstructorBody", _), ("{", _), ("BlockStatements", x), ("}", _)] =
+      blockStatementsTransformer x
 
 blockStatementsTransformer :: TaggedParseTree -> [Statement]
 blockStatementsTransformer = match . asRule
   where
     match [("BlockStatements", _), ("BlockStatement", x)] =
-      [] --TODO
+      [blockStatementTransformer x]
     match [("BlockStatements", _), ("BlockStatements", x), ("BlockStatement", y)] =
-      [] --TODO
+      blockStatementsTransformer x ++ [blockStatementTransformer y]
 
-blockStatementTransformer :: TaggedParseTree -> [Statement]
+blockStatementTransformer :: TaggedParseTree -> Statement
 blockStatementTransformer = match . asRule
   where
     match [("BlockStatement", _), ("LocalVariableDeclarationStatement", x)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("BlockStatement", _), ("Statement", x)] =
-      [] --TODO
+      statementTransformer x
 
 localVariableDeclarationStatementTransformer :: TaggedParseTree -> [Statement]
 localVariableDeclarationStatementTransformer = match . asRule
@@ -67,370 +68,385 @@ localVariableDeclarationTransformer = match . asRule
     match [("LocalVariableDeclaration", _), ("Type", _), ("Identifier", _), ("=", _), ("Expression", _)] =
       [] --TODO
 
-statementTransformer :: TaggedParseTree -> [Statement]
+statementTransformer :: TaggedParseTree -> Statement
 statementTransformer = match . asRule
   where
-    match [("Statement", _), ("StatementWithoutTrailingSubstatement", _)] =
-      [] --TODO
-    match [("Statement", _), ("IfThenStatement", _)] =
-      [] --TODO
-    match [("Statement", _), ("IfThenElseStatement", _)] =
-      [] --TODO
-    match [("Statement", _), ("WhileStatement", _)] =
-      [] --TODO
-    match [("Statement", _), ("ForStatement", _)] =
-      [] --TODO
+    match [("Statement", _), ("StatementWithoutTrailingSubstatement", x)] =
+      statementWithoutTrailingSubstatementTransformer x
+    match [("Statement", _), ("IfThenStatement", x)] =
+      ifThenStatementTransformer x
+    match [("Statement", _), ("IfThenElseStatement", x)] =
+      ifThenElseStatementTransformer x
+    match [("Statement", _), ("WhileStatement", x)] =
+      whileStatementTransformer x
+    match [("Statement", _), ("ForStatement", x)] =
+      forStatementTransformer x
 
-statementWithoutTrailingSubstatementTransformer :: TaggedParseTree -> [Statement]
+statementWithoutTrailingSubstatementTransformer :: TaggedParseTree -> Statement
 statementWithoutTrailingSubstatementTransformer = match . asRule
   where
-    match [("StatementWithoutTrailingSubstatement", _), ("Block", _)] =
-      [] --TODO
-    match [("StatementWithoutTrailingSubstatement", _), ("EmptyStatement", _)] =
-      [] --TODO
-    match [("StatementWithoutTrailingSubstatement", _), ("ExpressionStatement", _)] =
-      [] --TODO
-    match [("StatementWithoutTrailingSubstatement", _), ("ReturnStatement", _)] =
-      [] --TODO
+    match [("StatementWithoutTrailingSubstatement", _), ("Block", x)] =
+      emptyScope $ BlockStatement $ blockTransformer x
+    match [("StatementWithoutTrailingSubstatement", _), ("EmptyStatement", x)] =
+      emptyStatementTransformer x
+    match [("StatementWithoutTrailingSubstatement", _), ("ExpressionStatement", x)] =
+      expressionStatementTransformer x
+    match [("StatementWithoutTrailingSubstatement", _), ("ReturnStatement", x)] =
+      returnStatementTransformer x
 
-statementNoShortIfTransformer :: TaggedParseTree -> [Statement]
+statementNoShortIfTransformer :: TaggedParseTree -> Statement
 statementNoShortIfTransformer = match . asRule
   where
-    match [("StatementNoShortIf", _), ("StatementWithoutTrailingSubstatement", _)] =
-      [] --TODO
-    match [("StatementNoShortIf", _), ("IfThenElseStatementNoShortIf", _)] =
-      [] --TODO
-    match [("StatementNoShortIf", _), ("WhileStatementNoShortIf", _)] =
-      [] --TODO
-    match [("StatementNoShortIf", _), ("ForStatementNoShortIf", _)] =
-      [] --TODO
+    match [("StatementNoShortIf", _), ("StatementWithoutTrailingSubstatement", x)] =
+      statementWithoutTrailingSubstatementTransformer x
+    match [("StatementNoShortIf", _), ("IfThenElseStatementNoShortIf", x)] =
+      ifThenElseStatementNoShortIfTransformer x
+    match [("StatementNoShortIf", _), ("WhileStatementNoShortIf", x)] =
+      whileStatementNoShortIfTransformer x
+    match [("StatementNoShortIf", _), ("ForStatementNoShortIf", x)] =
+      forStatementNoShortIfTransformer x
 
-emptyStatementTransformer :: TaggedParseTree -> [Statement]
+emptyStatementTransformer :: TaggedParseTree -> Statement
 emptyStatementTransformer = match . asRule
   where
     match [("EmptyStatement", _), (";", _)] =
-      [] --TODO
+      emptyScope EmptyStatement
 
-expressionStatementTransformer :: TaggedParseTree -> [Statement]
+expressionStatementTransformer :: TaggedParseTree -> Statement
 expressionStatementTransformer = match . asRule
   where
-    match [("ExpressionStatement", _), ("StatementExpression", _), (";", _)] =
-      [] --TODO
+    match [("ExpressionStatement", _), ("StatementExpression", x), (";", _)] =
+      statementExpressionTransformer x
 
-statementExpressionTransformer :: TaggedParseTree -> [Statement]
+statementExpressionTransformer :: TaggedParseTree -> Statement
 statementExpressionTransformer = match . asRule
   where
     match [("StatementExpression", _), ("Assignment", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("StatementExpression", _), ("MethodInvocation", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("StatementExpression", _), ("ClassInstanceCreationExpression", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
 
-ifThenStatementTransformer :: TaggedParseTree -> [Statement]
+ifThenStatementTransformer :: TaggedParseTree -> Statement
 ifThenStatementTransformer = match . asRule
   where
-    match [("IfThenStatement", _), ("if", _), ("(", _), ("Expression", _), (")", _), ("Statement", _)] =
-      [] --TODO
+    match [("IfThenStatement", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("Statement", s)] =
+      emptyScope IfStatement
+        { ifPredicate = expressionTransformer e
+        , ifThenStatement = statementNoShortIfTransformer s
+        , ifElseStatement = emptyScope EmptyStatement }
 
-ifThenElseStatementTransformer :: TaggedParseTree -> [Statement]
+ifThenElseStatementTransformer :: TaggedParseTree -> Statement
 ifThenElseStatementTransformer = match . asRule
   where
-    match [("IfThenElseStatement", _), ("if", _), ("(", _), ("Expression", _), (")", _), ("StatementNoShortIf", _), ("else", _), ("Statement", _)] =
-      [] --TODO
+    match [("IfThenElseStatement", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s1), ("else", _), ("Statement", s2)] =
+      emptyScope IfStatement
+        { ifPredicate = expressionTransformer e
+        , ifThenStatement = statementNoShortIfTransformer s1
+        , ifElseStatement = statementTransformer s2 }
 
-ifThenElseStatementNoShortIfTransformer :: TaggedParseTree -> [Statement]
+ifThenElseStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 ifThenElseStatementNoShortIfTransformer = match . asRule
   where
-    match [("IfThenElseStatementNoShortIf", _), ("if", _), ("(", _), ("Expression", _), (")", _), ("StatementNoShortIf", _), ("else", _), ("StatementNoShortIf", _)] =
-      [] --TODO
+    match [("IfThenElseStatementNoShortIf", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s1), ("else", _), ("StatementNoShortIf", s2)] =
+      emptyScope IfStatement
+       { ifPredicate = expressionTransformer e
+       , ifThenStatement = statementNoShortIfTransformer s1
+       , ifElseStatement = statementTransformer s2 }
 
-whileStatementTransformer :: TaggedParseTree -> [Statement]
+whileStatementTransformer :: TaggedParseTree -> Statement
 whileStatementTransformer = match . asRule
   where
-    match [("WhileStatement", _), ("while", _), ("(", _), ("Expression", _), (")", _), ("Statement", _)] =
-      [] --TODO
+    match [("WhileStatement", _), ("while", _), ("(", _), ("Expression", e), (")", _), ("Statement", s)] =
+      emptyScope LoopStatement
+        { loopPredicate  = expressionTransformer e
+        , loopStatements = [statementTransformer s] }
 
-whileStatementNoShortIfTransformer :: TaggedParseTree -> [Statement]
+whileStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 whileStatementNoShortIfTransformer = match . asRule
   where
-    match [("WhileStatementNoShortIf", _), ("while", _), ("(", _), ("Expression", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
+    match [("WhileStatementNoShortIf", _), ("while", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s)] =
+      emptyScope LoopStatement
+        { loopPredicate  = expressionTransformer e
+        , loopStatements = [statementTransformer s] }
 
-forStatementTransformer :: TaggedParseTree -> [Statement]
+forStatementTransformer :: TaggedParseTree -> Statement
 forStatementTransformer = match . asRule
   where
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
 
-forStatementNoShortIfTransformer :: TaggedParseTree -> [Statement]
+forStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 forStatementNoShortIfTransformer = match . asRule
   where
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", _)] =
-      [] --TODO
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope LoopStatement
+        { loopPredicate  = Literal "true" -- TODO: better literals
+        , loopStatements = [statementNoShortIfTransformer x] }
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope EmptyStatement -- TODO
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope EmptyStatement --TODO
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope EmptyStatement --TODO
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope EmptyStatement --TODO
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope EmptyStatement --TODO
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope EmptyStatement --TODO
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
+      emptyScope EmptyStatement --TODO
 
-forInitTransformer :: TaggedParseTree -> [Statement]
+forInitTransformer :: TaggedParseTree -> Statement
 forInitTransformer = match . asRule
   where
     match [("ForInit", _), ("StatementExpression", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ForInit", _), ("LocalVariableDeclaration", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
 
-forUpdateTransformer :: TaggedParseTree -> [Statement]
+forUpdateTransformer :: TaggedParseTree -> Expression
 forUpdateTransformer = match . asRule
   where
     match [("ForUpdate", _), ("StatementExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-returnStatementTransformer :: TaggedParseTree -> [Statement]
+returnStatementTransformer :: TaggedParseTree -> Statement
 returnStatementTransformer = match . asRule
   where
     match [("ReturnStatement", _), ("return", _), (";", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
     match [("ReturnStatement", _), ("return", _), ("Expression", _), (";", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
 
-primaryTransformer :: TaggedParseTree -> [Statement]
+primaryTransformer :: TaggedParseTree -> Expression
 primaryTransformer = match . asRule
   where
     match [("Primary", _), ("PrimaryNoNewArray", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("Primary", _), ("ArrayCreationExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-primaryNoNewArrayTransformer :: TaggedParseTree -> [Statement]
+primaryNoNewArrayTransformer :: TaggedParseTree -> Expression
 primaryNoNewArrayTransformer = match . asRule
   where
     match [("PrimaryNoNewArray", _), ("Literal", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("PrimaryNoNewArray", _), ("this", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("PrimaryNoNewArray", _), ("(", _), ("Expression", _), (")", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("PrimaryNoNewArray", _), ("ClassInstanceCreationExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("PrimaryNoNewArray", _), ("FieldAccess", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("PrimaryNoNewArray", _), ("MethodInvocation", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("PrimaryNoNewArray", _), ("ArrayAccess", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-classInstanceCreationExpressionTransformer :: TaggedParseTree -> [Statement]
+classInstanceCreationExpressionTransformer :: TaggedParseTree -> Expression
 classInstanceCreationExpressionTransformer = match . asRule
   where
     match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", _), ("(", _), (")", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", _), ("(", _), ("ArgumentList", _), (")", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-argumentListTransformer :: TaggedParseTree -> [Statement]
+argumentListTransformer :: TaggedParseTree -> [Expression]
 argumentListTransformer = match . asRule
   where
     match [("ArgumentList", _), ("Expression", _)] =
-      [] --TODO
+      [Literal "TODO"] --TODO
     match [("ArgumentList", _), ("ArgumentList", _), (",", _), ("Expression", _)] =
-      [] --TODO
+      [Literal "TODO"] --TODO
 
-arrayCreationExpressionTransformer :: TaggedParseTree -> [Statement]
+arrayCreationExpressionTransformer :: TaggedParseTree -> Expression
 arrayCreationExpressionTransformer = match . asRule
   where
     match [("ArrayCreationExpression", _), ("new", _), ("Name", _), ("[", _), ("]", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("ArrayCreationExpression", _), ("new", _), ("Name", _), ("[", _), ("Expression", _), ("]", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", _), ("[", _), ("]", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", _), ("[", _), ("Expression", _), ("]", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-fieldAccessTransformer :: TaggedParseTree -> [Statement]
+fieldAccessTransformer :: TaggedParseTree -> Expression
 fieldAccessTransformer = match . asRule
   where
     match [("FieldAccess", _), ("Primary", _), (".", _), ("Identifier", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-methodInvocationTransformer :: TaggedParseTree -> [Statement]
+methodInvocationTransformer :: TaggedParseTree -> Expression
 methodInvocationTransformer = match . asRule
   where
     match [("MethodInvocation", _), ("Name", _), ("(", _), (")", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("MethodInvocation", _), ("Name", _), ("(", _), ("ArgumentList", _), (")", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("MethodInvocation", _), ("Primary", _), (".", _), ("Identifier", _), ("(", _), (")", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("MethodInvocation", _), ("Primary", _), (".", _), ("Identifier", _), ("(", _), ("ArgumentList", _), (")", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-arrayAccessTransformer :: TaggedParseTree -> [Statement]
+arrayAccessTransformer :: TaggedParseTree -> Expression
 arrayAccessTransformer = match . asRule
   where
     match [("ArrayAccess", _), ("Name", _), ("[", _), ("Expression", _), ("]", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("ArrayAccess", _), ("PrimaryNoNewArray", _), ("[", _), ("Expression", _), ("]", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-unaryExpressionTransformer :: TaggedParseTree -> [Statement]
+unaryExpressionTransformer :: TaggedParseTree -> Expression
 unaryExpressionTransformer = match . asRule
   where
     match [("UnaryExpression", _), ("-", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("UnaryExpression", _), ("UnaryExpressionNotPlusMinus", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-unaryExpressionNotPlusMinusTransformer :: TaggedParseTree -> [Statement]
+unaryExpressionNotPlusMinusTransformer :: TaggedParseTree -> Expression
 unaryExpressionNotPlusMinusTransformer = match . asRule
   where
     match [("UnaryExpressionNotPlusMinus", _), ("Primary", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("UnaryExpressionNotPlusMinus", _), ("Name", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("UnaryExpressionNotPlusMinus", _), ("!", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("UnaryExpressionNotPlusMinus", _), ("CastExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-caseExpressionTransformer :: TaggedParseTree -> [Statement]
+caseExpressionTransformer :: TaggedParseTree -> Expression
 caseExpressionTransformer = match . asRule
   where
     match [("CastExpression", _), ("(", _), ("PrimitiveType", _), (")", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("CastExpression", _), ("(", _), ("PrimitiveType", _), ("[", _), ("]", _), (")", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("CastExpression", _), ("(", _), ("Expression", _), (")", _), ("UnaryExpressionNotPlusMinus", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("CastExpression", _), ("(", _), ("Name", _), ("[", _), ("]", _), (")", _), ("UnaryExpressionNotPlusMinus", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-multiplicativeExpressionTransformer :: TaggedParseTree -> [Statement]
+multiplicativeExpressionTransformer :: TaggedParseTree -> Expression
 multiplicativeExpressionTransformer = match . asRule
   where
     match [("MultiplicativeExpression", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("MultiplicativeExpression", _), ("MultiplicativeExpression", _), ("*", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("MultiplicativeExpression", _), ("MultiplicativeExpression", _), ("/", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("MultiplicativeExpression", _), ("MultiplicativeExpression", _), ("%", _), ("UnaryExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-additiveExpressionTransformer :: TaggedParseTree -> [Statement]
+additiveExpressionTransformer :: TaggedParseTree -> Expression
 additiveExpressionTransformer = match . asRule
   where
     match [("AdditiveExpression", _), ("MultiplicativeExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("AdditiveExpression", _), ("AdditiveExpression", _), ("+", _), ("MultiplicativeExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("AdditiveExpression", _), ("AdditiveExpression", _), ("-", _), ("MultiplicativeExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-relationalExpressionTransformer :: TaggedParseTree -> [Statement]
+relationalExpressionTransformer :: TaggedParseTree -> Expression
 relationalExpressionTransformer = match . asRule
   where
     match [("RelationalExpression", _), ("AdditiveExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("RelationalExpression", _), ("RelationalExpression", _), ("<", _), ("AdditiveExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("RelationalExpression", _), ("RelationalExpression", _), (">", _), ("AdditiveExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("RelationalExpression", _), ("RelationalExpression", _), ("<=", _), ("AdditiveExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("RelationalExpression", _), ("RelationalExpression", _), (">=", _), ("AdditiveExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("RelationalExpression", _), ("RelationalExpression", _), ("instanceof", _), ("ReferenceType", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-equalityExpressionTransformer :: TaggedParseTree -> [Statement]
+equalityExpressionTransformer :: TaggedParseTree -> Expression
 equalityExpressionTransformer = match . asRule
   where
     match [("EqualityExpression", _), ("RelationalExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("EqualityExpression", _), ("EqualityExpression", _), ("==", _), ("RelationalExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("EqualityExpression", _), ("EqualityExpression", _), ("!=", _), ("RelationalExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-andExpressionTransformer :: TaggedParseTree -> [Statement]
+andExpressionTransformer :: TaggedParseTree -> Expression
 andExpressionTransformer = match . asRule
   where
     match [("AndExpression", _), ("EqualityExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("AndExpression", _), ("AndExpression", _), ("&", _), ("EqualityExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-inclusiveOrExpressionTransformer :: TaggedParseTree -> [Statement]
+inclusiveOrExpressionTransformer :: TaggedParseTree -> Expression
 inclusiveOrExpressionTransformer = match . asRule
   where
     match [("InclusiveOrExpression", _), ("AndExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("InclusiveOrExpression", _), ("InclusiveOrExpression", _), ("|", _), ("AndExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-conditionalAndExpressionTransformer :: TaggedParseTree -> [Statement]
+conditionalAndExpressionTransformer :: TaggedParseTree -> Expression
 conditionalAndExpressionTransformer = match . asRule
   where
     match [("ConditionalAndExpression", _), ("InclusiveOrExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("ConditionalAndExpression", _), ("ConditionalAndExpression", _), ("&&", _), ("InclusiveOrExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-conditionalOrExpressionTransformer :: TaggedParseTree -> [Statement]
+conditionalOrExpressionTransformer :: TaggedParseTree -> Expression
 conditionalOrExpressionTransformer = match . asRule
   where
     match [("ConditionalOrExpression", _), ("ConditionalAndExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("ConditionalOrExpression", _), ("ConditionalOrExpression", _), ("||", _), ("ConditionalAndExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-assignmentExpressionTransformer :: TaggedParseTree -> [Statement]
+assignmentExpressionTransformer :: TaggedParseTree -> Expression
 assignmentExpressionTransformer = match . asRule
   where
     match [("AssignmentExpression", _), ("Assignment", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("AssignmentExpression", _), ("ConditionalOrExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-assignmentTransformer :: TaggedParseTree -> [Statement]
+assignmentTransformer :: TaggedParseTree -> Expression
 assignmentTransformer = match . asRule
   where
     match [("Assignment", _), ("Name", _), ("=", _), ("AssignmentExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("Assignment", _), ("FieldAccess", _), ("=", _), ("AssignmentExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
     match [("Assignment", _), ("ArrayAccess", _), ("=", _), ("AssignmentExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO
 
-expressionTransformer :: TaggedParseTree -> [Statement]
+expressionTransformer :: TaggedParseTree -> Expression
 expressionTransformer = match . asRule
   where
     match [("Expression", _), ("AssignmentExpression", _)] =
-      [] --TODO
+      Literal "TODO" --TODO

@@ -156,6 +156,9 @@ extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"
 extractTypeName (Just c) = typeName c
 
+emptyScope :: InnerStatement -> Statement
+emptyScope s = Statement{scope=Scope [] Nothing, statement=s}
+
 commaDelimit :: [String] -> String
 commaDelimit l = intercalate ", " l
 

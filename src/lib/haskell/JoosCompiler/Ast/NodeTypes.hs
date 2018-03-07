@@ -92,15 +92,15 @@ data Statement = Statement
   } deriving (Eq)
 
 data InnerStatement
-  = AssignStatement { assignedVar   :: Name
+  = BlockStatement { blockStatements :: [Statement] }
+  | AssignStatement { assignedVar   :: Name
                     , assignedValue :: Expression }
   | ExpressionStatement { statementExpression :: Expression }
-  | LoopStatement { loopInit   :: Maybe Statement -- ExpressionStatement
-                  , loopTest   :: Maybe Statement
-                  , loopUpdate :: Maybe Statement }
-  | IfStatement { ifTest        :: Expression
-                , thenStatement :: Statement
-                , elseStatement :: Maybe Statement }
+  | LoopStatement { loopPredicate  :: Expression
+                  , loopStatements :: [Statement] }
+  | IfStatement { ifPredicate     :: Expression
+                , ifThenStatement :: Statement
+                , ifElseStatement :: Statement }
   | EmptyStatement
   deriving (Eq)
 
