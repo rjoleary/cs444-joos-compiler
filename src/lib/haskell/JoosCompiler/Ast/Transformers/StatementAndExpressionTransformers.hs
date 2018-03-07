@@ -56,17 +56,23 @@ blockStatementTransformer = match . asRule
     match [("BlockStatement", _), ("Statement", x)] =
       statementTransformer x
 
-localVariableDeclarationStatementTransformer :: TaggedParseTree -> [Statement]
+localVariableDeclarationStatementTransformer :: TaggedParseTree -> Statement
 localVariableDeclarationStatementTransformer = match . asRule
   where
     match [("LocalVariableDeclarationStatement", _), ("LocalVariableDeclaration", x), (";", _)] =
-      [] --TODO
+      emptyScope EmptyStatement --TODO
 
-localVariableDeclarationTransformer :: TaggedParseTree -> [Statement]
+localVariableDeclarationTransformer :: TaggedParseTree -> Statement
 localVariableDeclarationTransformer = match . asRule
   where
-    match [("LocalVariableDeclaration", _), ("Type", _), ("Identifier", _), ("=", _), ("Expression", _)] =
-      [] --TODO
+    match [("LocalVariableDeclaration", _), ("Type", t), ("Identifier", n), ("=", _), ("Expression", x)] =
+      emptyScope EmptyStatement -- TODO
+      --Local
+      --{ localType      = Void -- TODO
+      --, localModifiers = [] -- TODO: why does this field exist?
+      --, localName      = tokenString $ lhs n
+      --, localValue     = expressionTransformer x
+      --}
 
 statementTransformer :: TaggedParseTree -> Statement
 statementTransformer = match . asRule
@@ -174,58 +180,68 @@ whileStatementNoShortIfTransformer = match . asRule
 forStatementTransformer :: TaggedParseTree -> Statement
 forStatementTransformer = match . asRule
   where
-    match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("Statement", _)] =
-      emptyScope EmptyStatement --TODO
+    match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("Statement", x)] =
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementTransformer x)
+    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("Statement", x)] =
+      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementTransformer x)
+    match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
+      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (emptyScope EmptyStatement) (statementTransformer x)
+    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
+      genericForLoop (forInitTransformer s1) (expressionTransformer e) (emptyScope EmptyStatement) (statementTransformer x)
+    match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementTransformer x)
+    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
+      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementTransformer x)
+    match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
+      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (forUpdateTransformer s2) (statementTransformer x)
+    match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
+      genericForLoop (forInitTransformer s1) (expressionTransformer e) (forUpdateTransformer s2) (statementTransformer x)
 
 forStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 forStatementNoShortIfTransformer = match . asRule
   where
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope LoopStatement
-        { loopPredicate  = emptyType $ Literal Void "true" -- TODO: better literals
-        , loopStatements = [statementNoShortIfTransformer x] }
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope EmptyStatement -- TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", _), (";", _), ("Expression", _), (";", _), ("ForUpdate", _), (")", _), ("StatementNoShortIf", x)] =
-      emptyScope EmptyStatement --TODO
+      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
+      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
+      genericForLoop (forInitTransformer s1) (expressionTransformer e) (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
+      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
+      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+    match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
+      genericForLoop (forInitTransformer s1) (expressionTransformer e) (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+
+-- Helper function for for-statements
+genericForLoop init expr update statement =
+  emptyScope BlockStatement
+    { blockStatements =
+      [ init
+      , emptyScope LoopStatement
+        { loopPredicate = expr
+        , loopStatements =
+          [ emptyScope BlockStatement
+            { blockStatements = [statement] }
+          , statement ] } ] }
 
 forInitTransformer :: TaggedParseTree -> Statement
 forInitTransformer = match . asRule
   where
-    match [("ForInit", _), ("StatementExpression", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ForInit", _), ("LocalVariableDeclaration", _)] =
-      emptyScope EmptyStatement --TODO
+    match [("ForInit", _), ("StatementExpression", x)] =
+      statementExpressionTransformer x
+    match [("ForInit", _), ("LocalVariableDeclaration", x)] =
+      localVariableDeclarationTransformer x
 
-forUpdateTransformer :: TaggedParseTree -> Expression
+forUpdateTransformer :: TaggedParseTree -> Statement
 forUpdateTransformer = match . asRule
   where
-    match [("ForUpdate", _), ("StatementExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("ForUpdate", _), ("StatementExpression", x)] =
+      statementExpressionTransformer x
 
 returnStatementTransformer :: TaggedParseTree -> Statement
 returnStatementTransformer = match . asRule
