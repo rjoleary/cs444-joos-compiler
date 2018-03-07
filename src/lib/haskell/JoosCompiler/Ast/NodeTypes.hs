@@ -126,6 +126,9 @@ data InnerExpression
   | BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression
   | Literal Type String
+  | This
+  | FieldAccess Expression String
+  | ExpressionName Name
   deriving (Eq)
 
 data Type

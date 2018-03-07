@@ -16,6 +16,14 @@ asRule :: TaggedParseTree -> [(String, TaggedParseTree)]
 asRule n@(Node _ xs) = asPair n : map asPair xs
   where asPair n@(Node x _) = (tokenName x, n)
 
+nameTransformer :: TaggedParseTree -> Name
+nameTransformer = match . asRule
+  where
+    match [("Name", _), ("Identifier", x)] =
+      [tokenString $ lhs x]
+    match [("Name", _), ("Name", xs), (".", _), ("Identifier", x)] =
+      nameTransformer xs ++ [tokenString $ lhs x]
+
 methodBodyTransformer :: TaggedParseTree -> [Statement]
 methodBodyTransformer = match . asRule
   where
@@ -262,16 +270,16 @@ primaryTransformer = match . asRule
 primaryNoNewArrayTransformer :: TaggedParseTree -> Expression
 primaryNoNewArrayTransformer = match . asRule
   where
-    match [("PrimaryNoNewArray", _), ("Literal", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("PrimaryNoNewArray", _), ("Literal", x)] =
+      emptyType $ Literal Void (tokenString $ lhs x)
     match [("PrimaryNoNewArray", _), ("this", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("PrimaryNoNewArray", _), ("(", _), ("Expression", _), (")", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("PrimaryNoNewArray", _), ("ClassInstanceCreationExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("PrimaryNoNewArray", _), ("FieldAccess", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+      emptyType This
+    match [("PrimaryNoNewArray", _), ("(", _), ("Expression", x), (")", _)] =
+      expressionTransformer x
+    match [("PrimaryNoNewArray", _), ("ClassInstanceCreationExpression", x)] =
+      classInstanceCreationExpressionTransformer x
+    match [("PrimaryNoNewArray", _), ("FieldAccess", x)] =
+      fieldAccessTransformer x
     match [("PrimaryNoNewArray", _), ("MethodInvocation", _)] =
       emptyType $ Literal Void "TODO" --TODO
     match [("PrimaryNoNewArray", _), ("ArrayAccess", _)] =
@@ -308,8 +316,8 @@ arrayCreationExpressionTransformer = match . asRule
 fieldAccessTransformer :: TaggedParseTree -> Expression
 fieldAccessTransformer = match . asRule
   where
-    match [("FieldAccess", _), ("Primary", _), (".", _), ("Identifier", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("FieldAccess", _), ("Primary", x), (".", _), ("Identifier", y)] =
+      emptyType $ FieldAccess (primaryTransformer x) (tokenString $ lhs y)
 
 methodInvocationTransformer :: TaggedParseTree -> Expression
 methodInvocationTransformer = match . asRule
@@ -344,8 +352,8 @@ unaryExpressionNotPlusMinusTransformer = match . asRule
   where
     match [("UnaryExpressionNotPlusMinus", _), ("Primary", x)] =
       primaryTransformer x
-    match [("UnaryExpressionNotPlusMinus", _), ("Name", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("UnaryExpressionNotPlusMinus", _), ("Name", x)] =
+      emptyType $ ExpressionName (nameTransformer x)
     match [("UnaryExpressionNotPlusMinus", _), ("!", _), ("UnaryExpression", x)] =
       emptyType $ UnaryOperation Negate (unaryExpressionTransformer x)
     match [("UnaryExpressionNotPlusMinus", _), ("CastExpression", x)] =
