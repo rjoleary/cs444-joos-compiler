@@ -157,7 +157,10 @@ extractTypeName Nothing  = "N/A"
 extractTypeName (Just c) = typeName c
 
 emptyScope :: InnerStatement -> Statement
-emptyScope s = Statement{scope=Scope [] Nothing, statement=s}
+emptyScope s = Statement{ statement = s }
+
+emptyType :: InnerExpression -> Expression
+emptyType e = Expression{ expressionType = Void, innerExpression = e }
 
 commaDelimit :: [String] -> String
 commaDelimit l = intercalate ", " l
