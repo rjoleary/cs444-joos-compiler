@@ -60,3 +60,11 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
     _type = expressionType e1
     typedE1 = typeExpression cu scope e1
     typedE2= typeExpression cu scope e2
+
+
+
+
+------------          ExpressionName ------------------------
+typeExpression cu scope(Expression t (ExpressionName s))
+  | (&&) (not (isArray t) ) (unNamedType (innerType t) == s) = Expression t (ExpressionName s)
+  | otherwise = error "name expression is invalid"
