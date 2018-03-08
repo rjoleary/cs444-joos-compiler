@@ -127,6 +127,7 @@ data InnerExpression
   | This
   | FieldAccess Expression String
   | ExpressionName Name
+  | NewExpression Name [Expression]
   deriving (Eq)
 
 data Type

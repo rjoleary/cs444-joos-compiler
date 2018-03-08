@@ -192,8 +192,8 @@ statementExpressionTransformer = match . asRule
       emptyScope $ ExpressionStatement (assignmentTransformer x)
     match [("StatementExpression", _), ("MethodInvocation", x)] =
       emptyScope $ ExpressionStatement (methodInvocationTransformer x)
-    match [("StatementExpression", _), ("ClassInstanceCreationExpression", _)] =
-      emptyScope EmptyStatement --TODO
+    match [("StatementExpression", _), ("ClassInstanceCreationExpression", x)] =
+      emptyScope $ ExpressionStatement (classInstanceCreationExpressionTransformer x)
 
 ifThenStatementTransformer :: TaggedParseTree -> Statement
 ifThenStatementTransformer = match . asRule
@@ -341,10 +341,10 @@ primaryNoNewArrayTransformer = match . asRule
 classInstanceCreationExpressionTransformer :: TaggedParseTree -> Expression
 classInstanceCreationExpressionTransformer = match . asRule
   where
-    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", _), ("(", _), (")", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
-    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", _), ("(", _), ("ArgumentList", _), (")", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", x), ("(", _), (")", _)] =
+      emptyType $ NewExpression (nameTransformer x) []
+    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", x), ("(", _), ("ArgumentList", y), (")", _)] =
+      emptyType $ NewExpression (nameTransformer x) (argumentListTransformer y)
 
 argumentListTransformer :: TaggedParseTree -> [Expression]
 argumentListTransformer = match . asRule

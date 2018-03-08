@@ -52,6 +52,7 @@ children (AstExpression x)      = innerChildren $ innerExpression x
     innerChildren This                      = []
     innerChildren (FieldAccess e _)         = [AstExpression e]
     innerChildren (ExpressionName _)        = []
+    innerChildren (NewExpression name args) = map AstExpression args
 children (AstField x)           = [] -- TODO: expression
 children (AstImport x)          = []
 children (AstLocalVariable x)   = [] -- TODO: expression
