@@ -52,19 +52,72 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
       typedExpression
   | and [(expressionType typedE1 ==  expressionType typedE2),
          (innerType (expressionType typedE1) == Short),
-         not((isArray (expressionType typedE1)))] =
+         not((isArray (expressionType typedE1))),
+         (operator `elem` [Multiply, Divide, Modulus])] =
       typedExpression
   | otherwise = error "Mutilply parameters are not the same and is invalid"
   where
-    typedExpression = Expression _type (BinaryOperation Multiply typedE1 typedE2)
-    _type = expressionType e1
+    typedExpression = Expression _type (BinaryOperation operator typedE1 typedE2)
+    _type = expressionType e1 
     typedE1 = typeExpression cu scope e1
-    typedE2= typeExpression cu scope e2
+    typedE2 = typeExpression cu scope e2
+
+
+
+-------------------------UnaryOperator---------------------------------------------------------
+typeExpression cu scope (Expression _ (UnaryOperation operator e))
+  | and [(operator == Not),
+         not(isArray (expressionType typedE)),
+         ((innerType (expressionType typedE)) `elem` [Byte, Int, Short, Char])] = typedExpression
+  | and [(operator == Negate),
+         not(isArray (expressionType typedE)),
+         ((innerType (expressionType typedE)) == Boolean)] = typedExpression2
+  | otherwise = error "wrong operand type for NOT unaryOperation"
+  where
+    typedExpression = Expression _type (UnaryOperation operator typedE)
+    typedExpression2 = Expression _type2 (UnaryOperation operator typedE)
+    _type = Type
+            { innerType = Int
+            , isArray = False
+            }
+    _type2 = expressionType e
+    typedE = typeExpression cu scope e
 
 
 
 
 ------------          ExpressionName ------------------------
-typeExpression cu scope(Expression t (ExpressionName s))
-  | (&&) (not (isArray t) ) (unNamedType (innerType t) == s) = Expression t (ExpressionName s)
+typeExpression cu scope(Expression t (ExpressionName n))
+---  | (&&) (not (isArray t) )  (na== n) = Expression localType(l) (ExpressionName n)
+  | (&&) (not (isArray t) ) (unNamedType (innerType t) == n) = Expression t (ExpressionName n)
   | otherwise = error "name expression is invalid"
+ -- where
+ --  na = unNamedType(innerType (t)) --Name
+ --  l = resolveInScope scope (head na)
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--resolveInScope :: Scope -> String -> Local
+--resolveInScope (Scope locals Nothing) "string" =  Local
+  --    { localType = Type
+    --  , localModifiers = []
+     -- , localName = Name
+     -- , localValue = Expression Type (Literal Type "3")
+     -- }
+      
