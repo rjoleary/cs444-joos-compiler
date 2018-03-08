@@ -420,13 +420,15 @@ castExpressionTransformer :: TaggedParseTree -> Expression
 castExpressionTransformer = match . asRule
   where
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), (")", _), ("UnaryExpression", x)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+      emptyType $ CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), ("[", _), ("]", _), (")", _), ("UnaryExpression", x)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+      emptyType $ CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("Expression", t), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+      emptyType $ CastExpression (getType $ expressionTransformer t) (unaryExpressionNotPlusMinusTransformer x)
+      where getType (Expression _ (ExpressionName name)) = Type (NamedType name) False
+            getType _                                    = error "Cast expression name should have been checked by the weeder"
     match [("CastExpression", _), ("(", _), ("Name", t), ("[", _), ("]", _), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+      emptyType $ CastExpression (Type (NamedType $ nameTransformer t) False) (unaryExpressionNotPlusMinusTransformer x)
 
 multiplicativeExpressionTransformer :: TaggedParseTree -> Expression
 multiplicativeExpressionTransformer = match . asRule

@@ -115,6 +115,7 @@ instance Show InnerExpression where
   show (FieldAccess e s)              = "$." ++ s
   show (ExpressionName n)             = showName n
   show (NewExpression name args)      = "new " ++ showName name ++ "(" ++ (show $ length args) ++ " arguments)"
+  show (CastExpression t e)           = "(" ++ typeSignature t ++ ")$"
 
 instance Show Type where
   show Void           = "void"
