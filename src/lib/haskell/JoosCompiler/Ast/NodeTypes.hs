@@ -120,14 +120,13 @@ data Expression = Expression
   } deriving(Eq)
 
 data InnerExpression
-  = MethodInvocation Name [Expression]
+  = MethodInvocation Expression String [Expression]
   | BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression
   | Literal Type String
   | This
   | FieldAccess Expression String
   | ExpressionName Name
-  | AssignmentExpression Expression Expression
   deriving (Eq)
 
 data Type
@@ -167,4 +166,5 @@ data BinaryOperator
 
 data UnaryOperator
   = Negate
+  | Not
   deriving (Eq)

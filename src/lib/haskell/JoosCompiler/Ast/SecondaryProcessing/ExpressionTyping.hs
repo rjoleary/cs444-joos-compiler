@@ -18,14 +18,15 @@ addTypes _ (Node (AstBlock block) _children) =
     scope = blockScope block
     typedChildren = map (addTypes $ Just scope) _children
 
-addTypes scope (Node (AstExpression (Expression _ (MethodInvocation name arguments))) _children)
-  | (map localType $ methodParameters method) == map calculateType arguments = typedExpression
-  | otherwise = error "Method signature does not match argument list types"
-  where
-    method = resolveMethod name
-    typedExpression = Node (AstExpression $ Expression _type (MethodInvocation name arguments)) newChildren
-    newChildren = map (addTypes scope) _children
-    _type = methodReturn method
+-- FIXME: the method might be called on an expression
+-- FIXME: addTypes scope (Node (AstExpression (Expression _ (MethodInvocation expression name arguments))) _children)
+  -- FIXME: | (map localType $ methodParameters method) == map calculateType arguments = typedExpression
+  -- FIXME: | otherwise = error "Method signature does not match argument list types"
+  -- FIXME: where
+    -- FIXME: method = resolveMethod name
+    -- FIXME: typedExpression = Node (AstExpression $ Expression _type (MethodInvocation expression name arguments)) newChildren
+    -- FIXME: newChildren = map (addTypes scope) _children
+    -- FIXME: _type = methodReturn method
 
 addTypes scope (Node (AstExpression (Expression _ l@(Literal _type v))) _children) =
   Node (AstExpression $ Expression _type l) newChildren

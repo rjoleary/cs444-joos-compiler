@@ -45,14 +45,13 @@ children (AstConstructor x)     = error "AstConstructor not in final AST"
 children (AstConstructorBody x) = error "AstConstructorBody not in final AST"
 children (AstExpression x)      = innerChildren $ innerExpression x
   where
-    innerChildren (MethodInvocation _ xs)    = map AstExpression xs
+    innerChildren (MethodInvocation x _ xs)  = AstExpression x : map AstExpression xs
     innerChildren (BinaryOperation _ x y)    = map AstExpression [x, y]
     innerChildren (UnaryOperation _ x)       = [AstExpression x]
     innerChildren (Literal t _)              = [AstType t]
     innerChildren This                       = []
     innerChildren (FieldAccess e _)          = [AstExpression e]
     innerChildren (ExpressionName _)         = []
-    innerChildren (AssignmentExpression x y) = [AstExpression x, AstExpression y]
 children (AstField x)           = [] -- TODO: expression
 children (AstImport x)          = []
 children (AstLocalVariable x)   = [] -- TODO: expression
