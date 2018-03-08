@@ -29,11 +29,11 @@ main = do
   filenames <- getArgs
   taggedTrees <- mapM taggedTreeFromFile filenames
   let ast = cstsToAst taggedTrees
-  putStrLn $ drawTree (fmap show ast)
+  --putStrLn $ drawTree (fmap show ast)
 
   -- Environment building & type linking
   let failedRules = checkRules (environmentBuildingRules ++ typeLinkingRules) ast
-  putStrLn $ intercalate "\n" failedRules
+  --putStrLn $ intercalate "\n" failedRules
   when (length failedRules > 0) $ exitError "See failed rules above"
 
   -- Simplify the AST
