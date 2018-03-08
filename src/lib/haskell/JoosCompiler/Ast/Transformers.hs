@@ -7,16 +7,13 @@ module JoosCompiler.Ast.Transformers
   , fieldTransformer
   , importTransformer
   , localVariableTransformer
-  , abstractMethodTransformer
   , methodTransformer
   , modifierTransformer
   , modifiersTransformer
   , packageTransformer
   , statementTransformer
-  , typeTransformer
   ) where
 
-import           JoosCompiler.Ast.Transformers.AbstractMethodTransformers
 import           JoosCompiler.Ast.Transformers.BlockTransformers
 import           JoosCompiler.Ast.Transformers.TypeDeclaration
 import           JoosCompiler.Ast.Transformers.CompilationUnitTransformers
@@ -28,4 +25,3 @@ import           JoosCompiler.Ast.Transformers.MethodTransformers
 import           JoosCompiler.Ast.Transformers.ModifierTransformers
 import           JoosCompiler.Ast.Transformers.PackageTransformers
 import           JoosCompiler.Ast.Transformers.StatementTransformers
-import           JoosCompiler.Ast.Transformers.TypeTransformers

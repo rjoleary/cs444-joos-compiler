@@ -123,7 +123,7 @@ data InnerExpression
   = MethodInvocation Expression String [Expression]
   | BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression
-  | Literal Type String
+  | LiteralExpression Literal
   | This
   | FieldAccess Expression String
   | ExpressionName Name
@@ -131,6 +131,7 @@ data InnerExpression
 
 data Type
   = Void
+  | Null
   | Type { innerType :: InnerType
          , isArray   :: Bool }
   deriving (Eq)
@@ -142,6 +143,14 @@ data InnerType
   | Int
   | Short
   | NamedType { unNamedType :: Name }
+  deriving (Eq)
+
+data Literal
+  = IntegerLiteral Integer
+  | BooleanLiteral Bool
+  | CharacterLiteral Char
+  | StringLiteral String
+  | NullLiteral
   deriving (Eq)
 
 data BinaryOperator

@@ -106,12 +106,11 @@ instance Show Local where
 instance Show Expression where
   show Expression{innerExpression=e, expressionType=t} = show t ++ ": " ++ show e
 
-
 instance Show InnerExpression where
   show (MethodInvocation e name args) = "$." ++ show name ++ "(" ++ (show $ length args) ++ " arguments)"
   show (BinaryOperation op e1 e2)     = "$ " ++ show op ++ " $"
   show (UnaryOperation op e)          = show op ++ "$"
-  show (Literal t v)                  = show t ++ ": " ++ v
+  show (LiteralExpression v)          = "Literal"
   show This                           = "this"
   show (FieldAccess e s)              = "$." ++ s
   show (ExpressionName n)             = showName n
@@ -128,6 +127,13 @@ instance Show InnerType where
   show Int           = "int"
   show Short         = "short"
   show (NamedType x) = showName x
+
+instance Show Literal where
+  show (IntegerLiteral x)   = show x
+  show (BooleanLiteral x)   = show x
+  show (CharacterLiteral x) = show x
+  show (StringLiteral x)    = show x
+  show NullLiteral          = "null"
 
 instance Show BinaryOperator where
   show Multiply     = "*"
@@ -162,6 +168,13 @@ importName ImportDeclaration{onDemand=True, importPackageName=p, importTypeName=
 
 showName :: [String] -> String
 showName l = intercalate "." l
+
+literalType :: Literal -> Type
+literalType IntegerLiteral{}   = Type Int False
+literalType BooleanLiteral{}   = Type Boolean False
+literalType CharacterLiteral{} = Type Char False
+literalType StringLiteral{}    = Type (NamedType ["java", "lang", "String"]) False
+literalType NullLiteral{}      = Null
 
 extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"

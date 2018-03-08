@@ -30,6 +30,7 @@ typeAstExpressionsInner cu scope (Node (AstExpression e) _children) =
     newChildren = map (typeAstExpressionsInner cu scope) _children
     typedExpression = typeExpression (fromJust cu) scope e
 
+typeAstExpressionsInner _ _ x = x -- TODO
 
 typeExpression :: CompilationUnit -> Maybe Scope -> Expression -> Expression
 typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodName arguments))
@@ -41,7 +42,8 @@ typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodN
     typedExpression = Expression _type (MethodInvocation parentObjectName methodName typedArguments)
     _type = methodReturn method
 
-typeExpression _ _ (Expression _ l@(Literal _type v)) = Expression _type l
+typeExpression _ _ (Expression _ l@(LiteralExpression literal)) =
+  (Expression (literalType literal) l)
 
 ------------------------BinaryOperation-------------------------------------------------------
 typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
