@@ -23,7 +23,7 @@ literalTransformer = match . asRule
     match [("Literal", _), ("IntegerLiteral", x)] =
       IntegerLiteral (read $ tokenString $ lhs x)
     match [("Literal", _), ("BooleanLiteral", x)] =
-      BooleanLiteral (read $ tokenString $ lhs x)
+      BooleanLiteral (if tokenString (lhs x) == "true" then True else False)
     match [("Literal", _), ("CharacterLiteral", x)] =
       CharacterLiteral (head $ tokenString $ lhs x) -- TODO: escapes
     match [("Literal", _), ("StringLiteral", x)] =
@@ -358,13 +358,13 @@ arrayCreationExpressionTransformer :: TaggedParseTree -> Expression
 arrayCreationExpressionTransformer = match . asRule
   where
     match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) True) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
+      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) False) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
     match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("Expression", e), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) True) (expressionTransformer e) -- TODO: convert char to Char, etc..
+      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) False) (expressionTransformer e) -- TODO: convert char to Char, etc..
     match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) True) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
+      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) False) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
     match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("Expression", e), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) True) (expressionTransformer e)
+      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) False) (expressionTransformer e)
 
 fieldAccessTransformer :: TaggedParseTree -> Expression
 fieldAccessTransformer = match . asRule
