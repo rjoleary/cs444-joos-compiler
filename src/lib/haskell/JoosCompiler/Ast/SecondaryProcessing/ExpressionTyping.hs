@@ -46,25 +46,26 @@ typeExpression _ _ (Expression _ l@(Literal _type v)) = Expression _type l
 ------------------------BinaryOperation-------------------------------------------------------
 typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
   | and [(expressionType typedE1 ==  expressionType typedE2),
-         (innerType (expressionType typedE1) == Int),
+         (innerType (expressionType typedE1) `elem` [Int, Short, Byte]),
          not((isArray (expressionType typedE1))),
          (operator `elem` [Multiply, Divide, Modulus])] =
       typedExpression
-  | and [(expressionType typedE1 ==  expressionType typedE2),
-         (innerType (expressionType typedE1) == Short),
-         not((isArray (expressionType typedE1))),
-         (operator `elem` [Multiply, Divide, Modulus])] =
-      typedExpression
-  | otherwise = error "Mutilply parameters are not the same and is invalid"
+   | otherwise = error "Mutilply parameters are not the same and is invalid"
   where
     typedExpression = Expression _type (BinaryOperation operator typedE1 typedE2)
-    _type = expressionType e1 
+    _type = Type
+            {innerType = Int
+            ,isArray = False
+            }
     typedE1 = typeExpression cu scope e1
     typedE2 = typeExpression cu scope e2
 
 
 
--------------------------UnaryOperator---------------------------------------------------------
+
+
+
+
 typeExpression cu scope (Expression _ (UnaryOperation operator e))
   | and [(operator == Not),
          not(isArray (expressionType typedE)),
@@ -95,7 +96,6 @@ typeExpression cu scope(Expression t (ExpressionName n))
  --  na = unNamedType(innerType (t)) --Name
  --  l = resolveInScope scope (head na)
    
-
 
 
 
