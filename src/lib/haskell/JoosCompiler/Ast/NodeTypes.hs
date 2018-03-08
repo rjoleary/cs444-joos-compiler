@@ -128,7 +128,9 @@ data InnerExpression
   | FieldAccess Expression String
   | ExpressionName Name
   | NewExpression Name [Expression]
+  | NewArrayExpression Type Expression -- TODO: confusion on primitive types
   | CastExpression Type Expression
+  | InstanceOfExpression Expression Type
   deriving (Eq)
 
 data Type
@@ -165,7 +167,6 @@ data BinaryOperator
   | Greater
   | LessEqual
   | GreaterEqual
-  | InstanceOf
   | Equality
   | Inequality
   | LazyAnd

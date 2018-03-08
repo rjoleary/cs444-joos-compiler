@@ -315,10 +315,10 @@ returnStatementTransformer = match . asRule
 primaryTransformer :: TaggedParseTree -> Expression
 primaryTransformer = match . asRule
   where
-    match [("Primary", _), ("PrimaryNoNewArray", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
-    match [("Primary", _), ("ArrayCreationExpression", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+    match [("Primary", _), ("PrimaryNoNewArray", x)] =
+      primaryNoNewArrayTransformer x
+    match [("Primary", _), ("ArrayCreationExpression", x)] =
+      arrayCreationExpressionTransformer x
 
 primaryNoNewArrayTransformer :: TaggedParseTree -> Expression
 primaryNoNewArrayTransformer = match . asRule
@@ -335,8 +335,8 @@ primaryNoNewArrayTransformer = match . asRule
       fieldAccessTransformer x
     match [("PrimaryNoNewArray", _), ("MethodInvocation", x)] =
       methodInvocationTransformer x
-    match [("PrimaryNoNewArray", _), ("ArrayAccess", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+    match [("PrimaryNoNewArray", _), ("ArrayAccess", x)] =
+      arrayAccessTransformer x
 
 classInstanceCreationExpressionTransformer :: TaggedParseTree -> Expression
 classInstanceCreationExpressionTransformer = match . asRule
@@ -357,14 +357,14 @@ argumentListTransformer = match . asRule
 arrayCreationExpressionTransformer :: TaggedParseTree -> Expression
 arrayCreationExpressionTransformer = match . asRule
   where
-    match [("ArrayCreationExpression", _), ("new", _), ("Name", _), ("[", _), ("]", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
-    match [("ArrayCreationExpression", _), ("new", _), ("Name", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
-    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", _), ("[", _), ("]", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
-    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+    match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) True) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
+    match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("Expression", e), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) True) (expressionTransformer e) -- TODO: convert char to Char, etc..
+    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) True) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
+    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("Expression", e), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) True) (expressionTransformer e)
 
 fieldAccessTransformer :: TaggedParseTree -> Expression
 fieldAccessTransformer = match . asRule
@@ -466,8 +466,7 @@ relationalExpressionTransformer = match . asRule
     match [("RelationalExpression", _), ("RelationalExpression", x), (">=", _), ("AdditiveExpression", y)] =
       emptyType $ BinaryOperation GreaterEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
     match [("RelationalExpression", _), ("RelationalExpression", x), ("instanceof", _), ("ReferenceType", y)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
-      -- emptyType $ BinaryOperation InstanceOf (relationalExpressionTransformer x) (referenceTypeTransformer y)
+      emptyType $ InstanceOfExpression (relationalExpressionTransformer x) (referenceTypeTransformer y)
 
 equalityExpressionTransformer :: TaggedParseTree -> Expression
 equalityExpressionTransformer = match . asRule

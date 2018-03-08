@@ -115,7 +115,9 @@ instance Show InnerExpression where
   show (FieldAccess e s)              = "$." ++ s
   show (ExpressionName n)             = showName n
   show (NewExpression name args)      = "new " ++ showName name ++ "(" ++ (show $ length args) ++ " arguments)"
+  show (NewArrayExpression t e)       = "new " ++ typeSignature t ++ "[$]"
   show (CastExpression t e)           = "(" ++ typeSignature t ++ ")$"
+  show (InstanceOfExpression e t)     = "$ instanceof " ++ typeSignature t
 
 instance Show Type where
   show Void           = "void"
@@ -147,7 +149,6 @@ instance Show BinaryOperator where
   show Greater      = ">"
   show LessEqual    = "<="
   show GreaterEqual = ">="
-  show InstanceOf   = "instanceof"
   show Equality     = "=="
   show Inequality   = "!="
   show LazyAnd      = "&"
