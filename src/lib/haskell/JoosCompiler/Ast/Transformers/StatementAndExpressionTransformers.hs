@@ -113,7 +113,7 @@ blockStatementTransformer :: TaggedParseTree -> Statement
 blockStatementTransformer = match . asRule
   where
     match [("BlockStatement", _), ("LocalVariableDeclarationStatement", x)] =
-      emptyScope EmptyStatement --TODO
+      localVariableDeclarationStatementTransformer x
     match [("BlockStatement", _), ("Statement", x)] =
       statementTransformer x
 
@@ -121,19 +121,18 @@ localVariableDeclarationStatementTransformer :: TaggedParseTree -> Statement
 localVariableDeclarationStatementTransformer = match . asRule
   where
     match [("LocalVariableDeclarationStatement", _), ("LocalVariableDeclaration", x), (";", _)] =
-      emptyScope EmptyStatement --TODO
+      localVariableDeclarationTransformer x
 
 localVariableDeclarationTransformer :: TaggedParseTree -> Statement
 localVariableDeclarationTransformer = match . asRule
   where
     match [("LocalVariableDeclaration", _), ("Type", t), ("Identifier", n), ("=", _), ("Expression", x)] =
-      emptyScope EmptyStatement -- TODO
-      --Local
-      --{ localType      = Void -- TODO
-      --, localModifiers = [] -- TODO: why does this field exist?
-      --, localName      = tokenString $ lhs n
-      --, localValue     = expressionTransformer x
-      --}
+      emptyScope $ LocalStatement $ Local
+        { localType      = (typeTransformer t)
+        , localModifiers = []
+        , localName      = tokenString $ lhs n
+        , localValue     = expressionTransformer x
+        }
 
 statementTransformer :: TaggedParseTree -> Statement
 statementTransformer = match . asRule

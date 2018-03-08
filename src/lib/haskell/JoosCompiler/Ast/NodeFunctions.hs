@@ -94,6 +94,7 @@ instance Show InnerStatement where
   show IfStatement{} = "IfStatement"
   show ReturnStatement{} = "Return"
   show EmptyStatement{} = "EmptyStatement"
+  show LocalStatement{} = "LocalStatement"
 
 instance Show Local where
   show (Local _type _modifiers _name _) =

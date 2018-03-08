@@ -100,6 +100,7 @@ data InnerStatement
                 , ifThenStatement :: Statement
                 , ifElseStatement :: Statement }
   | ReturnStatement { returnExpression :: Maybe Expression }
+  | LocalStatement Local
   | EmptyStatement
   deriving (Eq)
 

@@ -69,15 +69,16 @@ children (AstPackage x)         = map (AstCompilationUnit . snd) $ packageCompil
 children (AstPackageDeclaration x) = error "AstPackageDeclartion not in final AST"
 children (AstStatement x)       = innerChildren $ statement x
   where
-    innerChildren x@BlockStatement{}      = map AstStatement $ blockStatements x
-    innerChildren x@ExpressionStatement{} = [AstExpression $ statementExpression x]
-    innerChildren x@LoopStatement{}       = (AstExpression $ loopPredicate x) :
-                                            (map AstStatement $ loopStatements x)
-    innerChildren x@IfStatement{}         = (AstExpression $ ifPredicate x) :
-                                            (AstStatement $ ifThenStatement x) :
-                                            [AstStatement $ ifElseStatement x]
-    innerChildren x@ReturnStatement{}     = fmap AstExpression $ maybeToList $ returnExpression x
-    innerChildren x@EmptyStatement{}      = []
+    innerChildren x@BlockStatement{}       = map AstStatement $ blockStatements x
+    innerChildren x@ExpressionStatement{}  = [AstExpression $ statementExpression x]
+    innerChildren x@LoopStatement{}        = (AstExpression $ loopPredicate x) :
+                                             (map AstStatement $ loopStatements x)
+    innerChildren x@IfStatement{}          = (AstExpression $ ifPredicate x) :
+                                             (AstStatement $ ifThenStatement x) :
+                                             [AstStatement $ ifElseStatement x]
+    innerChildren x@ReturnStatement{}      = fmap AstExpression $ maybeToList $ returnExpression x
+    innerChildren x@(LocalStatement local) = [AstExpression $ localValue local]
+    innerChildren x@EmptyStatement{}       = []
 children (AstTaggedToken x)     = error "AstTaggedToken not in final AST"
 children (AstType x)            = []
 
