@@ -33,11 +33,12 @@ typeAstExpressionsInner cu scope (Node (AstExpression e) _children) =
 
 typeExpression :: CompilationUnit -> Maybe Scope -> Expression -> Expression
 typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodName arguments))
-  | (map localType $ methodParameters method) == map calculateType arguments = typedExpression
+  | (map localType $ methodParameters method) == (map expressionType typedArguments) = typedExpression
   | otherwise = error "Method signature does not match argument list types"
   where
     method = resolveMethod ["TODO"]
-    typedExpression = Expression _type (MethodInvocation parentObjectName methodName arguments)
+    typedArguments = map (typeExpression cu scope) arguments
+    typedExpression = Expression _type (MethodInvocation parentObjectName methodName typedArguments)
     _type = methodReturn method
 
 typeExpression _ _ (Expression _ l@(Literal _type v)) = Expression _type l
@@ -59,7 +60,3 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
     _type = expressionType e1
     typedE1 = typeExpression cu scope e1
     typedE2= typeExpression cu scope e2
-
--- TODO
-calculateType :: Expression -> Type
-calculateType _ = Type Int False
