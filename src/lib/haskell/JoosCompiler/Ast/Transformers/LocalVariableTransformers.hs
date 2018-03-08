@@ -5,12 +5,13 @@ module JoosCompiler.Ast.Transformers.LocalVariableTransformers
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
+import           JoosCompiler.Ast.Transformers.StatementAndExpressionTransformers
 import           JoosCompiler.Ast.Utils
 import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 localVariableTransformer :: Transformer
-localVariableTransformer transformedChildren t =
+localVariableTransformer transformedChildren t@(Node _ (myType:_)) =
   AstLocalVariable $
   Local
   { localType = _type
@@ -19,9 +20,9 @@ localVariableTransformer transformedChildren t =
   , localValue = _value
   }
   where
-    _type = getType transformedChildren
+    _type = typeTransformer myType
     name = getVarName t
-    _value = Expression _type $ Literal _type "3"
+    _value = Expression _type $ LiteralExpression $ StringLiteral "TODO"
     -- TODO: _value = astExpression $ getExpression transformedChildren
 
 getVarName :: TaggedParseTree -> String

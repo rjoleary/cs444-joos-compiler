@@ -12,6 +12,22 @@ import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
 
+abstractMethodTransformer :: Transformer
+abstractMethodTransformer transformedChildren t@(Node label _) =
+  AstMethod $
+  Method
+  { methodReturn = _type
+  , methodModifiers = _modifiers
+  , methodName = _name
+  , methodParameters = _formalParams
+  , methodStatements = []
+  }
+  where
+    _type = getAbstractMethodType t
+    _modifiers = astModifiers $ getMethodModifiers transformedChildren
+    _name = getAbstractMethodName t
+    _formalParams = getFormalParams transformedChildren
+
 constructorTransformer :: Transformer
 constructorTransformer transformedChildren t@(Node label [modifiers, declaration, body]) =
   AstConstructor $
@@ -38,7 +54,7 @@ methodTransformer transformedChildren t@(Node label [header, body]) =
   , methodStatements = _statements
   }
   where
-    _type = getMethodType transformedChildren
+    _type = getMethodType header
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
     _name = getMethodName t
     _formalParams = getFormalParams transformedChildren
@@ -54,12 +70,12 @@ getFormalParams ts = map convertToLocal formalParamNodes
       { localType = _type
       , localModifiers = []
       , localName = _name
-      , localValue = Expression _type $ Literal _type "3"
+      , localValue = Expression _type $ LiteralExpression $ StringLiteral "3"
       }
       where
         typeNode = (subForest paramNode) !! 0
         nameNode = (subForest paramNode) !! 1
-        _type = astType $ rootLabel typeNode
+        _type = typeTransformer $ fmap astTaggedToken $ typeNode
         _name = tokenString $ astTaggedToken $ rootLabel nameNode
 
 getMethodModifiers :: [AstNode] -> AstWrapper
@@ -74,15 +90,20 @@ getMethodName (Node _ ts) = head $ extractName [nameNode]
     nameNode =
       findDirectChildByTokenName kIdentifier kFormalParameterList declaratorNode
 
-getMethodType :: [AstNode] -> Type
-getMethodType ts = extractType typeLabel
+getAbstractMethodName :: TaggedParseTree -> String
+getAbstractMethodName methodHeader@(Node _ ts) = head $ extractName [nameNode]
   where
-    methodHeader = head ts
-    typeNode = subForest methodHeader !! 1
-    typeLabel = rootLabel typeNode
-    extractType :: AstWrapper -> Type
-    extractType (AstType t) = t
-    extractType _           = error "Unexpected AST type in methodtype"
+    declaratorNode = subForest methodHeader !! 2
+    nameNode =
+      findDirectChildByTokenName kIdentifier kFormalParameterList declaratorNode
+
+getMethodType :: TaggedParseTree -> Type
+getMethodType header@(Node _ [_, (Node (TaggedToken "void" _ _ _) _), _]) = Void
+getMethodType header@(Node _ [_, t, _]) = typeTransformer t
+
+getAbstractMethodType :: TaggedParseTree -> Type
+getAbstractMethodType header@(Node _ [_, (Node (TaggedToken "void" _ _ _) _), _, _]) = Void
+getAbstractMethodType header@(Node _ [_, t, _, _]) = typeTransformer t
 
 getStatements :: [AstNode] -> [Statement]
 getStatements _ = []

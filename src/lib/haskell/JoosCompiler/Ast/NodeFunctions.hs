@@ -92,6 +92,7 @@ instance Show InnerStatement where
   show ExpressionStatement{} = "ExpressionStatement"
   show LoopStatement{} = "LoopStatement"
   show IfStatement{} = "IfStatement"
+  show ReturnStatement{} = "Return"
   show EmptyStatement{} = "EmptyStatement"
 
 instance Show Local where
@@ -104,17 +105,21 @@ instance Show Local where
           else ""
 
 instance Show Expression where
-  show Expression{innerExpression=e, expressionType=t} = show t ++ ": " ++ show e
-
+  show Expression{innerExpression=e} = show e
 
 instance Show InnerExpression where
-  show (MethodInvocation e name args) = "$." ++ show name ++ "(" ++ (show $ length args) ++ " arguments)"
-  show (BinaryOperation op e1 e2)     = "$ " ++ show op ++ " $"
-  show (UnaryOperation op e)          = show op ++ "$"
-  show (Literal t v)                  = show t ++ ": " ++ v
-  show This                           = "this"
-  show (FieldAccess e s)              = "$." ++ s
-  show (ExpressionName n)             = showName n
+  show (MethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ ")"
+  show (BinaryOperation op e1 e2)     = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
+  show (UnaryOperation op e)          = "(" ++ show op ++ show e ++ ")"
+  show (LiteralExpression v)          = "(" ++ show v ++ ")"
+  show This                           = "(this)"
+  show (FieldAccess e s)              = "(" ++ show e ++ "." ++ s ++ ")"
+  show (ExpressionName n)             = "(" ++ showName n ++ ")"
+  show (NewExpression name args)      = "(new " ++ showName name ++ "(" ++ intercalate "," (map show args) ++ "))"
+  show (NewArrayExpression t e)       = "(new " ++ typeSignature t ++ "[" ++ show e ++ "])"
+  show (CastExpression t e)           = "((" ++ typeSignature t ++ ")" ++ show e ++ ")"
+  show (InstanceOfExpression e t)     = "(" ++ show e ++ " instanceof " ++ typeSignature t ++ ")"
+  show (ArrayExpression e1 e2)        = "(" ++ show e1 ++ "[" ++ show e2 ++ "])"
 
 instance Show Type where
   show Void           = "void"
@@ -129,6 +134,13 @@ instance Show InnerType where
   show Short         = "short"
   show (NamedType x) = showName x
 
+instance Show Literal where
+  show (IntegerLiteral x)   = show x
+  show (BooleanLiteral x)   = show x
+  show (CharacterLiteral x) = show x
+  show (StringLiteral x)    = show x
+  show NullLiteral          = "null"
+
 instance Show BinaryOperator where
   show Multiply     = "*"
   show Divide       = "/"
@@ -139,7 +151,6 @@ instance Show BinaryOperator where
   show Greater      = ">"
   show LessEqual    = "<="
   show GreaterEqual = ">="
-  show InstanceOf   = "instanceof"
   show Equality     = "=="
   show Inequality   = "!="
   show LazyAnd      = "&"
@@ -162,6 +173,13 @@ importName ImportDeclaration{onDemand=True, importPackageName=p, importTypeName=
 
 showName :: [String] -> String
 showName l = intercalate "." l
+
+literalType :: Literal -> Type
+literalType IntegerLiteral{}   = Type Int False
+literalType BooleanLiteral{}   = Type Boolean False
+literalType CharacterLiteral{} = Type Char False
+literalType StringLiteral{}    = Type (NamedType ["java", "lang", "String"]) False
+literalType NullLiteral{}      = Null
 
 extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"

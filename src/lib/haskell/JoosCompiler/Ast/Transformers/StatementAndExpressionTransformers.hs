@@ -1,5 +1,6 @@
 module JoosCompiler.Ast.Transformers.StatementAndExpressionTransformers
-  ( methodBodyTransformer
+  ( typeTransformer
+  , methodBodyTransformer
   , constructorBodyTransformer
   ) where
 
@@ -15,6 +16,58 @@ import JoosCompiler.Treeify
 asRule :: TaggedParseTree -> [(String, TaggedParseTree)]
 asRule n@(Node _ xs) = asPair n : map asPair xs
   where asPair n@(Node x _) = (tokenName x, n)
+
+literalTransformer :: TaggedParseTree -> Literal
+literalTransformer = match . asRule
+  where
+    match [("Literal", _), ("IntegerLiteral", x)] =
+      IntegerLiteral (read $ tokenString $ lhs x)
+    match [("Literal", _), ("BooleanLiteral", x)] =
+      BooleanLiteral (if tokenString (lhs x) == "true" then True else False)
+    match [("Literal", _), ("CharacterLiteral", x)] =
+      CharacterLiteral (head $ tokenString $ lhs x) -- TODO: escapes
+    match [("Literal", _), ("StringLiteral", x)] =
+      StringLiteral (tokenString $ lhs x) -- TODO: escapes
+    match [("Literal", _), ("NullLiteral", x)] =
+      NullLiteral
+
+typeTransformer :: TaggedParseTree -> Type
+typeTransformer = match . asRule
+  where
+    match [("Type", _), ("PrimitiveType", x)] =
+      Type (primitiveTypeTransformer x) False
+    match [("Type", _), ("ReferenceType", x)] =
+      referenceTypeTransformer x
+
+primitiveTypeTransformer :: TaggedParseTree -> InnerType
+primitiveTypeTransformer = match . asRule
+  where
+    match [("PrimitiveType", _), ("boolean", x)] =
+      Boolean
+    match [("PrimitiveType", _), ("byte", x)] =
+      Byte
+    match [("PrimitiveType", _), ("char", x)] =
+      Char
+    match [("PrimitiveType", _), ("int", x)] =
+      Int
+    match [("PrimitiveType", _), ("short", x)] =
+      Short
+
+referenceTypeTransformer :: TaggedParseTree -> Type
+referenceTypeTransformer = match . asRule
+  where
+    match [("ReferenceType", _), ("Name", x)] =
+      Type (NamedType $ nameTransformer x) False
+    match [("ReferenceType", _), ("ArrayType", x)] =
+      arrayTypeTransformer x
+
+arrayTypeTransformer :: TaggedParseTree -> Type
+arrayTypeTransformer = match . asRule
+  where
+    match [("ArrayType", _), ("PrimitiveType", x), ("[", _), ("]", _)] =
+      Type (primitiveTypeTransformer x) False
+    match [("ArrayType", _), ("Name", x), ("[", _), ("]", _)] =
+      Type (NamedType $ nameTransformer x) True
 
 nameTransformer :: TaggedParseTree -> Name
 nameTransformer = match . asRule
@@ -139,8 +192,8 @@ statementExpressionTransformer = match . asRule
       emptyScope $ ExpressionStatement (assignmentTransformer x)
     match [("StatementExpression", _), ("MethodInvocation", x)] =
       emptyScope $ ExpressionStatement (methodInvocationTransformer x)
-    match [("StatementExpression", _), ("ClassInstanceCreationExpression", _)] =
-      emptyScope EmptyStatement --TODO
+    match [("StatementExpression", _), ("ClassInstanceCreationExpression", x)] =
+      emptyScope $ ExpressionStatement (classInstanceCreationExpressionTransformer x)
 
 ifThenStatementTransformer :: TaggedParseTree -> Statement
 ifThenStatementTransformer = match . asRule
@@ -189,17 +242,17 @@ forStatementTransformer :: TaggedParseTree -> Statement
 forStatementTransformer = match . asRule
   where
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementTransformer x)
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementTransformer x)
+      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
       genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (emptyScope EmptyStatement) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
       genericForLoop (forInitTransformer s1) (expressionTransformer e) (emptyScope EmptyStatement) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementTransformer x)
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementTransformer x)
+      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
       genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
@@ -209,17 +262,17 @@ forStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 forStatementNoShortIfTransformer = match . asRule
   where
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop (forInitTransformer s1) (expressionTransformer e) (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ Literal Void "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
@@ -255,23 +308,23 @@ returnStatementTransformer :: TaggedParseTree -> Statement
 returnStatementTransformer = match . asRule
   where
     match [("ReturnStatement", _), ("return", _), (";", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ReturnStatement", _), ("return", _), ("Expression", _), (";", _)] =
-      emptyScope EmptyStatement --TODO
+      emptyScope $ ReturnStatement Nothing
+    match [("ReturnStatement", _), ("return", _), ("Expression", x), (";", _)] =
+      emptyScope $ ReturnStatement (Just $ expressionTransformer x)
 
 primaryTransformer :: TaggedParseTree -> Expression
 primaryTransformer = match . asRule
   where
-    match [("Primary", _), ("PrimaryNoNewArray", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("Primary", _), ("ArrayCreationExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("Primary", _), ("PrimaryNoNewArray", x)] =
+      primaryNoNewArrayTransformer x
+    match [("Primary", _), ("ArrayCreationExpression", x)] =
+      arrayCreationExpressionTransformer x
 
 primaryNoNewArrayTransformer :: TaggedParseTree -> Expression
 primaryNoNewArrayTransformer = match . asRule
   where
     match [("PrimaryNoNewArray", _), ("Literal", x)] =
-      emptyType $ Literal Void (tokenString $ lhs x)
+      emptyType $ LiteralExpression $ literalTransformer x
     match [("PrimaryNoNewArray", _), ("this", _)] =
       emptyType This
     match [("PrimaryNoNewArray", _), ("(", _), ("Expression", x), (")", _)] =
@@ -282,16 +335,16 @@ primaryNoNewArrayTransformer = match . asRule
       fieldAccessTransformer x
     match [("PrimaryNoNewArray", _), ("MethodInvocation", x)] =
       methodInvocationTransformer x
-    match [("PrimaryNoNewArray", _), ("ArrayAccess", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("PrimaryNoNewArray", _), ("ArrayAccess", x)] =
+      arrayAccessTransformer x
 
 classInstanceCreationExpressionTransformer :: TaggedParseTree -> Expression
 classInstanceCreationExpressionTransformer = match . asRule
   where
-    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", _), ("(", _), (")", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", _), ("(", _), ("ArgumentList", _), (")", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", x), ("(", _), (")", _)] =
+      emptyType $ NewExpression (nameTransformer x) []
+    match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", x), ("(", _), ("ArgumentList", y), (")", _)] =
+      emptyType $ NewExpression (nameTransformer x) (argumentListTransformer y)
 
 argumentListTransformer :: TaggedParseTree -> [Expression]
 argumentListTransformer = match . asRule
@@ -304,14 +357,14 @@ argumentListTransformer = match . asRule
 arrayCreationExpressionTransformer :: TaggedParseTree -> Expression
 arrayCreationExpressionTransformer = match . asRule
   where
-    match [("ArrayCreationExpression", _), ("new", _), ("Name", _), ("[", _), ("]", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("ArrayCreationExpression", _), ("new", _), ("Name", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", _), ("[", _), ("]", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) False) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
+    match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("Expression", e), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) False) (expressionTransformer e) -- TODO: convert char to Char, etc..
+    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) False) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
+    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("Expression", e), ("]", _)] =
+      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) False) (expressionTransformer e)
 
 fieldAccessTransformer :: TaggedParseTree -> Expression
 fieldAccessTransformer = match . asRule
@@ -338,10 +391,10 @@ methodInvocationTransformer = match . asRule
 arrayAccessTransformer :: TaggedParseTree -> Expression
 arrayAccessTransformer = match . asRule
   where
-    match [("ArrayAccess", _), ("Name", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("ArrayAccess", _), ("PrimaryNoNewArray", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("ArrayAccess", _), ("Name", e1), ("[", _), ("Expression", e2), ("]", _)] =
+      emptyType $ ArrayExpression (emptyType $ ExpressionName $ nameTransformer e1) (expressionTransformer e2)
+    match [("ArrayAccess", _), ("PrimaryNoNewArray", e1), ("[", _), ("Expression", e2), ("]", _)] =
+      emptyType $ ArrayExpression (primaryNoNewArrayTransformer e1) (expressionTransformer e2)
 
 unaryExpressionTransformer :: TaggedParseTree -> Expression
 unaryExpressionTransformer = match . asRule
@@ -367,13 +420,15 @@ castExpressionTransformer :: TaggedParseTree -> Expression
 castExpressionTransformer = match . asRule
   where
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), (")", _), ("UnaryExpression", x)] =
-      emptyType $ Literal Void "TODO" --TODO
+      emptyType $ CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), ("[", _), ("]", _), (")", _), ("UnaryExpression", x)] =
-      emptyType $ Literal Void "TODO" --TODO
+      emptyType $ CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("Expression", t), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
-      emptyType $ Literal Void "TODO" --TODO
+      emptyType $ CastExpression (getType $ expressionTransformer t) (unaryExpressionNotPlusMinusTransformer x)
+      where getType (Expression _ (ExpressionName name)) = Type (NamedType name) False
+            getType _                                    = error "Cast expression name should have been checked by the weeder"
     match [("CastExpression", _), ("(", _), ("Name", t), ("[", _), ("]", _), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
-      emptyType $ Literal Void "TODO" --TODO
+      emptyType $ CastExpression (Type (NamedType $ nameTransformer t) False) (unaryExpressionNotPlusMinusTransformer x)
 
 multiplicativeExpressionTransformer :: TaggedParseTree -> Expression
 multiplicativeExpressionTransformer = match . asRule
@@ -411,8 +466,7 @@ relationalExpressionTransformer = match . asRule
     match [("RelationalExpression", _), ("RelationalExpression", x), (">=", _), ("AdditiveExpression", y)] =
       emptyType $ BinaryOperation GreaterEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
     match [("RelationalExpression", _), ("RelationalExpression", x), ("instanceof", _), ("ReferenceType", y)] =
-      emptyType $ Literal Void "TODO" --TODO
-      -- emptyType $ BinaryOperation InstanceOf (relationalExpressionTransformer x) (referenceTypeTransformer y)
+      emptyType $ InstanceOfExpression (relationalExpressionTransformer x) (referenceTypeTransformer y)
 
 equalityExpressionTransformer :: TaggedParseTree -> Expression
 equalityExpressionTransformer = match . asRule

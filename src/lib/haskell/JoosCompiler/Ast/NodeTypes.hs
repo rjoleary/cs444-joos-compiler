@@ -99,6 +99,7 @@ data InnerStatement
   | IfStatement { ifPredicate     :: Expression
                 , ifThenStatement :: Statement
                 , ifElseStatement :: Statement }
+  | ReturnStatement { returnExpression :: Maybe Expression }
   | EmptyStatement
   deriving (Eq)
 
@@ -123,14 +124,20 @@ data InnerExpression
   = MethodInvocation Expression String [Expression]
   | BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression
-  | Literal Type String
+  | LiteralExpression Literal
   | This
   | FieldAccess Expression String
   | ExpressionName Name
+  | NewExpression Name [Expression]
+  | NewArrayExpression Type Expression -- TODO: confusion on primitive types
+  | CastExpression Type Expression
+  | InstanceOfExpression Expression Type
+  | ArrayExpression Expression Expression
   deriving (Eq)
 
 data Type
   = Void
+  | Null
   | Type { innerType :: InnerType
          , isArray   :: Bool }
   deriving (Eq)
@@ -144,6 +151,14 @@ data InnerType
   | NamedType { unNamedType :: Name }
   deriving (Eq)
 
+data Literal
+  = IntegerLiteral Integer
+  | BooleanLiteral Bool
+  | CharacterLiteral Char
+  | StringLiteral String
+  | NullLiteral
+  deriving (Eq)
+
 data BinaryOperator
   = Multiply
   | Divide
@@ -154,7 +169,6 @@ data BinaryOperator
   | Greater
   | LessEqual
   | GreaterEqual
-  | InstanceOf
   | Equality
   | Inequality
   | LazyAnd

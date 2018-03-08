@@ -48,10 +48,15 @@ children (AstExpression x)      = innerChildren $ innerExpression x
     innerChildren (MethodInvocation x _ xs)  = AstExpression x : map AstExpression xs
     innerChildren (BinaryOperation _ x y)    = map AstExpression [x, y]
     innerChildren (UnaryOperation _ x)       = [AstExpression x]
-    innerChildren (Literal t _)              = [AstType t]
+    innerChildren (LiteralExpression _)      = []
     innerChildren This                       = []
     innerChildren (FieldAccess e _)          = [AstExpression e]
     innerChildren (ExpressionName _)         = []
+    innerChildren (NewExpression name args)  = map AstExpression args
+    innerChildren (NewArrayExpression t e)   = [AstExpression e]
+    innerChildren (CastExpression t e)       = [AstExpression e]
+    innerChildren (InstanceOfExpression e t) = [AstExpression e]
+    innerChildren (ArrayExpression e1 e2)    = [AstExpression e1, AstExpression e2]
 children (AstField x)           = [] -- TODO: expression
 children (AstImport x)          = []
 children (AstLocalVariable x)   = [] -- TODO: expression
@@ -71,6 +76,7 @@ children (AstStatement x)       = innerChildren $ statement x
     innerChildren x@IfStatement{}         = (AstExpression $ ifPredicate x) :
                                             (AstStatement $ ifThenStatement x) :
                                             [AstStatement $ ifElseStatement x]
+    innerChildren x@ReturnStatement{}     = fmap AstExpression $ maybeToList $ returnExpression x
     innerChildren x@EmptyStatement{}      = []
 children (AstTaggedToken x)     = error "AstTaggedToken not in final AST"
 children (AstType x)            = []
@@ -142,8 +148,3 @@ isPackageDeclaration _                         = False
 isType :: AstWrapper -> Bool
 isType (AstType _) = True
 isType _           = False
-
-getType :: [AstNode] -> Type
-getType ts = astType $ rootLabel typeNode
-  where
-    typeNode = head $ findChildren1 isType ts
