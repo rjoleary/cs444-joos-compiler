@@ -93,8 +93,6 @@ data Statement = Statement
 
 data InnerStatement
   = BlockStatement { blockStatements :: [Statement] }
-  | AssignStatement { assignedVar   :: Name
-                    , assignedValue :: Expression }
   | ExpressionStatement { statementExpression :: Expression }
   | LoopStatement { loopPredicate  :: Expression
                   , loopStatements :: [Statement] }
@@ -129,6 +127,7 @@ data InnerExpression
   | This
   | FieldAccess Expression String
   | ExpressionName Name
+  | AssignmentExpression Expression Expression
   deriving (Eq)
 
 data Type

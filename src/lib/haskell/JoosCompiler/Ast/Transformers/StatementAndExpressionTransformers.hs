@@ -455,20 +455,20 @@ conditionalOrExpressionTransformer = match . asRule
 assignmentExpressionTransformer :: TaggedParseTree -> Expression
 assignmentExpressionTransformer = match . asRule
   where
-    match [("AssignmentExpression", _), ("Assignment", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("AssignmentExpression", _), ("Assignment", x)] =
+      assignmentTransformer x
     match [("AssignmentExpression", _), ("ConditionalOrExpression", x)] =
       conditionalOrExpressionTransformer x
 
 assignmentTransformer :: TaggedParseTree -> Expression
 assignmentTransformer = match . asRule
   where
-    match [("Assignment", _), ("Name", _), ("=", _), ("AssignmentExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("Assignment", _), ("FieldAccess", _), ("=", _), ("AssignmentExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
-    match [("Assignment", _), ("ArrayAccess", _), ("=", _), ("AssignmentExpression", _)] =
-      emptyType $ Literal Void "TODO" --TODO
+    match [("Assignment", _), ("Name", x), ("=", _), ("AssignmentExpression", y)] =
+      emptyType $ AssignmentExpression (emptyType $ ExpressionName (nameTransformer x)) (assignmentExpressionTransformer y)
+    match [("Assignment", _), ("FieldAccess", x), ("=", _), ("AssignmentExpression", y)] =
+      emptyType $ AssignmentExpression (fieldAccessTransformer x) (assignmentExpressionTransformer y)
+    match [("Assignment", _), ("ArrayAccess", x), ("=", _), ("AssignmentExpression", y)] =
+      emptyType $ AssignmentExpression (arrayAccessTransformer x) (assignmentExpressionTransformer y)
 
 expressionTransformer :: TaggedParseTree -> Expression
 expressionTransformer = match . asRule

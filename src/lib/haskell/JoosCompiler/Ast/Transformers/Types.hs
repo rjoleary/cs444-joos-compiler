@@ -45,13 +45,14 @@ children (AstConstructor x)     = error "AstConstructor not in final AST"
 children (AstConstructorBody x) = error "AstConstructorBody not in final AST"
 children (AstExpression x)      = innerChildren $ innerExpression x
   where
-    innerChildren (MethodInvocation _ xs) = map AstExpression xs
-    innerChildren (BinaryOperation _ x y) = map AstExpression [x, y]
-    innerChildren (UnaryOperation _ x)    = [AstExpression x]
-    innerChildren (Literal t _)           = [AstType t]
-    innerChildren This                    = []
-    innerChildren (FieldAccess e _)       = [AstExpression e]
-    innerChildren (ExpressionName _)      = []
+    innerChildren (MethodInvocation _ xs)    = map AstExpression xs
+    innerChildren (BinaryOperation _ x y)    = map AstExpression [x, y]
+    innerChildren (UnaryOperation _ x)       = [AstExpression x]
+    innerChildren (Literal t _)              = [AstType t]
+    innerChildren This                       = []
+    innerChildren (FieldAccess e _)          = [AstExpression e]
+    innerChildren (ExpressionName _)         = []
+    innerChildren (AssignmentExpression x y) = [AstExpression x, AstExpression y]
 children (AstField x)           = [] -- TODO: expression
 children (AstImport x)          = []
 children (AstLocalVariable x)   = [] -- TODO: expression
@@ -65,7 +66,6 @@ children (AstPackageDeclaration x) = error "AstPackageDeclartion not in final AS
 children (AstStatement x)       = innerChildren $ statement x
   where
     innerChildren x@BlockStatement{}      = map AstStatement $ blockStatements x
-    innerChildren x@AssignStatement{}     = [AstExpression $ assignedValue x]
     innerChildren x@ExpressionStatement{} = [AstExpression $ statementExpression x]
     innerChildren x@LoopStatement{}       = (AstExpression $ loopPredicate x) :
                                             (map AstStatement $ loopStatements x)

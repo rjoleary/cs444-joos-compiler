@@ -89,7 +89,6 @@ instance Show Statement where
 
 instance Show InnerStatement where
   show BlockStatement{} = "BlockStatement"
-  show AssignStatement{assignedVar=v} = "AssignStatement{assignedVar=" ++ showName v ++ "}"
   show ExpressionStatement{} = "ExpressionStatement"
   show LoopStatement{} = "LoopStatement"
   show IfStatement{} = "IfStatement"
