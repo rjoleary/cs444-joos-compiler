@@ -308,9 +308,9 @@ returnStatementTransformer :: TaggedParseTree -> Statement
 returnStatementTransformer = match . asRule
   where
     match [("ReturnStatement", _), ("return", _), (";", _)] =
-      emptyScope EmptyStatement --TODO
-    match [("ReturnStatement", _), ("return", _), ("Expression", _), (";", _)] =
-      emptyScope EmptyStatement --TODO
+      emptyScope $ ReturnStatement Nothing
+    match [("ReturnStatement", _), ("return", _), ("Expression", x), (";", _)] =
+      emptyScope $ ReturnStatement (Just $ expressionTransformer x)
 
 primaryTransformer :: TaggedParseTree -> Expression
 primaryTransformer = match . asRule
@@ -391,10 +391,10 @@ methodInvocationTransformer = match . asRule
 arrayAccessTransformer :: TaggedParseTree -> Expression
 arrayAccessTransformer = match . asRule
   where
-    match [("ArrayAccess", _), ("Name", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
-    match [("ArrayAccess", _), ("PrimaryNoNewArray", _), ("[", _), ("Expression", _), ("]", _)] =
-      emptyType $ LiteralExpression $ StringLiteral "TODO" --TODO
+    match [("ArrayAccess", _), ("Name", e1), ("[", _), ("Expression", e2), ("]", _)] =
+      emptyType $ ArrayExpression (emptyType $ ExpressionName $ nameTransformer e1) (expressionTransformer e2)
+    match [("ArrayAccess", _), ("PrimaryNoNewArray", e1), ("[", _), ("Expression", e2), ("]", _)] =
+      emptyType $ ArrayExpression (primaryNoNewArrayTransformer e1) (expressionTransformer e2)
 
 unaryExpressionTransformer :: TaggedParseTree -> Expression
 unaryExpressionTransformer = match . asRule

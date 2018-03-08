@@ -92,6 +92,7 @@ instance Show InnerStatement where
   show ExpressionStatement{} = "ExpressionStatement"
   show LoopStatement{} = "LoopStatement"
   show IfStatement{} = "IfStatement"
+  show ReturnStatement{} = "Return"
   show EmptyStatement{} = "EmptyStatement"
 
 instance Show Local where
@@ -118,6 +119,7 @@ instance Show InnerExpression where
   show (NewArrayExpression t e)       = "new " ++ typeSignature t ++ "[$]"
   show (CastExpression t e)           = "(" ++ typeSignature t ++ ")$"
   show (InstanceOfExpression e t)     = "$ instanceof " ++ typeSignature t
+  show (ArrayExpression e1 e2)        = "$[$]"
 
 instance Show Type where
   show Void           = "void"

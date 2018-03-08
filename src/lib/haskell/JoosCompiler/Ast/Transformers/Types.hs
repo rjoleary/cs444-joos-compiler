@@ -56,6 +56,7 @@ children (AstExpression x)      = innerChildren $ innerExpression x
     innerChildren (NewArrayExpression t e)   = [AstExpression e]
     innerChildren (CastExpression t e)       = [AstExpression e]
     innerChildren (InstanceOfExpression e t) = [AstExpression e]
+    innerChildren (ArrayExpression e1 e2)    = [AstExpression e1, AstExpression e2]
 children (AstField x)           = [] -- TODO: expression
 children (AstImport x)          = []
 children (AstLocalVariable x)   = [] -- TODO: expression
@@ -75,6 +76,7 @@ children (AstStatement x)       = innerChildren $ statement x
     innerChildren x@IfStatement{}         = (AstExpression $ ifPredicate x) :
                                             (AstStatement $ ifThenStatement x) :
                                             [AstStatement $ ifElseStatement x]
+    innerChildren x@ReturnStatement{}     = fmap AstExpression $ maybeToList $ returnExpression x
     innerChildren x@EmptyStatement{}      = []
 children (AstTaggedToken x)     = error "AstTaggedToken not in final AST"
 children (AstType x)            = []

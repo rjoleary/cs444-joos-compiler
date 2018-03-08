@@ -99,6 +99,7 @@ data InnerStatement
   | IfStatement { ifPredicate     :: Expression
                 , ifThenStatement :: Statement
                 , ifElseStatement :: Statement }
+  | ReturnStatement { returnExpression :: Maybe Expression }
   | EmptyStatement
   deriving (Eq)
 
@@ -131,6 +132,7 @@ data InnerExpression
   | NewArrayExpression Type Expression -- TODO: confusion on primitive types
   | CastExpression Type Expression
   | InstanceOfExpression Expression Type
+  | ArrayExpression Expression Expression
   deriving (Eq)
 
 data Type
