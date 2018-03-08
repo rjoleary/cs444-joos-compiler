@@ -32,9 +32,24 @@ addTypes scope (Node (AstExpression (Expression _ l@(Literal _type v))) _childre
   where
     newChildren = map (addTypes scope) _children
 
+
+------------------------BinaryOperation-------------------------------------------------------
+addTypes scope (Node (AstExpression (Expression _ (BinaryOperation operator e1 e2))) _children)
+  | and [(expressionType typedE1 ==  expressionType typedE2), (innerType (expressionType typedE1) == Int), not((isArray (expressionType typedE1))), (operator `elem` [Multiply, Divide, Modulus])]= typedExpression
+  | and [(expressionType typedE1 ==  expressionType typedE2), (innerType (expressionType typedE1) == Short), not((isArray (expressionType typedE1)))]= typedExpression
+  | otherwise = error "Mutilply parameters are not the same and is invalid"
+  where
+    typedExpression = Node (AstExpression $ Expression _type (BinaryOperation Multiply typedE1 typedE2)) newChildren
+    newChildren = map (addTypes scope) _children
+    _type = expressionType e1
+    typedE1 = e1 -- addTypes scope e1
+    typedE2= e2 -- addTypes scope e2 
+
 addTypes scope (Node n _children) = (Node n newChildren)
   where
     newChildren = map (addTypes scope) _children
+
+
 
 -- TODO
 calculateType :: Expression -> Type
