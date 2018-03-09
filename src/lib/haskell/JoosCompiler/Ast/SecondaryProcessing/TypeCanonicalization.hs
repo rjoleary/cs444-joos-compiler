@@ -19,10 +19,11 @@ javaLang =
 
 -- Assumes the children are Compilation Units
 canonicalizeProgram :: AstNode -> AstNode
-canonicalizeProgram t@(Node p@(AstWholeProgram program) oldUnits) =
+canonicalizeProgram (Node p@(AstWholeProgram program) oldUnits) =
   Node p newUnits
   where
     newUnits = map (canonicalizeUnit program) oldUnits
+canonicalizeProgram _ = error "Invalid node type in canonicalizeProgram"
 
 canonicalizeUnit :: WholeProgram -> AstNode -> AstNode
 canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
@@ -36,7 +37,7 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
                             , fieldModifiers = m
                             , fieldName = n
                             , fieldValue = v
-                            }) children) =
+                            }) _children) =
       Node
         (AstField
            (Field
@@ -45,7 +46,7 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
             , fieldName = n
             , fieldValue = v
             })) $
-      map f children
+      map f _children
       where
         newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
         newTypeName = canonicalize program oldUnit oldTypeName
@@ -55,7 +56,7 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
                                     , localModifiers = m
                                     , localName = n
                                     , localValue = v
-                                    }) children) =
+                                    }) _children) =
       Node
         (AstLocalVariable
            (Local
@@ -64,24 +65,26 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
             , localName = n
             , localValue = v
             })) $
-      map f children
+      map f _children
       where
         newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
         newTypeName = canonicalize program oldUnit oldTypeName
-    f (Node n children) = Node n $ map f children
+    f (Node n _children) = Node n $ map f _children
+canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
 
 -- TODO(Ahmed) This probably handles the default package wrong
 --             Possibly on-demand too. No collision handling right now
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
   -- If type is already canonical
-  | (resolveTypeFromProgram name program /= Nothing) = name
+  | (resolveTypeFromProgram program name /= Nothing) = name
   -- SingleTypeImport. We don't need to worry about collisions because they're
   -- checked elsewhere (src/compiler/NameResolution)
   | (singleTypePackageContainingType /= Nothing) =
     packageName (fromJust singleTypePackageContainingType) ++ name
   | (onDemandPackageContainingType /= Nothing) =
-    packageName (fromJust onDemandPackageContainingType) ++ name
+    packageName (fromMaybe (error "This should never happen. Expected package to exist")
+                 onDemandPackageContainingType) ++ name
   | otherwise = name -- TODO
   where
     importsWithoutDefault = imports unit
@@ -91,12 +94,12 @@ canonicalize program unit name
       -- HACK: This can fail, but if it fails then the program is wrong
     onDemandPackages =
       map
-        (fromJust . resolvePackageFromProgram program . importPackageName)
+        (fromMaybe (error "Imported on-demand package not found") . resolvePackageFromProgram program . importPackageName)
         onDemandImports
       -- HACK: This can fail, but if it fails then the program is wrong
     singleTypePackages =
       map
-        (fromJust . resolvePackageFromProgram program . importPackageName)
+        (fromMaybe (error "Imported on-demand package not found") . resolvePackageFromProgram program . importPackageName)
         singleTypeImports
     singleTypePackageContainingType =
       find (typeIsInPackage name) singleTypePackages

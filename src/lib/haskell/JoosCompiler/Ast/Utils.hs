@@ -63,10 +63,10 @@ lookupPackage :: Name -> SubPackage -> Maybe Package
 lookupPackage [] (SubPackage p _) = p
 lookupPackage name (SubPackage _ m) = lookupPackageFromSubPackageMap name m
 
-resolveTypeFromProgram :: Name -> WholeProgram -> Maybe TypeDeclaration
-resolveTypeFromProgram [] program = Nothing
-resolveTypeFromProgram [x] program = Nothing
-resolveTypeFromProgram name program
+resolveTypeFromProgram :: WholeProgram -> Name -> Maybe TypeDeclaration
+resolveTypeFromProgram _ [] = Nothing
+resolveTypeFromProgram _ [_] = Nothing
+resolveTypeFromProgram program name
   | package == Nothing = Nothing
   | unit == Nothing = Nothing
   | otherwise = typeDecl $ fromJust unit
@@ -76,6 +76,13 @@ resolveTypeFromProgram name program
     package = resolvePackageFromProgram program _packageName
     units = packageCompilationUnits $ fromJust package
     unit = lookup _typeName units
+
+resolveInScope :: WholeProgram -> Scope -> Name -> Maybe TypeDeclaration
+resolveInScope program scope name
+  | match /= Nothing = resolveTypeFromProgram program name
+  where
+    match = find (\l -> name == [localName l]) locals
+    locals = scopeLocals scope
 
 -- TODO(Ahmed)
 resolveMethod :: Name -> Method
