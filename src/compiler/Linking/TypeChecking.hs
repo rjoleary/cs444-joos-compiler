@@ -9,6 +9,7 @@ import Data.List.Unique
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
+import JoosCompiler.Ast.Transformers.Types
 import JoosCompiler.Ast.Utils
 import JoosCompiler.TreeUtils
 import Linking.TypeChecking.BinaryOperation
@@ -31,7 +32,7 @@ checkTypes ast@(Node (AstWholeProgram program) children) = do
 
     assignmentOperations = []
 
-    expressions = findScopedExpressions isExpression ast
+    expressions = findScopedExpressions ast
 
 findScopedExpressions :: AstNode -> [(Scope, Expression)]
 findScopedExpressions (Node (AstExpression e) children) = f (Scope [] Nothing [])
@@ -39,6 +40,6 @@ findScopedExpressions (Node (AstExpression e) children) = f (Scope [] Nothing []
     f scope (AstExpression e) = (scope, e) : (map (findScopedExpressions scope) children)
     f _ (AstBlock scope) = map (findScopedExpressions scope) children
 
-isBinaryOperation :: (Scope, Expression) -> Bool
+isBinaryOperation :: Expression -> Bool
 isBinaryOperation (Expression _ (BinaryOperation _ _ _)) = True
 isBinaryOperation _ = False
