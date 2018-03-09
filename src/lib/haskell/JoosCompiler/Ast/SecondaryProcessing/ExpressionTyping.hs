@@ -132,6 +132,31 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
     typedE1 = typeExpression cu scope e1
     typedE2 = typeExpression cu scope e2
 
+typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
+  | and [(operator `elem` [And, Or]),
+        not (isArray (expressionType typedE1)),
+        not (isArray (expressionType typedE2)),
+        ((innerType (expressionType typedE1)) == (innerType (expressionType typedE2))),
+        ((innerType (expressionType typedE1)) `elem` [Byte, Int, Short])] =
+      Expression _type1 (BinaryOperation operator typedE1 typedE2)
+  | and [(operator `elem` [And, Or]),
+        not (isArray (expressionType typedE1)),
+        not (isArray (expressionType typedE2)),
+        ((innerType (expressionType typedE1)) == (innerType (expressionType typedE2))),
+        ((innerType (expressionType typedE1)) == Boolean)] =
+      Expression _type2 (BinaryOperation operator typedE1 typedE2)
+  | otherwise = error "Logical operators expressions are invalid"
+  where
+    typedE1 = typeExpression cu scope e1
+    typedE2 = typeExpression cu scope e2
+    _type1 = Type
+            {innerType = Int
+            ,isArray = False
+            }
+    _type2 = Type
+            {innerType = Boolean
+            ,isArray = False
+            }
 
 
 
