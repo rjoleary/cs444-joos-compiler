@@ -37,9 +37,8 @@ cstsToAst ts = finalProgram
     packagedProgram = packageProgram transformedCompilationUnits
     finalProgram =
       packagedProgram
-      |> injectScopesIntoChildrenBlocks
       |> canonicalizeProgram
-      |> typeAstExpressions
+      |> injectScopesIntoChildrenBlocks
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)

@@ -168,9 +168,9 @@ instance Show UnaryOperator where
 ---------- Other Functions ----------
 
 importName :: ImportDeclaration -> Name
-importName ImportDeclaration{onDemand=False, importPackageName=p} = p
-importName ImportDeclaration{onDemand=True, importPackageName=p, importTypeName=t} =
+importName ImportDeclaration{onDemand=False, importPackageName=p, importTypeName=t} =
   p ++ [fromJust t]
+importName ImportDeclaration{onDemand=True, importPackageName=p} = p
 
 showName :: [String] -> String
 showName l = intercalate "." l
