@@ -80,14 +80,38 @@ resolveTypeFromProgram program@(WholeProgram _ cus) name
     unit = fromMaybe (error "Could not find unit in resolveTypeFromProgram") $ find (\unit -> cuTypeName unit == _typeName) cus
     result = typeDecl unit
 
-resolveInScope :: WholeProgram -> Scope -> Name -> Maybe TypeDeclaration
+resolveInScope :: WholeProgram -> Scope -> String -> Either Field Local
 resolveInScope program scope name
-  | match /= Nothing = resolveTypeFromProgram program name
+  | localMatch /= Nothing = Right $ fromJust localMatch
+  | resolvedField /= Nothing = Left $ fromJust resolvedField
+  | otherwise = error "Cannot resolve in scope"
   where
-    match = find (\l -> name == [localName l]) locals
-    locals = scopeLocals scope
+    localMatch = find (\l -> name == localName l) locals
+    locals = flattenScope scope
+    -- unitTypeName is the name of the class that this scope belongs to
+    unitTypeName = scopeCuName scope
+    maybeUnit = find ((== unitTypeName) . canonicalizeUnitName) $ programCus program
+    unit = fromJust maybeUnit
+    resolvedField = resolveFieldInProgramUnit program unit name
+
+resolveFieldInProgramUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
+resolveFieldInProgramUnit program unit name
+  | fieldMaybe /= Nothing = Just field
+  | superMaybe /= Nothing = resolveFieldInProgramUnit program superUnit name
+  | otherwise = error "Cannot resolveFieldInProgramUnit"
+  where
+    units = programCus program
+    thisTypeMaybe = typeDecl unit
+    thisType = fromJust thisTypeMaybe
+    fieldMaybe = find ((== name) . fieldName) $ classFields thisType
+    field = fromJust fieldMaybe
+    superMaybe = find ((== super thisType) . canonicalizeUnitName) $ programCus program
+    superUnit = fromJust superMaybe
 
 -- TODO(Ahmed)
 resolveMethod :: Name -> Method
 resolveMethod _ = Method _type [] "method" [] []
   where _type = Type Int False
+
+canonicalizeUnitName :: CompilationUnit -> Name
+canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]

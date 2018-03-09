@@ -68,7 +68,7 @@ data TypeDeclaration = TypeDeclaration
 data Field = Field
   { fieldType      :: Type
   , fieldModifiers :: [Modifier]
-  , fieldName      :: Name
+  , fieldName      :: String
   , fieldValue     :: Expression
   } deriving (Eq)
 

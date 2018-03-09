@@ -64,13 +64,13 @@ instance Show TypeDeclaration where
     " extends(" ++
     (showName _super) ++
     ") Fields(" ++
-    (commaDelimit $ map (showName . fieldName) fields) ++
+    (commaDelimit $ map fieldName fields) ++
     ")"
 
 instance Show Field where
   show (Field _type _modifiers _name _) =
     "Field: " ++
-    m ++ show _type ++ " " ++ showName _name
+    m ++ show _type ++ " " ++ _name
     where
       m =
         if length _modifiers > 0

@@ -23,9 +23,12 @@ fieldTransformer transformedChildren t@(Node _ (modifiers:myType:_)) =
     _value = Expression _type $ LiteralExpression $ StringLiteral "TODO"
     -- TODO: _value = astExpression $ getExpression transformedChildren
 
-getFieldName :: TaggedParseTree -> Name
-getFieldName t = map (tokenString . rootLabel) identifierNodes
+getFieldName :: TaggedParseTree -> String
+getFieldName t
+  | length fieldNameList > 1 = "Field name contains too many parts"
+  | otherwise = head fieldNameList
   where
+    fieldNameList = map (tokenString . rootLabel) identifierNodes
     variableDeclarator = head $ findChildrenByTokenName kVariableDeclarator t
     identifierNodes =
       findDirectChildrenByTokenName kIdentifier kExpression variableDeclarator
