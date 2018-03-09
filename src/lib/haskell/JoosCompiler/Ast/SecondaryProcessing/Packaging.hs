@@ -48,18 +48,14 @@ makeSubPackageMapEntry packageAList = (packageNamePart, thisSubPackage)
     trimmed = map trimPackageName packageAList
     packageNamePart = head $ fst $ head packageAList
     thisPackage = lookup [] trimmed
-    subPackages = filter (\p -> fst p /= []) trimmed
-    subPackageMap =  subPackage subPackages
+    _subPackages = filter (\p -> fst p /= []) trimmed
+    subPackageMap =  subPackage _subPackages
     thisSubPackage = SubPackage thisPackage subPackageMap
 
 trimPackageName :: (Name, Package) -> (Name, Package)
 trimPackageName (oldName, p) = (newName, p)
   where
     newName = tail oldName
-
-isSubPackageOf :: Package -> Package -> Bool
-isSubPackageOf (Package name1 _ _) (Package name2 _ _) =
-  name2 `isProperPrefixOf` name1
 
 -- Assumes that root nodes are CompilationUnits
 groupByPackage :: [AstNode] -> [Package]
@@ -70,7 +66,7 @@ groupByPackage unitNodes = packages
     packages = map groupUnitsByPackageName packageNames
     groupUnitsByPackageName :: Name -> Package
     groupUnitsByPackageName _packageName =
-      Package _packageName [] packageUnitsAList
+      Package _packageName [] packageUnitNames
       where
         packageUnits = filter ((== _packageName) . cuPackage) compilationUnits
-        packageUnitsAList = zip (map cuTypeName packageUnits) packageUnits
+        packageUnitNames = map cuTypeName packageUnits

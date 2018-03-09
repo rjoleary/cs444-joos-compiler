@@ -103,21 +103,22 @@ canonicalize program unit name
 
 typeIsInPackage :: Name -> Package -> Bool
 typeIsInPackage [n] Package {packageCompilationUnits = units}
-  | match == Nothing = False
-  | otherwise = typeDecl (fromJust match) /= Nothing
+  | length matches > 1 = error "Duplicate definition for type in package"
+  | otherwise = length matches == 1
   where
-    match = lookup n units
+    matches = filter (== n) units
 typeIsInPackage n Package {subPackages = subs}
-  | maybePackage /= Nothing && match /= Nothing =
-    typeDecl (fromJust match) /= Nothing
-  | otherwise = False
+  | (maybePackage /= Nothing) = if length matches > 1
+                                    then error "Duplicate definition for type in package"
+                                    else (length matches == 1)
+  | otherwise = error "typeIsInPackage could not resolve package"
   where
     pName = init n
     uName = last n
     maybePackage = lookupPackageFromSubPackageMap pName subs
     package = fromJust maybePackage
     units = packageCompilationUnits package
-    match = lookup uName units
+    matches = filter (== uName) units
 
 makeOnDemandImportDeclaration :: Name -> ImportDeclaration
 makeOnDemandImportDeclaration name =

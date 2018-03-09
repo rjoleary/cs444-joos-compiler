@@ -63,7 +63,6 @@ children (AstMethod x)          = (map AstLocalVariable $ methodParameters x) ++
 children (AstMethodBody x)      = error "AstMethodBody not in final AST"
 children (AstModifier x)        = error "AstModifier not in final AST"
 children (AstModifiers x)       = error "AstModifiers not in final AST"
-children (AstPackage x)         = map (AstCompilationUnit . snd) $ packageCompilationUnits x
 children (AstPackageDeclaration x) = error "AstPackageDeclartion not in final AST"
 children (AstStatement x)       = innerChildren $ statement x
   where

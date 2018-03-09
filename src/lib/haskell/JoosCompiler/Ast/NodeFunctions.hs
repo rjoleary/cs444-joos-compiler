@@ -22,7 +22,7 @@ instance Show SubPackage where
   show (SubPackage x y) = "Subpackage: " ++ show x ++ " " ++ show y
 
 instance Show Package where
-  show (Package name subs _) =
+  show (Package name subs units) =
     "Package: n=" ++
     (showName name) ++
     (if length subs > 0
@@ -30,6 +30,9 @@ instance Show Package where
             (commaDelimit $
              map fst subs) ++
             ")"
+       else "") ++
+    (if length units > 0
+       then " units(" ++ commaDelimit units ++ ")"
        else "")
 
 instance Show CompilationUnit where

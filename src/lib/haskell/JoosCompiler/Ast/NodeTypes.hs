@@ -31,7 +31,7 @@ data PackageDeclaration = PackageDeclaration
   { packageDeclarationName :: Name
   } deriving (Eq, Show)
 
-type PackageCompilationUnits = [(String, CompilationUnit)]
+type PackageCompilationUnits = [String]
 
 data Package = Package
   { packageName             :: Name
