@@ -2,6 +2,7 @@ module JoosCompiler.Ast.Core(cstsToAst) where
 
 import           Data.Tree
 import           JoosCompiler.Ast.SecondaryProcessing.ExpressionTyping
+import           JoosCompiler.Ast.SecondaryProcessing.StatementBlocks
 import           JoosCompiler.Ast.SecondaryProcessing.Packaging
 import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
 import           JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
@@ -42,10 +43,10 @@ cstsToAst ts = program
       -- WholeProgram are updated
       |> subForest
       |> packageProgram
-      |> injectScopesIntoChildrenBlocks
       |> asAst
       |> asTree
-      |> typeAstExpressions
+      |> insertBlocksAroundStatements
+      |> injectScopesIntoChildrenBlocks
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)

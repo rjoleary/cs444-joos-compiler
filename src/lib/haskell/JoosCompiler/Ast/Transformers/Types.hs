@@ -143,6 +143,11 @@ isPackageDeclaration :: AstWrapper -> Bool
 isPackageDeclaration (AstPackageDeclaration _) = True
 isPackageDeclaration _                         = False
 
+isStatement :: AstWrapper -> Bool
+isStatement (AstStatement _) = True
+isStatement _                = False
+
+
 isType :: AstWrapper -> Bool
 isType (AstType _) = True
 isType _           = False
