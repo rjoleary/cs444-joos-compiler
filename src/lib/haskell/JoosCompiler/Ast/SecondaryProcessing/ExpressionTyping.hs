@@ -166,6 +166,7 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
         ((innerType (expressionType typedE1)) == (innerType (expressionType typedE2))),
         ((innerType (expressionType typedE1)) == Boolean)] =
       Expression _type (BinaryOperation operator typedE1 typedE2)
+   | otherwise = error "Lazy Boolean Operators expressions are invalid"
   where
     _type = Type
             {innerType = Boolean
