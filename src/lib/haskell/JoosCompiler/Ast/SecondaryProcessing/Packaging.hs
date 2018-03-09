@@ -67,10 +67,9 @@ groupByPackage unitNodes = packages
     compilationUnits = map (astCompilationUnit . rootLabel) unitNodes
     packageNames = map cuPackage compilationUnits
     packages = map groupUnitsByPackageName packageNames
-    groupUnitsByPackageName :: Maybe Name -> Package
-    groupUnitsByPackageName maybePackageName =
+    groupUnitsByPackageName :: Name -> Package
+    groupUnitsByPackageName _packageName =
       Package _packageName [] packageUnitsAList
       where
-        _packageName = fromMaybe [] maybePackageName
-        packageUnits = filter ((== maybePackageName) . cuPackage) compilationUnits
+        packageUnits = filter ((== _packageName) . cuPackage) compilationUnits
         packageUnitsAList = zip (map cuTypeName packageUnits) packageUnits

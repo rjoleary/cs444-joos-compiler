@@ -39,7 +39,7 @@ data Package = Package
   } deriving (Eq)
 
 data CompilationUnit
-  = CompilationUnit { cuPackage  :: Maybe Name
+  = CompilationUnit { cuPackage  :: Name
                     , imports    :: [ImportDeclaration]
                     , typeDecl   :: Maybe TypeDeclaration
                     , cuTypeName :: String }

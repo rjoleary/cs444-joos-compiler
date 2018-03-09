@@ -40,9 +40,9 @@ isProperPrefixOf :: Eq a => [a] -> [a] -> Bool
 isProperPrefixOf l1 l2 = l1 `isPrefixOf` l2 && (length l1) < (length l2)
 
 qualifyTypeName :: CompilationUnit -> Name
-qualifyTypeName u@(CompilationUnit Nothing _ (Just _typeDecl) _) =
+qualifyTypeName u@(CompilationUnit [] _ (Just _typeDecl) _) =
   [typeName _typeDecl]
-qualifyTypeName u@(CompilationUnit (Just _packageName) _ (Just _typeDecl) _) =
+qualifyTypeName u@(CompilationUnit _packageName _ (Just _typeDecl) _) =
   _packageName ++ [typeName _typeDecl]
 qualifyTypeName _ = error "Can't qualify a compilation unit without a class"
 

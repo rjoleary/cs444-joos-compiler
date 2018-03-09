@@ -35,7 +35,7 @@ instance Show Package where
 instance Show CompilationUnit where
   show (CompilationUnit p i c _) =
     "CompilationUnit(p=" ++
-    (showName $ fromMaybe ["N/A"] p) ++
+    (showName p) ++
     " i=[" ++
     (commaDelimit $ map (showName . importName) i) ++
     "]" ++ " c=" ++ extractTypeName c ++ ")"

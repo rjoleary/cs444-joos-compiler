@@ -13,7 +13,7 @@ compilationUnitTransformer :: Transformer
 compilationUnitTransformer transformedChildren t =
   AstCompilationUnit $
   CompilationUnit
-  { cuPackage = getPackage transformedChildren
+  { cuPackage = fromMaybe [] $ getPackage transformedChildren
   , imports = getImports transformedChildren
   , typeDecl = _typeDecl
   , cuTypeName = _typeName
