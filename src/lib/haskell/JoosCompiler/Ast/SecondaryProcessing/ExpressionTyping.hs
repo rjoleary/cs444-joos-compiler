@@ -87,14 +87,14 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
 typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
   | and [((innerType (expressionType typedE1) == s)
          || (innerType (expressionType typedE2) == s)),
-         not ((isArray (expressionType typedE1))),
-         not ((isArray (expressionType typedE2))),
+         not (isArray (expressionType typedE1)),
+         not (isArray (expressionType typedE2)),
          (operator == Add)] =
       typedExpression1
   | and [(innerType (expressionType typedE1) `elem` [Byte, Int, Short]),
          (innerType (expressionType typedE2) `elem` [Byte, Int, Short]),
-         not ((isArray (expressionType typedE1))),
-         not ((isArray (expressionType typedE2))),
+         not (isArray (expressionType typedE1)),
+         not (isArray (expressionType typedE2)),
          (operator `elem` [Add, Subtract])] =
       typedExpression2
   | otherwise = error " Additive operators expressions are invalid"
@@ -113,6 +113,20 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
     typedE1 = typeExpression cu scope e1
     typedE2 = typeExpression cu scope e2
 
+typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
+  | and [(operator `elem` [Less, Greater, LessEqual, GreaterEqual]),
+        not (isArray (expressionType typedE1)),
+        not (isArray (expressionType typedE2)),
+        (innerType (expressionType typedE1) `elem` [Byte, Int, Short]),
+        (innerType (expressionType typedE1) `elem` [Byte, Int, Short])] =
+      Expression _type (BinaryOperation operator typedE1 typedE2)
+  where
+    _type = Type
+            {innerType = Int
+            ,isArray = False
+            }
+    typedE1 = typeExpression cu scope e1
+    typedE2 = typeExpression cu scope e2
 
 
 
