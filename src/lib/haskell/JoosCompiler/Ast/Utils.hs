@@ -105,8 +105,12 @@ resolveFieldInProgramUnit program unit name
     thisType = fromJust thisTypeMaybe
     fieldMaybe = find ((== name) . fieldName) $ classFields thisType
     field = fromJust fieldMaybe
-    superMaybe = find ((== super thisType) . canonicalizeUnitName) $ programCus program
+    superMaybe = resolveUnitInProgram program $ super thisType
     superUnit = fromJust superMaybe
+
+resolveUnitInProgram :: WholeProgram -> Name -> Maybe CompilationUnit
+resolveUnitInProgram program name =
+  find ((== name) . canonicalizeUnitName) $ programCus program
 
 -- TODO(Ahmed)
 resolveMethod :: Name -> Method

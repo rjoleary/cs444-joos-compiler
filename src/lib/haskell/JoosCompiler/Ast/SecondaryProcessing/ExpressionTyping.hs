@@ -30,6 +30,11 @@ typeAstExpressionsInner cu scope (Node (AstExpression e) _children) =
     newChildren = map (typeAstExpressionsInner cu scope) _children
     typedExpression = typeExpression (fromJust cu) scope e
 
+typeAstExpressionsInner cu scope (Node n _children) =
+  Node n typedChildren
+  where
+    typedChildren = map (typeAstExpressionsInner cu scope) _children
+
 
 typeExpression :: CompilationUnit -> Maybe Scope -> Expression -> Expression
 typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodName arguments))

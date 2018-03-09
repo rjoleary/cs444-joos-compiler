@@ -43,6 +43,7 @@ cstsToAst ts = program
       |> subForest
       |> packageProgram
       |> injectScopesIntoChildrenBlocks
+      |> typeAstExpressions
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
