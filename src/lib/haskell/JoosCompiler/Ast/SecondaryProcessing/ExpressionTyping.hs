@@ -120,6 +120,7 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
         (innerType (expressionType typedE1) `elem` [Byte, Int, Short]),
         (innerType (expressionType typedE1) `elem` [Byte, Int, Short])] =
       Expression _type (BinaryOperation operator typedE1 typedE2)
+  | otherwise = error "Comparison operators expressions are invalid"
   where
     _type = Type
             {innerType = Int
