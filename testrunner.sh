@@ -32,7 +32,7 @@ runtests() {
             local files=$testname
         fi
 
-        $COMPILER $files > "$testname.stdout" 2> "$testname.stderr" &
+        ERROR_CODE=1 $COMPILER $files > "$testname.stdout" 2> "$testname.stderr" &
         PROCESSES="$PROCESSES $testname $!"
     done
 
