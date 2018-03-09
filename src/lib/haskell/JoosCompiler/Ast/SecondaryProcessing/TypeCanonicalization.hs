@@ -6,6 +6,7 @@ import           Data.List
 import           Data.Maybe
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
+import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Ast.Utils
 
@@ -76,6 +77,8 @@ canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
 --             Possibly on-demand too. No collision handling right now
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
+  -- If type is in this file
+  | (length name == 1) && head name == cuTypeName unit = name
   -- If type is already canonical
   | (resolveTypeFromProgram program name /= Nothing) = name
   -- SingleTypeImport. We don't need to worry about collisions because they're
@@ -85,7 +88,7 @@ canonicalize program unit name
   | (onDemandPackageContainingType /= Nothing) =
     packageName (fromMaybe (error "This should never happen. Expected package to exist")
                  onDemandPackageContainingType) ++ name
-  | otherwise = name -- TODO
+  | otherwise = error $ "Could not canonicalize: " ++ showName name
   where
     importsWithoutDefault = imports unit
     _imports = importsWithoutDefault ++ [javaLang]
@@ -99,10 +102,9 @@ canonicalize program unit name
       -- HACK: This can fail, but if it fails then the program is wrong
     singleTypePackages =
       map
-        (fromMaybe (error "Imported on-demand package not found") . resolvePackageFromProgram program . importPackageName)
+        (fromMaybe (error "Imported single-type package not found") . resolvePackageFromProgram program . importPackageName)
         singleTypeImports
-    singleTypePackageContainingType =
-      find (typeIsInPackage name) singleTypePackages
+    singleTypePackageContainingType = find (typeIsInPackage name) singleTypePackages
     onDemandPackageContainingType = find (typeIsInPackage name) onDemandPackages
 
 typeIsInPackage :: Name -> Package -> Bool
