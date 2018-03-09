@@ -35,10 +35,11 @@ checkTypes ast@(Node (AstWholeProgram program) children) = do
     expressions = findScopedExpressions ast
 
 findScopedExpressions :: AstNode -> [(Scope, Expression)]
-findScopedExpressions (Node (AstExpression e) children) = f (Scope [] Nothing [])
+findScopedExpressions t = f (Scope [] Nothing []) t
   where
-    f scope (AstExpression e) = (scope, e) : (map (findScopedExpressions scope) children)
-    f _ (AstBlock scope) = map (findScopedExpressions scope) children
+    f :: Scope -> AstNode -> [(Scope, Expression)]
+    f scope (Node (AstExpression e) children) = (scope, e) : (mconcat $ map (f scope) children)
+    f _ (Node (AstBlock (Block scope)) children) = mconcat $ map (f scope) children
 
 isBinaryOperation :: Expression -> Bool
 isBinaryOperation (Expression _ (BinaryOperation _ _ _)) = True
