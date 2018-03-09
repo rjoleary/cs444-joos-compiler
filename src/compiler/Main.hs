@@ -9,6 +9,7 @@ import           JoosCompiler.Ast
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
 import           JoosCompiler.Ast.Transformers.Types
+import           Linking.TypeChecking
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
@@ -41,6 +42,9 @@ main = do
     Right _  -> return ()
     Left err -> exitError err
 
+  case (checkTypes ast) of
+    Right _ -> return ()
+    Left err -> exitError err
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""

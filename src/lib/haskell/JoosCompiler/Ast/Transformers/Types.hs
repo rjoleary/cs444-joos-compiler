@@ -109,6 +109,10 @@ isField :: AstWrapper -> Bool
 isField (AstField _) = True
 isField _            = False
 
+isExpression :: AstWrapper -> Bool
+isExpression (AstExpression _) = True
+isExpression _            = False
+
 getFields :: [AstNode] -> [AstWrapper]
 getFields ts = map rootLabel $ findChildren1 isField ts
 
