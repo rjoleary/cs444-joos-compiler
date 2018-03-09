@@ -30,7 +30,6 @@ typeAstExpressionsInner cu scope (Node (AstExpression e) _children) =
     newChildren = map (typeAstExpressionsInner cu scope) _children
     typedExpression = typeExpression (fromJust cu) scope e
 
-typeAstExpressionsInner _ _ x = x -- TODO
 
 typeExpression :: CompilationUnit -> Maybe Scope -> Expression -> Expression
 typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodName arguments))
@@ -42,9 +41,32 @@ typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodN
     typedExpression = Expression _type (MethodInvocation parentObjectName methodName typedArguments)
     _type = methodReturn method
 
-typeExpression _ _ (Expression _ l@(LiteralExpression literal)) =
-  (Expression (literalType literal) l)
-
+--typeExpression _ _ (Expression _ l@(Literal _type v)) = Expression _type l
+{-typeExpression _ _ (Expression _ s@(LiteralExpression (l t)))
+  | l == IntegerLiteral = Expression _typeInt s
+  | l == BooleanLiteral = Expression _typeBool s
+  | l == CharLiteral = Expression _typeChar s
+  | l == StringLiteral = Expression _typeString s
+  | l == NullLiteral = Expression Null (LiteralExpression NullLiteral)
+  | otherwise = error "LiteralExpression type is wrong"
+  where
+    _typeInt = Type
+               {innerType = Int
+               ,isArray = False
+               }
+    _typeBool = Type
+               {innerType = Boolean
+               ,isArray = False
+               }
+    _typeChar = Type
+               {innerType = Char
+               ,isArray = False
+               }
+    _typeString = Type
+               {innerType =  NamedType (["java","lang","String"])
+               ,isArray = False
+               }
+-}
 ------------------------BinaryOperation-------------------------------------------------------
 typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
   | and [(expressionType typedE1 ==  expressionType typedE2),
@@ -56,6 +78,35 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
   where
     typedExpression = Expression _type (BinaryOperation operator typedE1 typedE2)
     _type = Type
+            {innerType = Int
+            ,isArray = False
+            }
+    typedE1 = typeExpression cu scope e1
+    typedE2 = typeExpression cu scope e2
+
+typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
+  | and [((innerType (expressionType typedE1) == s)
+         || (innerType (expressionType typedE2) == s)),
+         not ((isArray (expressionType typedE1))),
+         not ((isArray (expressionType typedE2))),
+         (operator == Add)] =
+      typedExpression1
+  | and [(innerType (expressionType typedE1) `elem` [Byte, Int, Short]),
+         (innerType (expressionType typedE2) `elem` [Byte, Int, Short]),
+         not ((isArray (expressionType typedE1))),
+         not ((isArray (expressionType typedE2))),
+         (operator `elem` [Add, Subtract])] =
+      typedExpression2
+  | otherwise = error " Additive operators expressions are invalid"
+  where
+    s = NamedType (["java","lang","String"])
+    typedExpression1 = Expression _type1 (BinaryOperation operator typedE1 typedE2)
+    typedExpression2 = Expression _type2 (BinaryOperation operator typedE1 typedE2)
+    _type1 = Type
+            {innerType = s
+            ,isArray = False
+            }
+    _type2 = Type
             {innerType = Int
             ,isArray = False
             }
