@@ -40,6 +40,7 @@ findScopedExpressions t = f (Scope [] Nothing []) t
     f :: Scope -> AstNode -> [(Scope, Expression)]
     f scope (Node (AstExpression e) children) = (scope, e) : (mconcat $ map (f scope) children)
     f _ (Node (AstBlock (Block scope)) children) = mconcat $ map (f scope) children
+    f scope (Node _ children) = mconcat $ map (f scope) children
 
 isBinaryOperation :: Expression -> Bool
 isBinaryOperation (Expression _ (BinaryOperation _ _ _)) = True

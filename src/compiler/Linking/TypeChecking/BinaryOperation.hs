@@ -24,3 +24,4 @@ checkBinaryOperation program (scope, (Expression _ (BinaryOperation operator e1 
     (getType program scope e1) `elem` numTypes &&
     (getType program scope e2) `elem` numTypes =
     True
+  | otherwise = True
