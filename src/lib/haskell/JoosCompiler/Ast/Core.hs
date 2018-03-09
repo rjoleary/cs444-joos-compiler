@@ -31,15 +31,17 @@ cstToAst t = ast
     transformer = getTransformer t
 
 cstsToAst :: [TaggedParseTree] -> AstNode
-cstsToAst ts = finalProgram
+cstsToAst ts = program
   where
     transformedCompilationUnits = map cstToAst ts
-    packagedProgram = packageProgram transformedCompilationUnits
-    finalProgram =
-      packagedProgram
-      |> asAst
-      |> asTree
+    program =
+      transformedCompilationUnits
+      |> packageProgram
       |> canonicalizeProgram
+      -- Break program and repackage once again so that compilation units in
+      -- WholeProgram are updated
+      |> subForest
+      |> packageProgram
       |> injectScopesIntoChildrenBlocks
 
 getTransformer :: TaggedParseTree -> Transformer

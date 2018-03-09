@@ -33,7 +33,7 @@ main = do
 
   -- Environment building & type linking
   let failedRules = checkRules (environmentBuildingRules ++ typeLinkingRules) ast
-  when (length failedRules > 0) $ exitError $ "Failed:\n" ++ intercalate "\n" failedRules
+  when (length failedRules > 0) $ exitError $ "Failed to pass those rules:\n" ++ intercalate "\n" failedRules
 
   -- Hierarchy checking
   let hierarchy = checkHierarchy ast

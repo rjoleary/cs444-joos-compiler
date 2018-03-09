@@ -11,8 +11,8 @@ injectScopesIntoChildrenBlocks :: AstNode -> AstNode
 injectScopesIntoChildrenBlocks _t = f [] Nothing _t
   where
     f :: Name -> Maybe Scope -> AstNode -> AstNode
-    f cuName _parentScope (Node unitNode@(AstCompilationUnit (CompilationUnit _ _ _ _cuName)) _children) =
-      Node unitNode $ map (f cuName _parentScope) _children
+    f _ _parentScope (Node unitNode@(AstCompilationUnit (CompilationUnit _cuPackage _ _ _cuName)) _children) =
+      Node unitNode $ map (f (_cuPackage ++ [_cuName]) _parentScope) _children
     f cuName _parentScope (Node (AstBlock block) _children) =
       Node (AstBlock newBlock) newChildren
       where
