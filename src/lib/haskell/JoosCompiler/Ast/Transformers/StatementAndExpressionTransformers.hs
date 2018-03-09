@@ -356,12 +356,8 @@ argumentListTransformer = match . asRule
 arrayCreationExpressionTransformer :: TaggedParseTree -> Expression
 arrayCreationExpressionTransformer = match . asRule
   where
-    match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) False) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
     match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("Expression", e), ("]", _)] =
       emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) False) (expressionTransformer e) -- TODO: convert char to Char, etc..
-    match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) False) (emptyType $ LiteralExpression $ IntegerLiteral 0) -- TODO: is this valid joos
     match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("Expression", e), ("]", _)] =
       emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) False) (expressionTransformer e)
 

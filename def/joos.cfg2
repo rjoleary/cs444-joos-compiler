@@ -459,9 +459,7 @@ ArgumentList            ArgumentList , Expression
 # Joos 1W does not support array data.
 # Joos 1W does not support multidimensional arrays.
 
-ArrayCreationExpression new Name [ ]
 ArrayCreationExpression new Name [ Expression ]
-ArrayCreationExpression new PrimitiveType [ ]
 ArrayCreationExpression new PrimitiveType [ Expression ]
 
 
