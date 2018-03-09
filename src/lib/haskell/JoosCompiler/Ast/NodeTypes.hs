@@ -19,6 +19,7 @@ data Modifier
 
 data WholeProgram = WholeProgram
   { programPackages :: SubPackage
+  , programCus :: [CompilationUnit]
   } deriving (Eq)
 
 data SubPackage = SubPackage (Maybe Package) SubPackageMap

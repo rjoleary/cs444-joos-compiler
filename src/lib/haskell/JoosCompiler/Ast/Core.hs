@@ -37,6 +37,8 @@ cstsToAst ts = finalProgram
     packagedProgram = packageProgram transformedCompilationUnits
     finalProgram =
       packagedProgram
+      |> asAst
+      |> asTree
       |> canonicalizeProgram
       |> injectScopesIntoChildrenBlocks
 

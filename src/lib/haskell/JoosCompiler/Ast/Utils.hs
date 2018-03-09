@@ -47,7 +47,7 @@ qualifyTypeName u@(CompilationUnit _packageName _ (Just _typeDecl) _) =
 qualifyTypeName _ = error "Can't qualify a compilation unit without a class"
 
 resolvePackageFromProgram :: WholeProgram -> Name -> Maybe Package
-resolvePackageFromProgram (WholeProgram subPackage) _name =
+resolvePackageFromProgram (WholeProgram subPackage units) _name =
   lookupPackage _name subPackage
 
 lookupPackageFromSubPackageMap :: Name -> SubPackageMap -> Maybe Package

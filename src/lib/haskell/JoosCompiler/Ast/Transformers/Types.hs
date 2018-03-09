@@ -36,9 +36,7 @@ children (AstTypeDeclaration x) = (map AstField $ classFields x) ++
                                   (map AstMethod $ methods x) ++
                                   (map AstMethod $ constructors x)
 children (AstBlock x)           = []
-children (AstWholeProgram x)    = (map AstPackage $ findPackages $ programPackages x)
-  where findPackages (SubPackage x []) = maybeToList x
-        findPackages (SubPackage x xs) = maybeToList x ++ concatMap (findPackages . snd) xs
+children (AstWholeProgram (WholeProgram _ cus))    = (map AstCompilationUnit cus)
 children (AstCompilationUnit x) = (map AstImport $ imports x) ++
                                   (map AstTypeDeclaration $ maybeToList $ typeDecl x)
 children (AstConstructor x)     = error "AstConstructor not in final AST"

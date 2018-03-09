@@ -15,7 +15,8 @@ packageProgram unitNodes = Node program unitNodes
   where
     groupedByPackages = groupByPackage unitNodes
     subPackageMap = subPackageFromPackages groupedByPackages
-    program = AstWholeProgram $ WholeProgram subPackageMap
+    units = map (astCompilationUnit . rootLabel) unitNodes
+    program = AstWholeProgram $ WholeProgram subPackageMap units
 
 subPackageFromPackages :: [Package] -> SubPackage
 subPackageFromPackages packages = SubPackage defaultPackage subPackageMap
