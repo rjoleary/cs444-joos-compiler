@@ -42,32 +42,11 @@ typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodN
     _type = methodReturn method
 
 --typeExpression _ _ (Expression _ l@(Literal _type v)) = Expression _type l
-{-typeExpression _ _ (Expression _ s@(LiteralExpression (l t)))
-  | l == IntegerLiteral = Expression _typeInt s
-  | l == BooleanLiteral = Expression _typeBool s
-  | l == CharLiteral = Expression _typeChar s
-  | l == StringLiteral = Expression _typeString s
-  | l == NullLiteral = Expression Null (LiteralExpression NullLiteral)
-  | otherwise = error "LiteralExpression type is wrong"
-  where
-    _typeInt = Type
-               {innerType = Int
-               ,isArray = False
-               }
-    _typeBool = Type
-               {innerType = Boolean
-               ,isArray = False
-               }
-    _typeChar = Type
-               {innerType = Char
-               ,isArray = False
-               }
-    _typeString = Type
-               {innerType =  NamedType (["java","lang","String"])
-               ,isArray = False
-               }
--}
-------------------------BinaryOperation-------------------------------------------------------
+
+typeExpression _ _ (Expression _ s@(LiteralExpression l)) = Expression (getLiteralType l) s
+
+
+-----------------------BinaryOperation-------------------------------------------------------
 typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
   | and [(expressionType typedE1 ==  expressionType typedE2),
          (innerType (expressionType typedE1) `elem` [Int, Short, Byte]),
@@ -163,7 +142,6 @@ typeExpression cu scope(Expression t (ExpressionName n))
  -- where
  --  na = unNamedType(innerType (t)) --Name
  --  l = resolveInScope scope (head na)
-   
 
 
 
@@ -174,6 +152,38 @@ typeExpression cu scope(Expression t (ExpressionName n))
 
 
 
+
+getLiteralType :: Literal -> Type
+getLiteralType (IntegerLiteral _) = _type
+  where
+    _type = Type
+               {innerType = Int
+               ,isArray = False
+               }
+getLiteralType (BooleanLiteral _) = _type
+  where
+    _type = Type
+               {innerType = Boolean
+               ,isArray = False
+               }
+
+getLiteralType (CharacterLiteral _) = _type
+  where
+    _type = Type
+               {innerType = Char
+               ,isArray = False
+               }
+
+getLiteralType (StringLiteral _) = _type
+  where
+    _type = Type
+               {innerType =  NamedType (["java","lang","String"])
+               ,isArray = False
+               }
+
+getLiteralType (NullLiteral) = _type
+  where
+    _type = Null
 
 
 
@@ -188,4 +198,3 @@ typeExpression cu scope(Expression t (ExpressionName n))
      -- , localName = Name
      -- , localValue = Expression Type (Literal Type "3")
      -- }
-      
