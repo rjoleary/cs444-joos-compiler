@@ -112,7 +112,6 @@ resolveUnitInProgram :: WholeProgram -> Name -> Maybe CompilationUnit
 resolveUnitInProgram program name =
   find ((== name) . canonicalizeUnitName) $ programCus program
 
--- TODO(Ahmed)
 resolveMethod :: Name -> Method
 resolveMethod _ = Method _type [] "method" [] []
   where _type = Type Int False

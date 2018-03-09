@@ -35,7 +35,6 @@ typeAstExpressionsInner cu scope (Node n _children) =
   where
     typedChildren = map (typeAstExpressionsInner cu scope) _children
 
-
 typeExpression :: CompilationUnit -> Maybe Scope -> Expression -> Expression
 typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodName arguments))
   | (map localType $ methodParameters method) == (map expressionType typedArguments) = typedExpression
@@ -46,10 +45,7 @@ typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodN
     typedExpression = Expression _type (MethodInvocation parentObjectName methodName typedArguments)
     _type = methodReturn method
 
---typeExpression _ _ (Expression _ l@(Literal _type v)) = Expression _type l
-
 typeExpression _ _ (Expression _ s@(LiteralExpression l)) = Expression (getLiteralType l) s
-
 
 -----------------------BinaryOperation-------------------------------------------------------
 typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
@@ -163,7 +159,6 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
             ,isArray = False
             }
 
-
 typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
   | and [(operator `elem` [LazyAnd, LazyOr]),
         not (isArray (expressionType typedE1)),
@@ -179,10 +174,6 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
             }
     typedE1 = typeExpression cu scope e1
     typedE2 = typeExpression cu scope e2
-
-
-
-
 
 typeExpression cu scope (Expression _ (UnaryOperation operator e))
   | and [(operator == Not),
@@ -202,9 +193,7 @@ typeExpression cu scope (Expression _ (UnaryOperation operator e))
     _type2 = expressionType e
     typedE = typeExpression cu scope e
 
-
-
-------------          ExpressionName ------------------------
+--------------------- ExpressionName ------------------------
 typeExpression cu scope(Expression t (ExpressionName n))
 ---  | (&&) (not (isArray t) )  (na== n) = Expression localType(l) (ExpressionName n)
   | (&&) (not (isArray t) ) (unNamedType (innerType t) == n) = Expression t (ExpressionName n)
@@ -213,16 +202,11 @@ typeExpression cu scope(Expression t (ExpressionName n))
  --  na = unNamedType(innerType (t)) --Name
  --  l = resolveInScope scope (head na)
 
-
-
-
-
-
-
+-- Default Case
+typeExpression _ _ (Expression t n) = Expression t n
 
 isName :: InnerType -> Bool
 isName (NamedType _) = True
-
 
 getLiteralType :: Literal -> Type
 getLiteralType (IntegerLiteral _) = _type
@@ -255,17 +239,3 @@ getLiteralType (StringLiteral _) = _type
 getLiteralType (NullLiteral) = _type
   where
     _type = Null
-
-
-
-
-
-
-
---resolveInScope :: Scope -> String -> Local
---resolveInScope (Scope locals Nothing) "string" =  Local
-  --    { localType = Type
-    --  , localModifiers = []
-     -- , localName = Name
-     -- , localValue = Expression Type (Literal Type "3")
-     -- }
