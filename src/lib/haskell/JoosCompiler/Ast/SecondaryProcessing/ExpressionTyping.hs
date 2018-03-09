@@ -97,7 +97,7 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
         not (isArray (expressionType typedE1)),
         not (isArray (expressionType typedE2)),
         (innerType (expressionType typedE1) `elem` [Byte, Int, Short]),
-        (innerType (expressionType typedE1) `elem` [Byte, Int, Short])] =
+        (innerType (expressionType typedE2) `elem` [Byte, Int, Short])] =
       Expression _type (BinaryOperation operator typedE1 typedE2)
   | otherwise = error "Comparison operators expressions are invalid"
   where
@@ -108,6 +108,29 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
     typedE1 = typeExpression cu scope e1
     typedE2 = typeExpression cu scope e2
 
+typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
+  | and [(operator `elem` [Equality, Inequality]),
+        not (isArray (expressionType typedE1)),
+        not (isArray (expressionType typedE2)),
+        (innerType (expressionType typedE1)) == (innerType (expressionType typedE2)),
+        ((innerType (expressionType typedE1) `elem` [Byte, Int, Short]) ||
+        ((innerType (expressionType typedE1)) == Boolean) ||
+        (isName (innerType (expressionType typedE1))))
+        ] =
+      Expression _type (BinaryOperation operator typedE1 typedE2)
+  | and [(expressionType typedE1) == (expressionType typedE2),
+         (expressionType typedE1) == Null] =
+      Expression _type (BinaryOperation operator typedE1 typedE2)
+  | (innerType (expressionType typedE1)) == (innerType (expressionType typedE2)) =
+      Expression _type (BinaryOperation operator typedE1 typedE2)
+  | otherwise = error "Equality operators expressions are invalid"
+  where
+    _type = Type
+            {innerType = Boolean
+            ,isArray = False
+            }
+    typedE1 = typeExpression cu scope e1
+    typedE2 = typeExpression cu scope e2
 
 
 
@@ -151,7 +174,8 @@ typeExpression cu scope(Expression t (ExpressionName n))
 
 
 
-
+isName :: InnerType -> Bool
+isName (NamedType _) = True
 
 
 getLiteralType :: Literal -> Type
