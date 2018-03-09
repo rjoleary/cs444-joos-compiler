@@ -20,10 +20,10 @@ isName (NamedType _) = True
 isName _ = False
 
 isNumber :: Type -> Bool
-isNumber (Type Byte)  = True
-isNumber (Type Int)   = True
-isNumber (Type Short) = True
-isNumber _            = False
+isNumber (Type Byte False)  = True
+isNumber (Type Int False)   = True
+isNumber (Type Short False) = True
+isNumber _                  = False
 
 getLiteralType :: Literal -> Type
 getLiteralType = literalType
