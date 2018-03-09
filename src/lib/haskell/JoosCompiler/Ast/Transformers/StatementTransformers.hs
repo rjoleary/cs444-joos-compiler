@@ -15,7 +15,7 @@ statementTransformer transformedChildren t =
     scope = createScope transformedChildren
 
 createScope :: [AstNode] -> Scope
-createScope ts = Scope vars Nothing
+createScope ts = Scope vars Nothing []
   where
     varNodes = findDirectChildren1 isLocalVariable isBlock ts
     vars = map (astLocalVariable . rootLabel) varNodes

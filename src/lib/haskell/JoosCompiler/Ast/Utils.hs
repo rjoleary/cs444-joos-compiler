@@ -11,8 +11,8 @@ extractName :: [TaggedParseTree] -> Name
 extractName nameNodes = map (tokenString . rootLabel) nameNodes
 
 flattenScope :: Scope -> [Local]
-flattenScope (Scope locals (Just parent)) = locals ++ flattenScope parent
-flattenScope (Scope locals Nothing)       = locals
+flattenScope (Scope locals (Just parent) _) = locals ++ flattenScope parent
+flattenScope (Scope locals Nothing _)       = locals
 
 findAstChildrenByTokenName :: String -> AstNode -> [AstNode]
 findAstChildrenByTokenName name t@(Node (AstTaggedToken label) children) =

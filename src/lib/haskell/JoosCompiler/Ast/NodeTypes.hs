@@ -108,6 +108,7 @@ data InnerStatement
 data Scope = Scope
   { scopeLocals :: [Local]
   , parentScope :: Maybe Scope
+  , scopeCuName :: Name
   } deriving (Eq)
 
 data Local = Local
