@@ -102,11 +102,13 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
   | otherwise = error "Comparison operators expressions are invalid"
   where
     _type = Type
-            {innerType = Int
+            {innerType = Boolean
             ,isArray = False
             }
     typedE1 = typeExpression cu scope e1
     typedE2 = typeExpression cu scope e2
+
+
 
 
 
@@ -130,7 +132,6 @@ typeExpression cu scope (Expression _ (UnaryOperation operator e))
             }
     _type2 = expressionType e
     typedE = typeExpression cu scope e
-
 
 
 
