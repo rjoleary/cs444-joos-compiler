@@ -159,6 +159,21 @@ typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
             }
 
 
+typeExpression cu scope (Expression _ (BinaryOperation operator e1 e2))
+  | and [(operator `elem` [LazyAnd, LazyOr]),
+        not (isArray (expressionType typedE1)),
+        not (isArray (expressionType typedE2)),
+        ((innerType (expressionType typedE1)) == (innerType (expressionType typedE2))),
+        ((innerType (expressionType typedE1)) == Boolean)] =
+      Expression _type (BinaryOperation operator typedE1 typedE2)
+  where
+    _type = Type
+            {innerType = Boolean
+            ,isArray = False
+            }
+    typedE1 = typeExpression cu scope e1
+    typedE2 = typeExpression cu scope e2
+
 
 
 
