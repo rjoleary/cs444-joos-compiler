@@ -19,5 +19,11 @@ isName :: InnerType -> Bool
 isName (NamedType _) = True
 isName _ = False
 
+isNumber :: Type -> Bool
+isNumber (Type Byte)  = True
+isNumber (Type Int)   = True
+isNumber (Type Short) = True
+isNumber _            = False
+
 getLiteralType :: Literal -> Type
 getLiteralType = literalType
