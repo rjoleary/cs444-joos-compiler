@@ -17,17 +17,45 @@ import Types
 
 -- Returns a error message if hierarchy checking fails.
 checkTypes :: AstNode -> Either String ()
-checkTypes ast@(Node (AstWholeProgram program) children) = do
-
-  ruleFor expressions "Statement expression error" $
-    (applyFnToScopedExpression program getExpressionType)
+checkTypes ast@(Node (AstWholeProgram program) children) =
+  (foldEither $ flatten $ fmap checkStatementType $ stdFilter ast) >> return ()
 
   where
-    ruleFor nodes err f = addPrefix $ foldEither $ map f $ nodes
-      where addPrefix (Left x)  = Left (err ++ ": " ++ x)
-            addPrefix _         = Right ()
+    stdFilter (Node x@(AstCompilationUnit (CompilationUnit{cuPackage=("java":_)})) _) = Node x []
+    stdFilter (Node x xs) = Node x (map stdFilter xs)
 
     expressions = findScopedExpressions ast
+
+    getScope :: Expression -> Scope
+    getScope expr = fst $ head $ filter (\(_, e) -> e == expr) expressions
+
+    -- Short form
+    getExprType' e = getExpressionType program (getScope e) e
+
+    checkStatementType :: AstWrapper -> Either String ()
+
+    -- ExpressionStatement
+    checkStatementType (AstStatement (Statement s@ExpressionStatement{})) = do
+      exprType <- getExprType' $ statementExpression s
+      return ()
+
+    -- LoopStatement
+    checkStatementType (AstStatement (Statement LoopStatement{})) = do
+      return ()
+
+    -- IfStatement
+    checkStatementType (AstStatement (Statement IfStatement{})) = do
+      return ()
+
+    -- ReturnStatement
+    checkStatementType (AstStatement (Statement ReturnStatement{})) = do
+      return ()
+
+    -- LocalStatement
+    checkStatementType (AstStatement (Statement LocalStatement{})) = do
+      return ()
+
+    checkStatementType _ = return ()
 
 findScopedExpressions :: AstNode -> [(Scope, Expression)]
 findScopedExpressions t = f (Scope [] Nothing []) t
@@ -45,9 +73,3 @@ findScopedExpressions t = f (Scope [] Nothing []) t
 isBinaryOperation :: Expression -> Bool
 isBinaryOperation (Expression _ (BinaryOperation _ _ _)) = True
 isBinaryOperation _ = False
-
-applyFnToScopedExpression ::
-  WholeProgram -> (WholeProgram -> Scope -> Expression -> Either String b) -> (Scope, Expression) -> Either String ()
-applyFnToScopedExpression p f (s, e) = case (f p s e) of
-  Left err -> Left err
-  Right _  -> Right ()
