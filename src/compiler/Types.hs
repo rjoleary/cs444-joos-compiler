@@ -8,11 +8,18 @@ import Data.List
 import Data.Function
 import Data.List.Unique
 import Data.Either
+import Control.Monad
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.Utils
 import JoosCompiler.TreeUtils
+
+-- Collapse all the error messages into one error message.
+foldEither :: [Either a b] -> Either a [b]
+foldEither []           = Right []
+foldEither (Left x:xs)  = Left x
+foldEither (Right x:xs) = either Left (\xs -> Right (x:xs)) (foldEither xs)
 
 getType :: WholeProgram -> Scope -> Expression -> Type
 getType _ _ _ = Type Int False
@@ -52,7 +59,12 @@ getExpressionType wp s e@(Expression _ (FieldAccess primary name)) = do
       return (Type Int False) -- TODO: lookup
 
 -- JLS 15.12: Method Invocation Expressions
--- TODO
+getExpressionType wp s e@(Expression _ (MethodInvocation expr name argExprs)) = do
+  exprType <- getExpressionType wp s expr
+  when (not $ isReference exprType) (Left "Method may only be invoked on reference types")
+  argTypes <- foldEither $ map (getExpressionType wp s) argExprs
+  let lookupSignature = createLookupSignature name argTypes
+  return (Type Int False) -- TODO: lookup
 
 -- JLS 15.13: Array Access Expressions
 getExpressionType wp s e@(Expression _ (ArrayExpression arrayExpr sizeExpr)) = do
@@ -110,8 +122,11 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
     else Left ("Bad binary operator " ++ show e)
 
 -- JLS 15.20.2: Type Comparison Operator instanceof
--- TODO
-
+getExpressionType wp s e@(Expression _ (InstanceOfExpression expr t)) = do
+  exprType <- getExpressionType wp s expr
+  if (isReference exprType || exprType == Null) && (isReference t)
+    then return (Type Boolean False)
+    else Left ("Bad instanceof operator " ++ show e)
 
 -- TODO: some more expression remain
 getExpressionType _ _ _ = Right Void
@@ -133,9 +148,20 @@ isNumber (Type Int False)   = True
 isNumber (Type Short False) = True
 isNumber _                  = False
 
+isReference :: Type -> Bool
+isReference Null                   = True
+isReference (Type _ True)          = True
+isReference (Type (NamedType _) _) = True
+isReference _                      = False
+
 isBoolean :: Type -> Bool
 isBoolean (Type Boolean False) = True
 isBoolean _                    = False
 
 isString :: Type -> Bool
 isString t = typeSignature t == "java.lang.String"
+
+-- Create method signature suitable for lookup.
+createLookupSignature :: String -> [Type] -> String
+createLookupSignature name args =
+  methodSignature $ Method Void [] name (map (\t -> Local t [] "" $ emptyType This) args) []
