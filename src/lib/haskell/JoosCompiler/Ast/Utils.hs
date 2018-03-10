@@ -82,16 +82,18 @@ resolveTypeFromProgram program@(WholeProgram _ cus) name
 
 resolveInScope :: WholeProgram -> Scope -> String -> Either Field Local
 resolveInScope program scope name
-  | localMatch /= Nothing = Right $ fromJust localMatch
-  | resolvedField /= Nothing = Left $ fromJust resolvedField
+  | isThis = error "this"
+  | localMatch /= Nothing = Right $ fromMaybe (error "LocalMatch was nothing") localMatch
+  | resolvedField /= Nothing = Left $ fromMaybe (error "resolvedField was nothing") resolvedField
   | otherwise = error "Cannot resolve in scope"
   where
+    isThis = name == "this"
     localMatch = find (\l -> name == localName l) locals
     locals = flattenScope scope
     -- unitTypeName is the name of the class that this scope belongs to
     unitTypeName = scopeCuName scope
     maybeUnit = find ((== unitTypeName) . canonicalizeUnitName) $ programCus program
-    unit = fromJust maybeUnit
+    unit = fromMaybe (error "resolveInScope couldn't find unit") maybeUnit
     resolvedField = resolveFieldInProgramUnit program unit name
 
 resolveFieldInProgramUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
