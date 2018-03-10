@@ -170,14 +170,18 @@ getExpressionType wp s e@(Expression _ (InstanceOfExpression expr t)) = do
     then return (Type Boolean False)
     else Left ("Bad instanceof operator " ++ show e)
 
+{-
+
 getExpressionType wp s (Expression _ (ExpressionName name)) =
   return $ fromMaybe localType typeType
   where typeDecl = resolveTypeFromProgram wp name
         typeType = fmap (\x -> Type (NamedType [typeName x]) False) typeDecl
         localType = resolveToType wp s (showName name)
 
+-}
+
 -- TODO: some more expression remain
-getExpressionType _ _ _ = Right Void
+getExpressionType _ _ _ = return $ Type Int False
 
 
 ---------- Helper Functions ----------
