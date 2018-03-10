@@ -99,76 +99,69 @@ getExpressionType wp s e@(Expression _ (CastExpression t expr)) = do
   exprType <- getExpressionType wp s expr
   return $ t -- TODO: there are more rules
 
--- JLS 15.18.1: String Concatenation Operator (+)
--- JLS 15.18.2: Additive Operators (+) for Numeric Types
--- The + operator is done separately from the other binary operators because strings.
-getExpressionType wp s e@(Expression _ (BinaryOperation Add expr1 expr2)) = do
-  expr1Type <- getExpressionType wp s expr1
-  expr2Type <- getExpressionType wp s expr2
-  if isString expr1Type || isString expr2Type
-    then return (Type (NamedType ["java", "lang", "String"]) False)
-    else if isNumber expr1Type && isNumber expr2Type
-      then return (Type Int False) -- TODO: promotions
-      else Left ("Bad addition types " ++ show e)
+-- Binary Operations
+getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
 
--- JLS 15.18.2: Additive Operators (-) for Numeric Types
-getExpressionType wp s e@(Expression _ (BinaryOperation Subtract expr1 expr2)) = do
-  expr1Type <- getExpressionType wp s expr1
-  expr2Type <- getExpressionType wp s expr2
-  if isNumber expr1Type && isNumber expr2Type
-      then return (Type Int False) 
+  -- JLS 15.17: Multiplicative Operators (*, /, %)
+  | op `elem` [Multiply, Divide, Modulus] = do
+    expr1Type <- getExpressionType wp s expr1
+    expr2Type <- getExpressionType wp s expr2
+    if isNumber expr1Type && isNumber expr2Type
+      then return (Type Int False)
+      else Left ("Bad multiplicative types" ++ show e)
+
+  -- JLS 15.18.1: String Concatenation Operator (+)
+  -- JLS 15.18.2: Additive Operators (+) for Numeric Types
+  | op `elem` [Add] = do
+    expr1Type <- getExpressionType wp s expr1
+    expr2Type <- getExpressionType wp s expr2
+    if isString expr1Type || isString expr2Type
+      then return (Type (NamedType ["java", "lang", "String"]) False)
+      else if isNumber expr1Type && isNumber expr2Type
+        then return (Type Int False) -- TODO: promotions
+        else Left ("Bad addition types " ++ show e)
+
+  -- JLS 15.18.2: Additive Operators (-) for Numeric Types
+  | op `elem` [Subtract] = do
+    expr1Type <- getExpressionType wp s expr1
+    expr2Type <- getExpressionType wp s expr2
+    if isNumber expr1Type && isNumber expr2Type
+      then return (Type Int False)
       else Left ("Bad Subtract types " ++ show e)
 
--- JLS 15.17: Multiplicative Operators (*, /, %)
-getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
-  expr1Type <- getExpressionType wp s expr1
-  expr2Type <- getExpressionType wp s expr2
-  if ((isNumber expr1Type && isNumber expr2Type) &&
-     (op `elem` [Multiply, Divide, Modulus]))
-    then return (Type Int False)
-    else Left ("Bad multiplicative types" ++ show e)
-    
--- JLS 15.20: Relational Operators (<, >, <=, >=)
-getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
-  expr1Type <- getExpressionType wp s expr1
-  expr2Type <- getExpressionType wp s expr2
-  if ((isNumber expr1Type && isNumber expr2Type) &&
-     (op `elem` [Less, Greater, LessEqual, GreaterEqual]))
-    then return (Type Boolean False)
-    else Left ("Bad relational types" ++ show e)
-    
--- JLS 15.21: Equality Operators (==, !=)
-getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
-  expr1Type <- getExpressionType wp s expr1
-  expr2Type <- getExpressionType wp s expr2
-  if (((isNumber expr1Type && isNumber expr2Type) ||
-     (isBoolean expr1Type && isBoolean expr2Type) ||
-     (isReference expr1Type && isReference expr2Type)) &&
-     (op `elem` [Equality, Inequality]))
-     then return (Type Boolean False)
-     else Left ("Bad Equality types " ++ show e)
+  -- JLS 15.20: Relational Operators (<, >, <=, >=)
+  | op `elem` [Less, Greater, LessEqual, GreaterEqual] = do
+    expr1Type <- getExpressionType wp s expr1
+    expr2Type <- getExpressionType wp s expr2
+    if (isNumber expr1Type && isNumber expr2Type)
+      then return expr1Type -- TODO: more checks are required
+      else Left ("Bad binary operator " ++ show e)
 
+  -- JLS 15.21: Equality Operators (==, !=)
+  | op `elem` [Equality, Inequality] = do
+    expr1Type <- getExpressionType wp s expr1
+    expr2Type <- getExpressionType wp s expr2
+    if (expr1Type == expr2Type)
+       then return (Type Boolean False)
+       else Left ("Bad Equality types " ++ show e)
 
--- JLS 15.22.2: Boolean Logical Operators &, ^, and |
+  -- JLS 15.22.2: Boolean Logical Operators &, ^, and |
+  -- JLS 15.23: Conditional-And Operator (&&)
+  -- JLS 15.24: Conditional-Or Operator (||)
+  | op `elem` [LazyAnd, LazyOr, And, Or] = do
+    expr1Type <- getExpressionType wp s expr1
+    expr2Type <- getExpressionType wp s expr2
+    if (isBoolean expr1Type && isBoolean expr2Type)
+      then return expr1Type -- TODO: more checks are required
+      else Left ("Bad binary operator " ++ show e)
 
--- JLS 15.23: Conditional-And Operator (&&)
--- JLS 15.24: Conditional-Or Operator (||)
-getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
-  expr1Type <- getExpressionType wp s expr1
-  expr2Type <- getExpressionType wp s expr2
-  if (isBoolean expr1Type && isBoolean expr2Type &&
-      (op `elem` [LazyAnd, LazyOr]))
-    then return expr1Type 
-    else Left ("Bad lazy conditional operators " ++ show e)
-
-
--- JLS 15.26: Assignment Operators (=)
-getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
-  expr1Type <- getExpressionType wp s expr1
-  expr2Type <- getExpressionType wp s expr2
-  if expr1Type == expr2Type
-    then return expr1Type -- TODO: more checks are required
-    else Left ("Bad binary operator " ++ show e)
+  -- JLS 15.26: Assignment Operators (=)
+  | op `elem` [Assign] = do
+    expr1Type <- getExpressionType wp s expr1
+    expr2Type <- getExpressionType wp s expr2
+    if expr1Type == expr2Type
+      then return expr1Type -- TODO: more checks are required
+      else Left ("Bad binary operator " ++ show e)
 
 -- JLS 15.20.2: Type Comparison Operator instanceof
 getExpressionType wp s e@(Expression _ (InstanceOfExpression expr t)) = do
