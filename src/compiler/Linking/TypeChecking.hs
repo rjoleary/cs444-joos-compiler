@@ -19,13 +19,13 @@ import Types
 checkTypes :: AstNode -> Either String ()
 checkTypes ast@(Node (AstWholeProgram program) children) = do
 
-  ruleFor expressions "Binary operation error" $
+  ruleFor expressions "Statement expression error" $
     (applyFnToScopedExpression program getExpressionType)
 
   where
-    ruleFor nodes err f = asEither $ filter (not . f) $ nodes
-      where asEither (x:_) = Left ("Error: " ++ err)
-            asEither []    = Right ()
+    ruleFor nodes err f = addPrefix $ foldEither $ map f $ nodes
+      where addPrefix (Left x)  = Left (err ++ ": " ++ x)
+            addPrefix _         = Right ()
 
     expressions = findScopedExpressions ast
 
@@ -47,7 +47,7 @@ isBinaryOperation (Expression _ (BinaryOperation _ _ _)) = True
 isBinaryOperation _ = False
 
 applyFnToScopedExpression ::
-  WholeProgram -> (WholeProgram -> Scope -> Expression -> Either a b) -> (Scope, Expression) -> Bool
+  WholeProgram -> (WholeProgram -> Scope -> Expression -> Either String b) -> (Scope, Expression) -> Either String ()
 applyFnToScopedExpression p f (s, e) = case (f p s e) of
-  Left _ -> False
-  Right _ -> True
+  Left err -> Left err
+  Right _  -> Right ()

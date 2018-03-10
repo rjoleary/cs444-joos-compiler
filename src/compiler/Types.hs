@@ -1,6 +1,7 @@
 module Types
   ( getType
   , getExpressionType
+  , foldEither
   ) where
 
 import Data.Tree
@@ -61,7 +62,8 @@ getExpressionType wp s e@(Expression _ (FieldAccess primary name)) = do
 -- JLS 15.12: Method Invocation Expressions
 getExpressionType wp s e@(Expression _ (MethodInvocation expr name argExprs)) = do
   exprType <- getExpressionType wp s expr
-  when (not $ isReference exprType) (Left "Method may only be invoked on reference types")
+  when (not $ isReference exprType)
+    (Left $ "Method may only be invoked on reference types " ++ show e)
   argTypes <- foldEither $ map (getExpressionType wp s) argExprs
   let lookupSignature = createLookupSignature name argTypes
   return (Type Int False) -- TODO: lookup

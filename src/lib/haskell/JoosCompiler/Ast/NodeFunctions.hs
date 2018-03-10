@@ -112,7 +112,7 @@ instance Show Expression where
   show Expression{innerExpression=e} = show e
 
 instance Show InnerExpression where
-  show (MethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ ")"
+  show (MethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
   show (BinaryOperation op e1 e2)     = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
   show (UnaryOperation op e)          = "(" ++ show op ++ show e ++ ")"
   show (LiteralExpression v)          = "(" ++ show v ++ ")"
