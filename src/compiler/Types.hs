@@ -112,6 +112,17 @@ getExpressionType wp s e@(Expression _ (BinaryOperation Add expr1 expr2)) = do
 -- JLS 15.17: Multiplicative Operators (*, /, %)
 -- JLS 15.20: Relational Operators (<, >, <=, >=)
 -- JLS 15.21: Equality Operators (==, !=)
+getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
+  expr1Type <- getExpressionType wp s expr1
+  expr2Type <- getExpressionType wp s expr2
+  if (((isNumber expr1Type && isNumber expr2Type) ||
+     (isBoolean expr1Type && isBoolean expr2Type) ||
+     (isReference expr1Type && isReference expr2Type)) &&
+     (op `elem` [Equality, Inequality]))
+     then return (Type Boolean False)
+     else Left ("Bad Equality types " ++ show e)
+
+
 -- JLS 15.22.2: Boolean Logical Operators &, ^, and |
 -- JLS 15.23: Conditional-And Operator (&&)
 -- JLS 15.24: Conditional-Or Operator (||)
