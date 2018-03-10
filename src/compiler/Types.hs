@@ -3,13 +3,14 @@ module Types
   , getExpressionType
   , foldEither
   , isName
-  , isNumber
+  , isNumeric
   , isReference
   , isPrimitive
   , isBoolean
   , isString
   ) where
 
+import Data.Char
 import Data.Tree
 import Data.List
 import Data.Function
@@ -54,7 +55,7 @@ getExpressionType wp s e@(Expression _ (NewExpression name arguments))
 -- JLS 15.10: Array Creation Expressions
 getExpressionType wp s e@(Expression _ (NewArrayExpression t sizeExpr)) = do
   sizeType <- getExpressionType wp s sizeExpr
-  if isNumber sizeType
+  if isNumeric sizeType
     then return t
     else Left ("Array size must be numeric type " ++ show e)
 
@@ -82,14 +83,14 @@ getExpressionType wp s e@(Expression _ (ArrayExpression arrayExpr sizeExpr)) = d
   if not $ isArray arrayType
     then Left ("Can only perform array access on an array " ++ show e)
     else do
-      if not $ isNumber sizeExpr
+      if not $ isNumeric sizeExpr
         then Left ("Can only perform array access with numbers " ++ show e)
         else return (toScalar arrayType)
 
 -- JLS 15.15.4: Unary Minus Operator (-)
 getExpressionType wp s e@(Expression _ (UnaryOperation Negate expr)) = do
   exprType <- getExpressionType wp s expr
-  if not $ isNumber exprType
+  if not $ isNumeric exprType
     then Left ("Can only negate numeric types " ++ show e)
     else return (Type Int False) -- promotion
 
@@ -112,7 +113,7 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
   | op `elem` [Multiply, Divide, Modulus] = do
     expr1Type <- getExpressionType wp s expr1
     expr2Type <- getExpressionType wp s expr2
-    if isNumber expr1Type && isNumber expr2Type
+    if isNumeric expr1Type && isNumeric expr2Type
       then return (Type Int False)
       else Left ("Bad multiplicative types" ++ show e)
 
@@ -123,7 +124,7 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
     expr2Type <- getExpressionType wp s expr2
     if isString expr1Type || isString expr2Type
       then return (Type (NamedType ["java", "lang", "String"]) False)
-      else if isNumber expr1Type && isNumber expr2Type
+      else if isNumeric expr1Type && isNumeric expr2Type
         then return (Type Int False) -- TODO: promotions
         else Left ("Bad addition types " ++ show e)
 
@@ -131,7 +132,7 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
   | op `elem` [Subtract] = do
     expr1Type <- getExpressionType wp s expr1
     expr2Type <- getExpressionType wp s expr2
-    if isNumber expr1Type && isNumber expr2Type
+    if isNumeric expr1Type && isNumeric expr2Type
       then return (Type Int False)
       else Left ("Bad Subtract types " ++ show e)
 
@@ -139,8 +140,8 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
   | op `elem` [Less, Greater, LessEqual, GreaterEqual] = do
     expr1Type <- getExpressionType wp s expr1
     expr2Type <- getExpressionType wp s expr2
-    if (isNumber expr1Type && isNumber expr2Type)
-      then return expr1Type -- TODO: more checks are required
+    if (isNumeric expr1Type && isNumeric expr2Type)
+      then return (Type Boolean False) -- TODO: more checks are required
       else Left ("Bad binary operator " ++ show e)
 
   -- JLS 15.21: Equality Operators (==, !=)
@@ -158,7 +159,7 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
     expr1Type <- getExpressionType wp s expr1
     expr2Type <- getExpressionType wp s expr2
     if (isBoolean expr1Type && isBoolean expr2Type)
-      then return expr1Type -- TODO: more checks are required
+      then return (Type Boolean False) -- TODO: more checks are required
       else Left ("Bad binary operator " ++ show e)
 
   -- JLS 15.26: Assignment Operators (=)
@@ -186,7 +187,9 @@ getExpressionType wp s (Expression _ (ExpressionName name)) =
 
 -}
 
--- TODO: some more expression remain
+getExpressionType wp s (Expression _ (ExpressionName name)) =
+  return $ Type Int False -- TODO: this is wrong
+
 getExpressionType _ _ _ = return $ Type Int False
 
 
@@ -199,12 +202,12 @@ isName :: Type -> Bool
 isName (Type (NamedType _) False) = True
 isName _                          = False
 
-isNumber :: Type -> Bool
-isNumber (Type Char False)  = True
-isNumber (Type Byte False)  = True
-isNumber (Type Int False)   = True
-isNumber (Type Short False) = True
-isNumber _                  = False
+isNumeric :: Type -> Bool
+isNumeric (Type Char False)  = True
+isNumeric (Type Byte False)  = True
+isNumeric (Type Int False)   = True
+isNumeric (Type Short False) = True
+isNumeric _                  = False
 
 isReference :: Type -> Bool
 isReference Null                   = True
