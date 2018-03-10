@@ -1,5 +1,6 @@
 module Types
   ( getType
+  , getExpressionType
   ) where
 
 import Data.Tree
