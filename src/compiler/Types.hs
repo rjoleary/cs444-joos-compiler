@@ -2,6 +2,12 @@ module Types
   ( getType
   , getExpressionType
   , foldEither
+  , isName
+  , isNumber
+  , isReference
+  , isPrimitive
+  , isBoolean
+  , isString
   ) where
 
 import Data.Tree

@@ -6,6 +6,7 @@ import Data.Tree
 import Data.List
 import Data.Function
 import Data.List.Unique
+import Control.Monad
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
@@ -40,20 +41,26 @@ checkTypes ast@(Node (AstWholeProgram program) children) =
       return ()
 
     -- LoopStatement
-    checkStatementType (AstStatement (Statement LoopStatement{})) = do
-      return ()
+    checkStatementType (AstStatement (Statement s@LoopStatement{})) = do
+      predicateType <- getExprType' $ loopPredicate s
+      when (not $ isBoolean $ predicateType)
+        (Left "Loop predicate must be a boolean")
 
     -- IfStatement
-    checkStatementType (AstStatement (Statement IfStatement{})) = do
-      return ()
+    checkStatementType (AstStatement (Statement s@IfStatement{})) = do
+      predicateType <- getExprType' $ ifPredicate s
+      when (not $ isBoolean $ predicateType)
+        (Left "If predicate must be a boolean")
 
     -- ReturnStatement
-    checkStatementType (AstStatement (Statement ReturnStatement{})) = do
-      return ()
+    checkStatementType (AstStatement (Statement ReturnStatement{returnExpression=Just e})) = do
+      returnType <- getExprType' $ e
+      when (returnType == Void) (Left "Cannot return void")
 
     -- LocalStatement
-    checkStatementType (AstStatement (Statement LocalStatement{})) = do
-      return ()
+    checkStatementType (AstStatement (Statement (LocalStatement l))) = do
+      exprType <- getExprType' $ localValue l
+      when (exprType /= localType l) (Left "Local statement type doesn't match")
 
     checkStatementType _ = return ()
 
