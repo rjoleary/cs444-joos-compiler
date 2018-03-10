@@ -110,7 +110,7 @@ getExpressionType wp s e@(Expression _ (BinaryOperation Add expr1 expr2)) = do
     else if isNumber expr1Type && isNumber expr2Type
       then return (Type Int False) -- TODO: promotions
       else Left ("Bad addition types " ++ show e)
-           
+
 -- JLS 15.18.2: Additive Operators (-) for Numeric Types
 getExpressionType wp s e@(Expression _ (BinaryOperation Subtract expr1 expr2)) = do
   expr1Type <- getExpressionType wp s expr1
@@ -118,7 +118,6 @@ getExpressionType wp s e@(Expression _ (BinaryOperation Subtract expr1 expr2)) =
   if isNumber expr1Type && isNumber expr2Type
       then return (Type Int False) 
       else Left ("Bad Subtract types " ++ show e)
-
 
 -- JLS 15.17: Multiplicative Operators (*, /, %)
 getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
@@ -137,6 +136,7 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
      (op `elem` [Less, Greater, LessEqual, GreaterEqual]))
     then return (Type Boolean False)
     else Left ("Bad relational types" ++ show e)
+    
 -- JLS 15.21: Equality Operators (==, !=)
 getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
   expr1Type <- getExpressionType wp s expr1
@@ -150,8 +150,18 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
 
 
 -- JLS 15.22.2: Boolean Logical Operators &, ^, and |
+
 -- JLS 15.23: Conditional-And Operator (&&)
 -- JLS 15.24: Conditional-Or Operator (||)
+getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
+  expr1Type <- getExpressionType wp s expr1
+  expr2Type <- getExpressionType wp s expr2
+  if (isBoolean expr1Type && isBoolean expr2Type &&
+      (op `elem` [LazyAnd, LazyOr]))
+    then return expr1Type 
+    else Left ("Bad lazy conditional operators " ++ show e)
+
+
 -- JLS 15.26: Assignment Operators (=)
 getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2)) = do
   expr1Type <- getExpressionType wp s expr1
