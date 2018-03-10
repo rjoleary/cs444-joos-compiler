@@ -9,6 +9,7 @@ import Data.List
 import Data.Function
 import Data.List.Unique
 import Data.Either
+import Data.Maybe
 import Control.Monad
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
@@ -94,7 +95,9 @@ getExpressionType wp s e@(Expression _ (UnaryOperation Not expr)) = do
     else return exprType
 
 -- JLS 15.16: Cast Expressions
--- TODO
+getExpressionType wp s e@(Expression _ (CastExpression t expr)) = do
+  exprType <- getExpressionType wp s expr
+  return $ t -- TODO: there are more rules
 
 -- JLS 15.18.1: String Concatenation Operator (+)
 -- JLS 15.18.2: Additive Operators (+) for Numeric Types
@@ -141,8 +144,11 @@ getExpressionType wp s e@(Expression _ (InstanceOfExpression expr t)) = do
     then return (Type Boolean False)
     else Left ("Bad instanceof operator " ++ show e)
 
-getExpressionType wp s e@(Expression _ (ExpressionName name)) =
-  return $ resolveToType wp s (showName name)
+getExpressionType wp s (Expression _ (ExpressionName name)) =
+  return $ fromMaybe localType typeType
+  where typeDecl = resolveTypeFromProgram wp name
+        typeType = fmap (\x -> Type (NamedType [typeName x]) False) typeDecl
+        localType = resolveToType wp s (showName name)
 
 -- TODO: some more expression remain
 getExpressionType _ _ _ = Right Void
@@ -169,6 +175,14 @@ isReference Null                   = True
 isReference (Type _ True)          = True
 isReference (Type (NamedType _) _) = True
 isReference _                      = False
+
+isPrimitive :: Type -> Bool
+isPrimitive (Type Boolean False) = True
+isPrimitive (Type Byte False)    = True
+isPrimitive (Type Char False)    = True
+isPrimitive (Type Int False)     = True
+isPrimitive (Type Short False)   = True
+isPrimitive _                    = False
 
 isBoolean :: Type -> Bool
 isBoolean (Type Boolean False) = True
