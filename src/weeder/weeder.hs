@@ -130,11 +130,19 @@ interfaceMethodNotStaticFinalOrNative tree =
 
 -- 12 Every class must contain at least one explicit constructor.
 -- This works because Joos has at most one type per file.
-classAtLeastOneConstructor :: UntaggedParseTree -> Bool
-classAtLeastOneConstructor tree = null constructors && not (null classes)
+constructorNameAndCount :: ClassName -> TaggedParseTree -> Bool
+constructorNameAndCount c tree = any (/=c) names || length constructors < length classNodes
   where
-    constructors = findChildren "ConstructorDeclaration" tree
-    classes = findChildren "ClassDeclaration" tree
+    classNodes = findChildren1 kClassDeclaration tree
+    constructors = findChildren1 "ConstructorDeclaration" tree
+    names = map getConstructorName constructors
+    getConstructorName :: TaggedParseTree -> String
+    getConstructorName (Node _ children) = tokenString identifier
+      where
+        identifier = rootLabel $ declaratorChildren !! 0
+        declaratorChildren = subForest declaratorNode
+        declaratorNode = children !! 1
+
 
 -- 13 No field can be final.
 noFinalField :: UntaggedParseTree -> Bool
@@ -210,7 +218,6 @@ untaggedRules =
   , staticMethodNotFinal
   , nativeMethodStatic
   , interfaceMethodNotStaticFinalOrNative
-  , classAtLeastOneConstructor
   , noFinalField
   , castExpression
   , packagePrivateClass
@@ -218,7 +225,7 @@ untaggedRules =
   ]
 
 taggedRules :: [ClassName -> TaggedParseTree -> Bool]
-taggedRules = [classnameSameAsFilename, integerWithinRange]
+taggedRules = [classnameSameAsFilename, integerWithinRange, constructorNameAndCount]
 
 untaggedWeed :: UntaggedParseTree -> Bool
 untaggedWeed tree = or $ map (\f -> f tree) untaggedRules
