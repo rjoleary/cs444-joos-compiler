@@ -56,8 +56,8 @@ getExpressionType wp s e@(Expression _ (FieldAccess primary name)) = do
   classType <- getExpressionType wp s primary
   if not $ isName classType -- TODO: arrays have a length field
     then Left ("Can only access fields of reference types " ++ show e)
-    else do
-      return (Type Int False) -- TODO: lookup
+    else return $ Type Int False
+    --else return $ resolveToType wp s name -- TODO: wrong resolve
 
 -- JLS 15.12: Method Invocation Expressions
 getExpressionType wp s e@(Expression _ (MethodInvocation expr name argExprs)) = do
@@ -130,6 +130,9 @@ getExpressionType wp s e@(Expression _ (InstanceOfExpression expr t)) = do
     then return (Type Boolean False)
     else Left ("Bad instanceof operator " ++ show e)
 
+getExpressionType wp s e@(Expression _ (ExpressionName name)) =
+  return $ resolveToType wp s (showName name)
+
 -- TODO: some more expression remain
 getExpressionType _ _ _ = Right Void
 
@@ -167,3 +170,13 @@ isString t = typeSignature t == "java.lang.String"
 createLookupSignature :: String -> [Type] -> String
 createLookupSignature name args =
   methodSignature $ Method Void [] name (map (\t -> Local t [] "" $ emptyType This) args) []
+
+-- Fields and Locals are essentially the same and are combined here.
+resolveAsLocal :: WholeProgram -> Scope -> String -> Local
+resolveAsLocal wp s name = asLocal $ resolveInScope wp s name
+  where
+    asLocal (Left (Field a b c d)) = Local a b c d
+    asLocal (Right x)              = x
+
+resolveToType :: WholeProgram -> Scope -> String -> Type
+resolveToType wp s name = localType $ resolveAsLocal wp s name
