@@ -12,6 +12,7 @@ import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.Transformers.Types
 import JoosCompiler.Ast.Utils
+import JoosCompiler.Error
 import JoosCompiler.TreeUtils
 import Linking.TypeChecking.BinaryOperation
 import Types
