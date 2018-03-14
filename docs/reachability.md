@@ -39,8 +39,8 @@ Assignment 4
 
 ### Initialization:
 Every local variable must have an initializer, and the variable must not occur in its own initializer.
-    *1.* each local variable must have an initializer. It is solved by AST, if it doesn't do it, this local variable cause an error: parse error on token ; Expected one of : =
-    *2.* the variable must not occur in its own initializer. For all localstatement, recursively check whether its children have the same Type as localStatement has.
+    *1 each local variable must have an initializer. It is solved by AST, if it doesn't do it, this local variable cause an error: parse error on token ; Expected one of : =
+    *2 the variable must not occur in its own initializer. For all localstatement, recursively check whether its children have the same Type as localStatement has.
 
 
 
