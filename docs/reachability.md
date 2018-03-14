@@ -1,7 +1,7 @@
 Assignment 4 
 ### Note:
 * If all the steps are carried out as described, with no indication of abrupt completion, the statement is said to `complete normally`. However, certain events may prevent a statement from completing normally: 
-		*The return statements causes a transfer of control that may prevent normal completion of statements that contain them.
+		* The return statements causes a transfer of control that may prevent normal completion of statements that contain them.
 * If such an event occurs, then execution of one or more statements may be terminated before all steps of their normal mode of execution have completed, such statements are said to `complete abruptly`.	
 		1. A return with no value
         2. A return with a given value
@@ -13,21 +13,17 @@ Assignment 4
 ### Reachability-check:
 * The block that is the body of a constructor, method, instance initializer or static initializer is reachable; 
 * EB = empty block
-		EB can complete normally, iff it is reachable.
-		Non-eb can complete normally, iff the last stmt in it can complete normally.
-		The 1st stmt in a non-bm is reachable, iff the block is reachable.
-		All stmt S(except the first) is reachable, iff the statement preceding S can completely normally.
+		* EB can complete normally, iff it is reachable.
+		* Non-eb can complete normally, iff the last stmt in it can complete normally.
+		* The 1st stmt in a non-bm is reachable, iff the block is reachable.
+		* All stmt S(except the first) is reachable, iff the statement preceding S can completely normally.
 * A local class declaration statement can complete normally iff it is reachable
 * A local variable declaration statement can complete normally iff it is reachable
-* An empty stmt can complete normally, iff it is reachable
-6u. An expression statement can complete normally iff it is reachable
-* A while stmt can complete normally, iff the while stmt is reachable && the condition expression is not a constant expression with value true.
-   The contained stmt is reachable, iff the while stmt is reachable and the condition expression is not a constant expression whose value is false
-* A for stmt can complete normally, iff the for stmt is reachable, there is a condition expression, and the condition expression is not a constant expression with value true.
-   The contained statement is reachable iff the for statement is reachable and the condtion expression is not a constant expression whose value is false.
-* An if-then stmt can complete normally, iff it is reachable. The then-statement is reachable iff the if-then is reachable.
-  An if-then-else stmt can complete normally, iff the then-stmt can complete normally or the else-stmt can complete normally. The then-statement is reachable iff the if-then-else stmt is reachable. The else-stmt is reachable iff the if-then-else stmt is reachable.
-
+* An empty stmt can complete normally, iff it is reachable. An expression statement can complete normally iff it is reachable
+* A while stmt and contained stmts are reachable, iff `while` statement is reachable and condition expression is not constant expression with value True or False.
+* A for stmt and contained stmts are reachable, iff `for` statement is reachable and condition expression is not constant expression with value True or False.
+* An if-then stmt: the then-statement is reachable iff the if-then is reachable.
+* An if-then-else stmt: The then-statement or else-statement is reachable iff the if-then-else stmt is reachable. 
 
 ### what we need for RC now:
 * If predicate must be a boolean: but the predicate can be initilized in constructor and method declaration 
@@ -42,8 +38,9 @@ Assignment 4
      * test/marmoset/a4/positive/J1_reachability_return... FAILED
 
 * Local statement type doesn't match
-     * test/marmoset/a4/positive/J1_unreachableAutomation.java... FAILED
-     * test/marmoset/a4/positive/J1_Unreachable.java... FAILED
+     * test/marmoset/a4/positive/J1_unreachableAutomation.java... FAILED   ->TODO not sure yet
+     * test/marmoset/a4/positive/J1_Unreachable.java... FAILED   -> check the type of variables in condition expression
+     
 * Negative tests
      * test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturn.java... FAILED => no stmt after return in if block
      * test/marmoset/a4/negative/Je_7_Reachability_AfterElseReturn.java... FAILED => no stmt after return in else block
@@ -59,9 +56,9 @@ Assignment 4
      * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_ConstantFolding.java... FAILED
      * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_Empty.java... FAILED
  
-     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue_ConstantFolding.java... FAILED
-     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue.java... FAILED
-     * test/marmoset/a4/negative/Je_7_Return_IfElseIf.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue_ConstantFolding.java... FAILED  => constant expression with value of True
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue.java... FAILED                  => constant expression with value of True
+     * test/marmoset/a4/negative/Je_7_Return_IfElseIf.java... FAILED                         => TODO: not sure why how to judge this test
      * test/marmoset/a4/negative/Je_7_Return_MissingInElse.java... FAILED
      * test/marmoset/a4/negative/Je_8_DefiniteAssignment_ComplexInitializer.java... FAILED
      * test/marmoset/a4/negative/Je_8_DefiniteAssignment_FieldWithSameName.java... FAILED
