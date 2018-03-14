@@ -2,7 +2,7 @@ Assignment 4
 ### Note:
 * If all the steps are carried out as described, with no indication of abrupt completion, the statement is said to `complete normally`. However, certain events may prevent a statement from completing normally: 
 		*The return statements causes a transfer of control that may prevent normal completion of statements that contain them.
-* If such an event occurs, then execution of one or more statements may be terminated before all steps of their normal mode of execution have completed, such statements are said to `complete abruptly***.	
+* If such an event occurs, then execution of one or more statements may be terminated before all steps of their normal mode of execution have completed, such statements are said to `complete abruptly`.	
 		**A return with no value
         **A return with a given value
 
