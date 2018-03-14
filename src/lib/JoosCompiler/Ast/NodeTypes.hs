@@ -1,8 +1,5 @@
 module JoosCompiler.Ast.NodeTypes where
 
-import           Data.List
-import           Data.Maybe
-
 type Name = [String]
 
 ---------- Packages, Types and Methods ----------

@@ -231,7 +231,7 @@ createLookupSignature name args =
 
 -- Fields and Locals are essentially the same and are combined here.
 resolveAsLocal :: WholeProgram -> Scope -> String -> Local
-resolveAsLocal wp s name = asLocal $ resolveInScope wp s name
+resolveAsLocal wp s name = asLocal $ resolveInScope wp s [name]
   where
     asLocal (Left (Field a b c d)) = Local a b c d
     asLocal (Right x)              = x
