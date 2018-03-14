@@ -6,11 +6,11 @@ Assignment 4
 		1. A return with no value
         2. A return with a given value
 
-* ConstantExpression: 
+* ConstantExpression(JLS 15.28): 
 
 
 
-### Reachability-check:
+### Reachability-check(JLS 14.20):
 * The block that is the body of a constructor, method, instance initializer or static initializer is reachable; 
 * EB = empty block
 		* EB can complete normally, iff it is reachable.
@@ -42,27 +42,30 @@ Assignment 4
      * test/marmoset/a4/positive/J1_Unreachable.java... FAILED   -> check the type of variables in condition expression
      
 * Negative tests
-     * test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturn.java... FAILED => no stmt after return in if block
-     * test/marmoset/a4/negative/Je_7_Reachability_AfterElseReturn.java... FAILED => no stmt after return in else block
-     * test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturnElseReturn.java... FAILED => if if and else both have return stmt, then no more stmts after return in the main block
-     * test/marmoset/a4/negative/Je_7_Reachability_AfterReturn_Constructor.java... FAILED => no constructor after return
-     * test/marmoset/a4/negative/Je_7_Reachability_AfterReturnEmptyBlock.java... FAILED  => no empty block after return
-     * test/marmoset/a4/negative/Je_7_Reachability_AfterValueReturn.java... FAILED    => no stmt after return
-     * test/marmoset/a4/negative/Je_7_Reachability_AfterVoidReturn.java... FAILED     => no stmt after return
-     * test/marmoset/a4/negative/Je_7_Reachability_EmptyValueMethod.java... FAILED    => 
-     * test/marmoset/a4/negative/Je_7_Reachability_ForFalse_1.java... FAILED
-     * test/marmoset/a4/negative/Je_7_Reachability_ForFalse_2.java... FAILED
-     * test/marmoset/a4/negative/Je_7_Reachability_ReturnReturn.java... FAILED => no stmt after return, no return followed by return
-     * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_ConstantFolding.java... FAILED
-     * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_Empty.java... FAILED
- 
-     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue_ConstantFolding.java... FAILED  => constant expression with value of True
-     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue.java... FAILED                  => constant expression with value of True
+#### nothing after return
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturn.java... FAILED => no stmt can be reachable after return in if block
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterElseReturn.java... FAILED => no stmt can be reachable after return in else block
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturnElseReturn.java... FAILED => if `if and else` both have return stmt, then no stmts after return in the main block can be reachable
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterReturn_Constructor.java... FAILED => no constructor after return can be reachable
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterReturnEmptyBlock.java... FAILED  => no empty block after return can be reachable
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterValueReturn.java... FAILED    => no stmt after return can be reachable
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterVoidReturn.java... FAILED     => no stmt after return can be reachable
+     * test/marmoset/a4/negative/Je_7_Reachability_ReturnReturn.java... FAILED        => no stmt after return, no return followed by return can be reachable
+     
+     
+     * test/marmoset/a4/negative/Je_7_Reachability_EmptyValueMethod.java... FAILED    => POINT 2, last stmt in a non-void-return-type method must be a return stmt.
+     * test/marmoset/a4/negative/Je_7_Reachability_ForFalse_1.java... FAILED          => condition stmt in for should not be constant expression with value of True/False
+     * test/marmoset/a4/negative/Je_7_Reachability_ForFalse_2.java... FAILED          => condition stmt in for should not be constant expression with value of True/False
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_ConstantFolding.java... FAILED=> condition stmt in while should't be constant expression with value of True/False 
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_Empty.java... FAILED    => condition stmt in while should't be constant expression with value of True/False
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue_ConstantFolding.java... FAILED  => condition stmt in while should't be constant expression with value of True/False
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue.java... FAILED                  => condition stmt in while should't be constant expression with value of True/False
      * test/marmoset/a4/negative/Je_7_Return_IfElseIf.java... FAILED                         => TODO: not sure why how to judge this test
-     * test/marmoset/a4/negative/Je_7_Return_MissingInElse.java... FAILED
-     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_ComplexInitializer.java... FAILED
-     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_FieldWithSameName.java... FAILED
-     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_InitToItself.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Return_MissingInElse.java... FAILED                    => missing return in else/method. TODO: if `if else` both have return in it, no return outside the if? 
+     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_ComplexInitializer.java... FAILED   => POINT 3, the variable must not occor in its own initilizer
+     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_FieldWithSameName.java... FAILED    => POINT 3, each local variable must have an innitializer
+     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_InitToItself.java... FAILED         => POINT 3, the variable must not occor in its own initilizer
+
 * An error:
 12: test/marmoset/a4/positive/J1_ifThenElse.java... ERROR 
 
@@ -70,9 +73,6 @@ compiler: src/lib/JoosCompiler/Ast/Transformers/StatementAndExpressionTransforme
 
 
 ### The last statement on every finite-length execution path through a method whose return type is not void must be a return statement. 
-		a method return type if not void
-		finite-length execution
-		the last stmt must be a return stmt
  * Thought: Go through the AST, for each AstMethod node, check the method declaration, 
     1. if it is not void, get the last children, check whether it is return statement. if it is not, then return compile-time error.
     2. if it is void, check there is no return statement in its chilren, if there is, return compile-time error
