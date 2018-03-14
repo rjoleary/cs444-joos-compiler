@@ -1,7 +1,9 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-GHC = stack build --only-dependencies && stack ghc -- -outputdir ${HS_BUILD} -O2 -Wall -i${HS_INCLUDE}
+GHC_WARNINGS := -Wincomplete-patterns -Woverlapping-patterns -Wmissing-signatures
+
+GHC = stack build --only-dependencies && stack ghc -- -outputdir ${HS_BUILD} -O2 ${GHC_WARNINGS} -i${HS_INCLUDE}
 
 DOC_INPUT := $(sort $(wildcard ./docs/*.md))
 DOC_OUTPUT := $(patsubst %.md,%.pdf,${DOC_INPUT})
