@@ -27,46 +27,49 @@ Assignment 4
    The contained statement is reachable iff the for statement is reachable and the condtion expression is not a constant expression whose value is false.
 * An if-then stmt can complete normally, iff it is reachable. The then-statement is reachable iff the if-then is reachable.
   An if-then-else stmt can complete normally, iff the then-stmt can complete normally or the else-stmt can complete normally. The then-statement is reachable iff the if-then-else stmt is reachable. The else-stmt is reachable iff the if-then-else stmt is reachable.
-#### what we need for RC now:
+
+
+### what we need for RC now:
 * If predicate must be a boolean: but the predicate can be initilized in constructor and method declaration 
-     J1_7_Reachability_IfThenElse_InConstructor.java... FAILED
-     J1_7_Reachability_IfThenElse_InValueMethod.java... FAILED
-     J1_7_Reachability_IfThenElse_InVoidMethod.java... FAILED
+     * J1_7_Reachability_IfThenElse_InConstructor.java... FAILED
+     * J1_7_Reachability_IfThenElse_InValueMethod.java... FAILED
+     * J1_7_Reachability_IfThenElse_InVoidMethod.java... FAILED
   
 * Method may only be invoked on reference types
-     test/marmoset/a4/positive/J1_7_Unreachable_IfEqualsNot.java... FAILED
-     test/marmoset/a4/positive/J1_arbitraryreturn.java... FAILED
-     test/marmoset/a4/positive/J1_omittedvoidreturn.java... FAILED
-     test/marmoset/a4/positive/J1_reachability_return... FAILED
+     * test/marmoset/a4/positive/J1_7_Unreachable_IfEqualsNot.java... FAILED
+     * test/marmoset/a4/positive/J1_arbitraryreturn.java... FAILED
+     * test/marmoset/a4/positive/J1_omittedvoidreturn.java... FAILED
+     * test/marmoset/a4/positive/J1_reachability_return... FAILED
 
 * Local statement type doesn't match
-     test/marmoset/a4/positive/J1_unreachableAutomation.java... FAILED
-     test/marmoset/a4/positive/J1_Unreachable.java... FAILED
-* Negative tests     
-31: test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturn.java... FAILED => no stmt after return in if block
-29: test/marmoset/a4/negative/Je_7_Reachability_AfterElseReturn.java... FAILED => no stmt after return in else block
-30: test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturnElseReturn.java... FAILED => if if and else both have return stmt, then no more stmts after return in the main block
-32: test/marmoset/a4/negative/Je_7_Reachability_AfterReturn_Constructor.java... FAILED => no constructor after return
-33: test/marmoset/a4/negative/Je_7_Reachability_AfterReturnEmptyBlock.java... FAILED  => no empty block after return
-34: test/marmoset/a4/negative/Je_7_Reachability_AfterValueReturn.java... FAILED    => no stmt after return
-35: test/marmoset/a4/negative/Je_7_Reachability_AfterVoidReturn.java... FAILED     => no stmt after return
-36: test/marmoset/a4/negative/Je_7_Reachability_EmptyValueMethod.java... FAILED    => 
-37: test/marmoset/a4/negative/Je_7_Reachability_ForFalse_1.java... FAILED
-38: test/marmoset/a4/negative/Je_7_Reachability_ForFalse_2.java... FAILED
-39: test/marmoset/a4/negative/Je_7_Reachability_ReturnReturn.java... FAILED => no stmt after return, no return followed by return
-40: test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_ConstantFolding.java... FAILED
-41: test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_Empty.java... FAILED
+     * test/marmoset/a4/positive/J1_unreachableAutomation.java... FAILED
+     * test/marmoset/a4/positive/J1_Unreachable.java... FAILED
+* Negative tests
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturn.java... FAILED => no stmt after return in if block
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterElseReturn.java... FAILED => no stmt after return in else block
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterIfReturnElseReturn.java... FAILED => if if and else both have return stmt, then no more stmts after return in the main block
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterReturn_Constructor.java... FAILED => no constructor after return
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterReturnEmptyBlock.java... FAILED  => no empty block after return
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterValueReturn.java... FAILED    => no stmt after return
+     * test/marmoset/a4/negative/Je_7_Reachability_AfterVoidReturn.java... FAILED     => no stmt after return
+     * test/marmoset/a4/negative/Je_7_Reachability_EmptyValueMethod.java... FAILED    => 
+     * test/marmoset/a4/negative/Je_7_Reachability_ForFalse_1.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Reachability_ForFalse_2.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Reachability_ReturnReturn.java... FAILED => no stmt after return, no return followed by return
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_ConstantFolding.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileFalse_Empty.java... FAILED
  
-43: test/marmoset/a4/negative/Je_7_Reachability_WhileTrue_ConstantFolding.java... FAILED
-44: test/marmoset/a4/negative/Je_7_Reachability_WhileTrue.java... FAILED
-45: test/marmoset/a4/negative/Je_7_Return_IfElseIf.java... FAILED
-48: test/marmoset/a4/negative/Je_7_Return_MissingInElse.java... FAILED
-51: test/marmoset/a4/negative/Je_8_DefiniteAssignment_ComplexInitializer.java... FAILED
-53: test/marmoset/a4/negative/Je_8_DefiniteAssignment_FieldWithSameName.java... FAILED
-55: test/marmoset/a4/negative/Je_8_DefiniteAssignment_InitToItself.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue_ConstantFolding.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Reachability_WhileTrue.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Return_IfElseIf.java... FAILED
+     * test/marmoset/a4/negative/Je_7_Return_MissingInElse.java... FAILED
+     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_ComplexInitializer.java... FAILED
+     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_FieldWithSameName.java... FAILED
+     * test/marmoset/a4/negative/Je_8_DefiniteAssignment_InitToItself.java... FAILED
+* An error:
+12: test/marmoset/a4/positive/J1_ifThenElse.java... ERROR 
 
-12: test/marmoset/a4/positive/J1_ifThenElse.java... ERROR
-  compiler: src/lib/JoosCompiler/Ast/Transformers/StatementAndExpressionTransformers.hs:(140,5)-(149,31): Non-exhaustive patterns in function match
+compiler: src/lib/JoosCompiler/Ast/Transformers/StatementAndExpressionTransformers.hs:(140,5)-(149,31): Non-exhaustive patterns in function match
 
 
 ### The last statement on every finite-length execution path through a method whose return type is not void must be a return statement. 
