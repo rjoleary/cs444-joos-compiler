@@ -6,6 +6,7 @@ Assignment 4
 		**A return with no value
         **A return with a given value
 
+* ConstantExpression: 
 
 
 
@@ -31,9 +32,15 @@ Assignment 4
 		a method return type if not void
 		finite-length execution
 		the last stmt must be a return stmt
+ * Thought: Go through the AST, for each AstMethod node, check the method declaration, 
+                                                   if it is not void, get the last children, check whether it is return statement. if it is not, then return compile-time error.
+                                                   if it is void, check there is no return statement in its chilren, if there is, return compile-time error
+ 
 
 ### Initialization:
-Every local variable must have an initializer, and the variable must not occur in its own initializer. 
+Every local variable must have an initializer, and the variable must not occur in its own initializer.
+    *1.* each local variable must have an initializer. It is solved by AST, if it doesn't do it, this local variable cause an error: parse error on token ; Expected one of : =
+    *2.* the variable must not occur in its own initializer. For all localstatement, recursively check whether its children have the same Type as localStatement has.
 
 
 
