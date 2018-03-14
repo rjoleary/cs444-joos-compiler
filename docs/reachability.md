@@ -33,8 +33,8 @@ Assignment 4
 		finite-length execution
 		the last stmt must be a return stmt
  * Thought: Go through the AST, for each AstMethod node, check the method declaration, 
-                                                   if it is not void, get the last children, check whether it is return statement. if it is not, then return compile-time error.
-                                                   if it is void, check there is no return statement in its chilren, if there is, return compile-time error
+                                                   1. if it is not void, get the last children, check whether it is return statement. if it is not, then return compile-time error.
+                                                   2. if it is void, check there is no return statement in its chilren, if there is, return compile-time error
  
 
 ### Initialization:
