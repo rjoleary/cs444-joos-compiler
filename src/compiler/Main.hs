@@ -13,6 +13,7 @@ import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
 import           Reachability
+import           Reachability3
 import           System.Environment
 import           Data.Maybe
 
@@ -53,6 +54,11 @@ main = do
         Left err -> exitError err
 
     when (testNum > 3) $ do
+      -- 3rd reachability rule
+      case (checkReachability3 ast) of
+        Right _ -> return ()
+        Left err -> exitError err
+
       -- Return / reachability
       case (checkReturnAndReachability ast) of
         Nothing -> return ()
