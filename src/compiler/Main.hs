@@ -14,6 +14,7 @@ import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
 import           System.Environment
+import           Data.Maybe
 
 checkRules :: [AstRule] -> AstNode -> [String]
 checkRules rules t = map getRuleString $ filter checkRule rules
@@ -25,26 +26,31 @@ checkRules rules t = map getRuleString $ filter checkRule rules
 
 main :: IO ()
 main = do
+  -- This booleans control if the compiler exists early based on the assignment number.
+  testNum <- fmap (read . fromMaybe "999") (lookupEnv "TESTNUM")
 
-  -- AST generation
-  filenames <- getArgs
-  taggedTrees <- mapM taggedTreeFromFile filenames
-  let ast = cstsToAst taggedTrees
-  putStrLn $ drawTree (fmap show ast)
+  when (testNum > 1) $ do
+    -- AST generation
+    filenames <- getArgs
+    taggedTrees <- mapM taggedTreeFromFile filenames
+    let ast = cstsToAst taggedTrees
+    putStrLn $ drawTree (fmap show ast)
 
-  -- Environment building & type linking
-  let failedRules = checkRules (environmentBuildingRules ++ typeLinkingRules) ast
-  when (length failedRules > 0) $ exitError $ "Failed to pass those rules:\n" ++ intercalate "\n" failedRules
+    -- Environment building & type linking
+    let failedRules = checkRules (environmentBuildingRules ++ typeLinkingRules) ast
+    when (length failedRules > 0) $ exitError $ "Failed to pass those rules:\n" ++ intercalate "\n" failedRules
 
-  -- Hierarchy checking
-  let hierarchy = checkHierarchy ast
-  case hierarchy of
-    Right _  -> return ()
-    Left err -> exitError err
+    -- Hierarchy checking
+    let hierarchy = checkHierarchy ast
+    case hierarchy of
+      Right _  -> return ()
+      Left err -> exitError err
 
-  case (checkTypes ast) of
-    Right _ -> return ()
-    Left err -> exitError err
+    when (testNum > 2) $ do
+      -- Type checking
+      case (checkTypes ast) of
+        Right _ -> return ()
+        Left err -> exitError err
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""

@@ -1,2 +1,0 @@
-#!/bin/sh
-make TESTSET=test/marmoset/a3 test

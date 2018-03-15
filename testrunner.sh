@@ -101,7 +101,7 @@ esac
 
 echo
 echo "SUMMARY:"
-echo "  Passed: $PASSED/$RUN"
-echo "  Failed: $FAILED/$RUN"
-echo "  Error: $ERROR/$RUN"
+echo "  Passed: $PASSED/$RUN = $(echo "scale=3; $PASSED/$RUN*100" | bc)%"
+echo "  Failed: $FAILED/$RUN = $(echo "scale=3; $FAILED/$RUN*100" | bc)%"
+echo "  Error: $ERROR/$RUN = $(echo "scale=3; $ERROR/$RUN*100" | bc)%"
 echo "  Ignored: $IGNORED"

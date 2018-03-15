@@ -45,11 +45,8 @@ compiler : bin bin/parser bin/lexer bin/weeder bin/compiler
 # Builds everything including the grammar and report.
 all : compiler grammar docs
 
-zip : zip2
-
-zip% : joosc%
+zip : joosc
 	rm -f submission.zip
-	ln -sf $^ joosc
 	@zip submission $(ZIP_FILES)
 
 bin :
@@ -112,6 +109,25 @@ test.java : compiler
 
 test : compiler
 	@./testrunner.sh all
+
+test.a1 : compiler
+	@TESTNUM=1 TESTSET=test/marmoset/a1 ./testrunner.sh all
+
+test.a2 : compiler
+	@TESTNUM=2 TESTSET=test/marmoset/a2 ./testrunner.sh all
+
+test.a3 : compiler
+	@TESTNUM=3 TESTSET=test/marmoset/a3 ./testrunner.sh all
+
+test.a4 : compiler
+	@TESTNUM=4 TESTSET=test/marmoset/a4 ./testrunner.sh all
+
+test.all : compiler
+	@OUT="A1 $$(make test.a1 | tee /dev/stderr | grep Passed)\n"; \
+	OUT="$${OUT}A2 $$(make test.a2 | tee /dev/stderr | grep Passed)\n"; \
+	OUT="$${OUT}A3 $$(make test.a3 | tee /dev/stderr | grep Passed)\n"; \
+	OUT="$${OUT}A4 $$(make test.a4 | tee /dev/stderr | grep Passed)\n"; \
+	echo -e "\n\n$${OUT}"
 
 clean :
 	find src \( -name '*.o' -o -name '*.hi' \) -delete
