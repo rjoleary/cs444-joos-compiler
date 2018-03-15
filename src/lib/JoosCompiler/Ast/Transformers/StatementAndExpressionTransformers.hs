@@ -147,6 +147,12 @@ statementTransformer = match . asRule
       whileStatementTransformer x
     match [("Statement", _), ("ForStatement", x)] =
       forStatementTransformer x
+    match [(i, _), (j, _)] =
+      error $ "statementTransformer saw: " ++ commaDelimit [i, j]
+    match [(i, _)] =
+      error $ "statementTransformer got one-member list: " ++ i
+    match [] =
+      error "statementTransformer got empty list"
 
 statementWithoutTrailingSubstatementTransformer :: TaggedParseTree -> Statement
 statementWithoutTrailingSubstatementTransformer = match . asRule
