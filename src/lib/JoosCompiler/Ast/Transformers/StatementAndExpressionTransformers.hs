@@ -2,6 +2,7 @@ module JoosCompiler.Ast.Transformers.StatementAndExpressionTransformers
   ( typeTransformer
   , methodBodyTransformer
   , constructorBodyTransformer
+  , expressionTransformer
   ) where
 
 import Data.Tree

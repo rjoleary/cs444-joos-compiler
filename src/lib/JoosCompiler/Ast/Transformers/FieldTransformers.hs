@@ -8,7 +8,7 @@ import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 fieldTransformer :: Transformer
-fieldTransformer transformedChildren t@(Node _ (modifiers:myType:_)) =
+fieldTransformer transformedChildren t@(Node _ (modifiers:myType:varDeclarator:_)) =
   AstField $
   Field
   { fieldType = _type
@@ -20,8 +20,7 @@ fieldTransformer transformedChildren t@(Node _ (modifiers:myType:_)) =
     _type = typeTransformer myType
     _fieldModifiers = astModifiers $ getModifiers transformedChildren
     name = getFieldName t
-    _value = Expression _type $ LiteralExpression $ StringLiteral "TODO"
-    -- TODO: _value = astExpression $ getExpression transformedChildren
+    _value = getFieldExpression varDeclarator
 
 getFieldName :: TaggedParseTree -> String
 getFieldName t
@@ -32,3 +31,9 @@ getFieldName t
     variableDeclarator = head $ findChildrenByTokenName kVariableDeclarator t
     identifierNodes =
       findDirectChildrenByTokenName kIdentifier kExpression variableDeclarator
+
+getFieldExpression :: TaggedParseTree -> Expression
+getFieldExpression (Node _ [(Node (TaggedToken "Identifier" _ _ _) []), (Node (TaggedToken "=" _ _ _) []), e]) =
+  expressionTransformer e
+getFieldExpression (Node _ [(Node (TaggedToken "Identifier" _ _ _) [])]) =
+  Expression Void $ LiteralExpression $ StringLiteral "TODO" -- TODO: default value?

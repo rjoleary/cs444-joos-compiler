@@ -52,12 +52,14 @@ children (AstExpression x)      = innerChildren $ innerExpression x
     innerChildren (ExpressionName _)         = []
     innerChildren (NewExpression name args)  = map AstExpression args
     innerChildren (NewArrayExpression t e)   = [AstExpression e]
-    innerChildren (CastExpression t e)       = [AstExpression e]
-    innerChildren (InstanceOfExpression e t) = [AstExpression e]
+    innerChildren (CastExpression t e)       = [AstExpression e, AstType t]
+    innerChildren (InstanceOfExpression e t) = [AstExpression e, AstType t]
     innerChildren (ArrayExpression e1 e2)    = [AstExpression e1, AstExpression e2]
-children (AstField x)           = [] -- TODO: expression
+children (AstField x)           = [ AstType $ fieldType x
+                                  , AstExpression $ fieldValue x ]
 children (AstImport x)          = []
-children (AstLocalVariable x)   = [] -- TODO: expression
+children (AstLocalVariable x)   = [ AstType $ localType x
+                                  , AstExpression $ localValue x ]
 children (AstMethod x)          = (map AstLocalVariable $ methodParameters x) ++
                                   (map AstStatement $ methodStatements x)
 children (AstMethodBody x)      = error "AstMethodBody not in final AST"

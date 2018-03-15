@@ -11,7 +11,7 @@ import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 localVariableTransformer :: Transformer
-localVariableTransformer transformedChildren t@(Node _ (myType:_)) =
+localVariableTransformer transformedChildren t@(Node _ [myType,identifier,_,expression]) =
   AstLocalVariable $
   Local
   { localType = _type
@@ -22,8 +22,7 @@ localVariableTransformer transformedChildren t@(Node _ (myType:_)) =
   where
     _type = typeTransformer myType
     name = getVarName t
-    _value = Expression _type $ LiteralExpression $ StringLiteral "TODO"
-    -- TODO: _value = astExpression $ getExpression transformedChildren
+    _value = expressionTransformer expression
 
 getVarName :: TaggedParseTree -> String
 getVarName (Node _ _children) = name
