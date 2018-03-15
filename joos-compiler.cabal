@@ -42,7 +42,8 @@ executable joos-compiler-exe
   other-modules:
       Paths_joos_compiler
   hs-source-dirs:
-      src/lexer
+                 src/lib
+               , src/compiler
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

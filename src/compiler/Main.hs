@@ -46,7 +46,7 @@ main = do
       Right _  -> return ()
       Left err -> exitError err
 
-    when (testNum > 2) $ do
+    when (testNum == 3) $ do
       -- Type checking
       case (checkTypes ast) of
         Right _ -> return ()
@@ -55,8 +55,8 @@ main = do
     when (testNum > 3) $ do
       -- Return / reachability
       case (checkReturnAndReachability ast) of
-        [] -> return ()
-        errors -> exitError $ intercalate "\n" errors
+        Nothing -> return ()
+        Just err -> exitError err
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""
