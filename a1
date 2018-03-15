@@ -1,0 +1,2 @@
+#!/bin/sh
+make TESTSET=test/marmoset/a1 test
