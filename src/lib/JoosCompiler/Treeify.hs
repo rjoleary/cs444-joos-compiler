@@ -43,7 +43,9 @@ parseProduction line = Node rhs (map singleNode lhs)
   where
     rhs:lhs = words line
 
--- Convert the bottom-up parse to a Haskell datatype.
+-- Convert the bottom-up parse to a Haskell datatype. This is unable to handle
+-- a rule with two symbols with the same name. Fortunately, our grammar has no
+-- such case.
 treeify :: String -> UntaggedParseTree
 treeify x =
   case foldl treeify' [] (map parseProduction . lines $ x) of
@@ -55,8 +57,6 @@ treeify' :: [UntaggedParseTree] -> UntaggedParseTree -> [UntaggedParseTree]
 treeify' forest rule = rule' : forest'
   where
     lhsEq x y = lhs x == lhs y
-        -- TODO: The following line fails on rules with multiple of the same
-        -- token on the RHS. It is not an issue for our current grammar.
     rule' =
       Node (lhs rule) [fromMaybe x $ find (lhsEq x) forest | x <- rhs rule]
     forest' = deleteFirstsBy lhsEq forest (rhs rule)

@@ -380,7 +380,11 @@ StatementExpression     ClassInstanceCreationExpression
 
 IfThenStatement                 if ( Expression ) Statement
 IfThenElseStatement             if ( Expression ) StatementNoShortIf else Statement
-IfThenElseStatementNoShortIf    if ( Expression ) StatementNoShortIf else StatementNoShortIf
+IfThenElseStatementNoShortIf    if ( Expression ) StatementNoShortIf else StatementNoShortIf2
+
+# This is because the treeify function is unable to handle a rule with two
+# symbols of the same name.
+StatementNoShortIf2     StatementNoShortIf
 
 
 ########## 14.11: The while Statement

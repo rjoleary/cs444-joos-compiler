@@ -222,11 +222,17 @@ ifThenElseStatementTransformer = match . asRule
 ifThenElseStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 ifThenElseStatementNoShortIfTransformer = match . asRule
   where
-    match [("IfThenElseStatementNoShortIf", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s1), ("else", _), ("StatementNoShortIf", s2)] =
+    match [("IfThenElseStatementNoShortIf", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s1), ("else", _), ("StatementNoShortIf2", s2)] =
       emptyScope IfStatement
        { ifPredicate = expressionTransformer e
        , ifThenStatement = statementNoShortIfTransformer s1
-       , ifElseStatement = statementTransformer s2 }
+       , ifElseStatement = statementNoShortIfTransformer2 s2 }
+
+statementNoShortIfTransformer2 :: TaggedParseTree -> Statement
+statementNoShortIfTransformer2 = match . asRule
+  where
+    match [("StatementNoShortIf2", _), ("StatementNoShortIf", s)] =
+      statementNoShortIfTransformer s
 
 whileStatementTransformer :: TaggedParseTree -> Statement
 whileStatementTransformer = match . asRule
