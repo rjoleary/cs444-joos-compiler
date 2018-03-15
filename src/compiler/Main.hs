@@ -13,6 +13,7 @@ import           Linking.TypeChecking
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
+import           Reachability
 import           System.Environment
 import           Data.Maybe
 
@@ -51,6 +52,12 @@ main = do
       case (checkTypes ast) of
         Right _ -> return ()
         Left err -> exitError err
+
+    when (testNum > 3) $ do
+      -- Return / reachability
+      case (checkReturnAndReachability ast) of
+        [] -> return ()
+        errors -> exitError $ intercalate "\n" errors
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""
