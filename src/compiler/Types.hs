@@ -50,7 +50,7 @@ getExpressionType wp s e@(Expression _ (NewExpression name arguments))
 getExpressionType wp s e@(Expression _ (NewArrayExpression t sizeExpr)) = do
   sizeType <- getExpressionType wp s sizeExpr
   if isNumeric sizeType
-    then return t
+    then return (toArray t)
     else Left ("Array size must be numeric type " ++ show e)
 
 -- JLS 15.11: Field Access Expressions
@@ -191,6 +191,9 @@ getExpressionType _ _ _ = return $ Type Int False
 
 toScalar :: Type -> Type
 toScalar (Type x _) = Type x False
+
+toArray :: Type -> Type
+toArray (Type x _) = Type x True
 
 isName :: Type -> Bool
 isName (Type (NamedType _) False) = True
