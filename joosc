@@ -1,7 +1,5 @@
 #!/bin/bash
 
-HIGHLIGHT_BEGIN=$(tput setf 2)
-HIGHLIGHT_END=$(tput sgr0)
 ERROR_CODE=${ERROR_CODE-42}
 
 # TODO: check for whitespace
@@ -53,8 +51,7 @@ done
 
 AST="test/ast.ast"
 
-bin/compiler "$@" > "$AST"; ret="$?"
-sed "/AstTaggedToken/ n; s/Ast.*/$HIGHLIGHT_BEGIN\\0$HIGHLIGHT_END/" "$AST"
+bin/compiler "$@"; ret="$?"
 # Print AST with AST nodes highlighted
 case "$ret" in
     0) ;;
