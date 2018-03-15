@@ -38,17 +38,17 @@ Assignment 4
 * An empty stmt can complete normally, iff it is reachable. An expression
   statement can complete normally iff it is reachable
 
-* A while stmt and contained stmts are reachable, iff `while` statement is
-  reachable and condition expression is not constant expression with value True
-  or False.
+* A while statement can complete normally iff at least one of the following is true:
+        * The while statement is reachable and the condition expression is not a constant expression with value true
+* The contained statement is reachable iff the while statement is reachable and the condition expression is not a constant expression whose value is false
 
-* A for stmt and contained stmts are reachable, iff `for` statement is reachable
-  and condition expression is not constant expression with value True or False.
+* A for statement can completely normally iff at least one of the follwing is true:
+		* The for statement is reachable, there is a condition expression, and the condition expression is not a constant expression with value true.
+* The contained statement is reachable iff the for statement is reachable and the condtion expression is not a constant expression whose value is false.
 
-* An if-then stmt: the then-statement is reachable iff the if-then is reachable.
+* An if-then statement can complete normally iff it is reachable. The then-statement is reachable iff the if-then is reachable.
 
-* An if-then-else stmt: The then-statement or else-statement is reachable iff
-  the if-then-else stmt is reachable.
+* An if-then-else statement can complete normally iff the then-statement can complete normally or the else-statement can complete normally. The then-statement or else-statement is reachable iff the if-then-else stmt is reachable.
 
 ### what we need for RC now:
 * If predicate must be a boolean: but the predicate can be initilized in
