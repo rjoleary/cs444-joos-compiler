@@ -8,7 +8,6 @@ import           Data.Tree
 import           JoosCompiler.Ast
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
-import           JoosCompiler.Ast.Transformers.Types
 import           Linking.TypeChecking
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
