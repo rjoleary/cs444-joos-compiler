@@ -2,10 +2,11 @@ module NameResolution.HierarchyChecking
   ( checkHierarchy
   ) where
 
-import Data.Tree
-import Data.List
 import Data.Function
+import Data.List
 import Data.List.Unique
+import Data.Maybe
+import Data.Tree
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
@@ -19,7 +20,7 @@ type TypeHierarchy = Tree TypeDeclaration
 
 -- Returns a error message if hierarchy checking fails.
 checkHierarchy :: AstNode -> Either String ()
-checkHierarchy ast = do
+checkHierarchy ast@(Node (AstWholeProgram program) _) = do
     -- This check must be first; otherwise, the compiler might go into an infinite loop.
     ruleFor types "The hierarchy must be acyclic"
       (null . drop (length types) . levels . typeHierarchy)
@@ -104,10 +105,11 @@ checkHierarchy ast = do
 
     -- TODO: make smart
     dumbResolve :: Name -> TypeDeclaration
-    dumbResolve []   = dumbResolve ["Object"] -- TODO: make Object the default super
-    dumbResolve name = head $ filter (\x -> typeName x == last name) $ types
-      where head (x:_) = x
-            head []    = error ("Could not resolve '" ++ showName name ++ "', type linking should have caught this")
+    -- TODO: make Object the default supers
+    dumbResolve []   = dumbResolve ["java", "lang", "Object"]
+    dumbResolve name = fromMaybe
+                       (error $ "Could not resolve type: " ++ showName name) $
+                       resolveTypeInProgram program name
 
     classes = filter (not . isInterface) $ types
     concreteClasses = filter (not . (Abstract `elem`) . classModifiers) classes

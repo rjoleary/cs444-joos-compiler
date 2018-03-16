@@ -29,7 +29,7 @@ typeDeclarationTransformer transformedChildren t@(Node label _) =
     _typeName = getTypeNameFromDeclaration t
     _superTemp = getSuperName t
     _super
-      | _superTemp == [] = [kObject]
+      | _superTemp == [] = ["java", "lang", "Object"]
       | otherwise = _superTemp
     _interfaces = getInterfaceNames t
     vars = map astField $ getTypeFields transformedChildren

@@ -20,7 +20,9 @@ compilationUnitTransformer transformedChildren t =
   }
   where
     _typeDecl = getTypeDecl transformedChildren
-    _typeName = typeName $ fromMaybe (error "Compilation unit without class") _typeDecl
+    _typeName
+      | _typeDecl /= Nothing = typeName $ fromJust _typeDecl
+      | otherwise            = "_"
 
 getPackage :: [AstNode] -> Maybe Name
 getPackage ts
