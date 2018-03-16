@@ -63,9 +63,6 @@ main = do
       case (checkReachability ast) of
         Right _ -> return ()
         Left err -> exitError err
-      case (checkReturnAndReachability ast) of
-        Nothing -> return ()
-        Just err -> exitError err
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""
