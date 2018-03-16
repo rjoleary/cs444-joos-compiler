@@ -14,19 +14,6 @@ import JoosCompiler.Error
 import JoosCompiler.TreeUtils
 import StaticAnalysis.DefiniteAssignment
 
--- Types
-
-data Annotation = Annotation { isReachable :: Bool
-                             , completesNormally :: Bool
-                             }
-
-reachableCompletes :: Annotation
-reachableCompletes = Annotation True True
-
-type AnnotatedAst = Tree (Annotation, AstWrapper)
-
--- Logic starts here
-
 data Status = CompletesNormally | CompletesAbnormally deriving (Eq, Show)
 
 instance Monoid Status where
@@ -42,10 +29,6 @@ checkReachability (Node (AstWholeProgram wp) _) =
 data CheckReachability = CheckReachability
 
 instance Analysis CheckReachability Status where
-  -- Skip interfaces.
-  --analyzeTypeDeclaration ctx t@TypeDeclaration{isInterface=False} =
-    --analyzeTypeDeclaration (DefaultAnalysis ctx) t
-
   analyzeMethod ctx m@Method{methodReturn=r, methodStatement=s} =
     if s == TerminalStatement
       then Right CompletesNormally -- Ignore methods with not implementation.
@@ -55,7 +38,6 @@ instance Analysis CheckReachability Status where
           then Left ("Non-void method '" ++ methodName m ++ "' must return on all paths")
           else return status
 
-  -- TODO: how about for loop?
   -- A while loop condition must not evaluate to true.
   analyzeStatement ctx s@LoopStatement{loopPredicate=e, nextStatement=n}
     | evalExpr e == ConstBool True && n /= TerminalStatement =
@@ -85,6 +67,21 @@ instance Analysis CheckReachability Status where
 
   -- All other statements complete normally.
   analyzeStatement ctx s = analyzeStatement (DefaultAnalysis ctx) s
+
+
+
+-- Types
+
+data Annotation = Annotation { isReachable :: Bool
+                             , completesNormally :: Bool
+                             }
+
+reachableCompletes :: Annotation
+reachableCompletes = Annotation True True
+
+type AnnotatedAst = Tree (Annotation, AstWrapper)
+
+-- Logic starts here
 
 
 -- returns Just x if error, Nothing otherwise
