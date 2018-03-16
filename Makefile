@@ -47,7 +47,7 @@ all : compiler grammar docs
 
 zip : joosc
 	rm -f submission.zip
-	@zip submission $(ZIP_FILES)
+	@zip submission $(ZIP_FILES) --exclude 'test/*'
 
 bin :
 	mkdir -p bin
