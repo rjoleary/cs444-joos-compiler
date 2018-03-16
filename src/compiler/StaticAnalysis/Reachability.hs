@@ -51,7 +51,7 @@ instance Analysis CheckReachability () where
       , analyzeStatement ctx (nextStatement s) ]
 
   -- All other statements are allowed.
-  analyzeStatement _ _ = Right ()
+  analyzeStatement ctx x = analyzeStatement (DefaultAnalysis ctx) x
 
 
 

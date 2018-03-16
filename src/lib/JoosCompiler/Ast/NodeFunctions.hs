@@ -93,7 +93,7 @@ instance Show Statement where
   show IfStatement{} = "IfStatement"
   show ReturnStatement{} = "Return"
   show EmptyStatement{} = "EmptyStatement"
-  show LocalStatement{} = "LocalStatement"
+  show LocalStatement{localVariable=v} = "LocalStatement " ++ show v
   show TerminalStatement{} = "TerminalStatement"
 
 instance Show Expression where

@@ -20,10 +20,10 @@ instance Analysis R3 () where
   -- Store the identifier into the context.
   analyzeStatement ctx LocalStatement{localVariable=Variable{variableName=id, variableValue=e}} =
     analyzeOuterExpression (R3 (Just id)) e
-  analyzeStatement _ _ = Right ()
+  analyzeStatement ctx x = analyzeStatement (DefaultAnalysis ctx) x
 
   -- Check the identifier /= the context.
   analyzeExpression (R3 (Just ctxId)) (ExpressionName [id])
     | id == ctxId = Left "Variable must not occur in its own initializer"
     | otherwise = Right ()
-  analyzeExpression _ _ = Right ()
+  analyzeExpression ctx x = analyzeExpression (DefaultAnalysis ctx) x

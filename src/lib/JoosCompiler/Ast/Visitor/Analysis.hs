@@ -1,6 +1,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
 module JoosCompiler.Ast.Visitor.Analysis
   ( Analysis(..)
+  , DefaultAnalysis(..)
   ) where
 
 import Data.Maybe
@@ -108,4 +111,111 @@ class Analysis a b where
 
   analyzeType :: Monoid b => a -> Type -> Either String b
   analyzeType ctx x =
+    Right mempty
+
+-- If you create any signature, all default signature with that name will be
+-- overwritten. This function can be called in the catch-all case to use the
+-- default patterns.
+data DefaultAnalysis a = DefaultAnalysis a
+
+instance (Analysis c b) => Analysis (DefaultAnalysis c) b where
+  analyzeTypeDeclaration :: Monoid b => DefaultAnalysis c -> TypeDeclaration -> Either String b
+  analyzeTypeDeclaration (DefaultAnalysis ctx) x =
+    concatEithers $
+      fmap (analyzeVariable ctx) (classFields x) ++
+      fmap (analyzeMethod ctx) (methods x) ++
+      fmap (analyzeMethod ctx) (constructors x)
+
+  analyzeWholeProgram :: Monoid b => DefaultAnalysis c -> WholeProgram -> Either String b
+  analyzeWholeProgram (DefaultAnalysis ctx) x =
+    concatEithers $
+      fmap (analyzeCompilationUnit ctx) (programCus x)
+
+  analyzeCompilationUnit :: Monoid b => DefaultAnalysis c -> CompilationUnit -> Either String b
+  analyzeCompilationUnit (DefaultAnalysis ctx) x =
+    concatEithers $
+      fmap (analyzeImport ctx) (imports x) ++
+      fmap (analyzeTypeDeclaration ctx) (maybeToList (typeDecl x))
+
+  -- TODO: remove this node
+  analyzeOuterExpression :: Monoid b => DefaultAnalysis c -> Expression -> Either String b
+  analyzeOuterExpression (DefaultAnalysis ctx) (Expression _ x) = analyzeExpression ctx x
+
+  analyzeExpression :: Monoid b => DefaultAnalysis c -> InnerExpression -> Either String b
+  analyzeExpression (DefaultAnalysis ctx) (MethodInvocation x _ xs) =
+    concatEithers $ fmap (analyzeOuterExpression ctx) (x:xs)
+  analyzeExpression (DefaultAnalysis ctx) (BinaryOperation _ x y) =
+    concatEithers $ fmap (analyzeOuterExpression ctx) [x, y]
+  analyzeExpression (DefaultAnalysis ctx) (UnaryOperation _ x) =
+    analyzeOuterExpression ctx x
+  analyzeExpression (DefaultAnalysis ctx) (LiteralExpression _) =
+    Right mempty
+  analyzeExpression (DefaultAnalysis ctx) This =
+    Right mempty
+  analyzeExpression (DefaultAnalysis ctx) (FieldAccess e _) =
+    concatEithers $ fmap (analyzeOuterExpression ctx) [e]
+  analyzeExpression (DefaultAnalysis ctx) (ExpressionName name) =
+    Right mempty
+  analyzeExpression (DefaultAnalysis ctx) (NewExpression name es) =
+    concatEithers $ fmap (analyzeExpression ctx . innerExpression) es
+  analyzeExpression (DefaultAnalysis ctx) (NewArrayExpression name arg) =
+    analyzeOuterExpression ctx arg
+  analyzeExpression (DefaultAnalysis ctx) (CastExpression t e) =
+    concatEithers $ [analyzeType ctx t, analyzeOuterExpression ctx e]
+  analyzeExpression (DefaultAnalysis ctx) (InstanceOfExpression e t) =
+    concatEithers $ [analyzeOuterExpression ctx e, analyzeType ctx t]
+  analyzeExpression (DefaultAnalysis ctx) (ArrayExpression e1 e2) =
+    concatEithers $ [analyzeOuterExpression ctx e1, analyzeOuterExpression ctx e2]
+
+  analyzeVariable :: Monoid b => DefaultAnalysis c -> Variable -> Either String b
+  analyzeVariable (DefaultAnalysis ctx) x =
+    concatEithers $
+      [analyzeType ctx (variableType x)] ++
+      [analyzeOuterExpression ctx (variableValue x)]
+
+  analyzeImport :: Monoid b => DefaultAnalysis c -> ImportDeclaration -> Either String b
+  analyzeImport (DefaultAnalysis ctx) x =
+    Right mempty
+
+  analyzeMethod :: Monoid b => DefaultAnalysis c -> Method -> Either String b
+  analyzeMethod (DefaultAnalysis ctx) x =
+    concatEithers $
+      fmap (analyzeVariable ctx) (methodParameters x) ++
+      [analyzeStatement ctx (methodStatement x)]
+
+  analyzeStatement :: Monoid b => DefaultAnalysis c -> Statement -> Either String b
+  analyzeStatement (DefaultAnalysis ctx) x@BlockStatement{} =
+    concatEithers $
+      [ analyzeStatement ctx (statementBlock x)
+      , analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement (DefaultAnalysis ctx) x@ExpressionStatement{} =
+    concatEithers $
+      [ analyzeOuterExpression ctx (statementExpression x)
+      , analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement (DefaultAnalysis ctx) x@LoopStatement{} =
+    concatEithers $
+      [ analyzeOuterExpression ctx (loopPredicate x)
+      , analyzeStatement ctx (loopStatement x)
+      , analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement (DefaultAnalysis ctx) x@IfStatement{} =
+    concatEithers $
+      [ analyzeOuterExpression ctx (ifPredicate x)
+      , analyzeStatement ctx (ifThenStatement x)
+      , analyzeStatement ctx (ifElseStatement x)
+      , analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement (DefaultAnalysis ctx) x@ReturnStatement{} =
+    concatEithers $
+      fmap (analyzeOuterExpression ctx) (maybeToList $ returnExpression x) ++
+      [ analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement (DefaultAnalysis ctx) x@LocalStatement{} =
+    concatEithers $
+      [ analyzeVariable ctx (localVariable x)
+      , analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement (DefaultAnalysis ctx) x@EmptyStatement{} =
+    analyzeStatement ctx (nextStatement x)
+  analyzeStatement (DefaultAnalysis ctx) TerminalStatement =
+    Right mempty
+
+  analyzeType :: Monoid b => DefaultAnalysis c -> Type -> Either String b
+  analyzeType (DefaultAnalysis ctx) x =
     Right mempty
