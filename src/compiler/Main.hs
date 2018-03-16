@@ -12,8 +12,8 @@ import           Linking.TypeChecking
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
-import           Reachability
-import           Reachability3
+import           StaticAnalysis.Reachability
+import           StaticAnalysis.Reachability3
 import           System.Environment
 import           Data.Maybe
 

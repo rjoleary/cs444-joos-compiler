@@ -1,5 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Reachability3 (checkReachability3) where
+module StaticAnalysis.Reachability3 (checkReachability3) where
 
 import Data.Tree
 import JoosCompiler.Ast

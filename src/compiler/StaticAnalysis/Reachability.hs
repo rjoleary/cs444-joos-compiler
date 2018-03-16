@@ -1,5 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Reachability
+module StaticAnalysis.Reachability
 ( checkReturnAndReachability
 , checkReachability ) where
 
