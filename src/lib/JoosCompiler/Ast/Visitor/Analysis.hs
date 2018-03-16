@@ -7,9 +7,6 @@ import Data.Maybe
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Error
 
-concatEithers :: Monoid a => [Either String a] -> Either String a
-concatEithers = fmap mconcat . foldEither
-
 -- Analysis takes the entire tree and outputs a single value.
 class Analysis a b where
   analyzeTypeDeclaration :: Monoid b => a -> TypeDeclaration -> Either String b

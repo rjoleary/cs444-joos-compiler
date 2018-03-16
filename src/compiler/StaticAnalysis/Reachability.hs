@@ -9,7 +9,9 @@ import Data.Tree
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Visitor.Analysis
+import JoosCompiler.Error
 import JoosCompiler.TreeUtils
+import StaticAnalysis.DefiniteAssignment
 
 -- Types
 
@@ -36,6 +38,17 @@ instance Analysis CheckReachability () where
     Right ()
   analyzeStatement ctx ReturnStatement{nextStatement=_} =
     Left "No statement allowed after the return statement"
+
+  -- TODO: how about for loop?
+  -- A while loop condition must not evaluate to true.
+  analyzeStatement ctx s@LoopStatement{loopPredicate=e, nextStatement=n}
+    | evalExpr e == Just True && n /= TerminalStatement =
+      Left "Expressions may not proceed loop which does not complete normally"
+    | otherwise                   = concatEithers $
+      [ analyzeStatement ctx (loopStatement s)
+      , analyzeStatement ctx (nextStatement s) ]
+
+  -- All other statements are allowed.
   analyzeStatement _ _ = Right ()
 
 

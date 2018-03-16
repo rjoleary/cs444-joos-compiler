@@ -1,4 +1,4 @@
-module DefiniteAssignment
+module StaticAnalysis.DefiniteAssignment
   ( ConstantValue
   , evalExpr
   ) where
