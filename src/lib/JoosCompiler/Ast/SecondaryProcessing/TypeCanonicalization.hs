@@ -73,7 +73,7 @@ canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
   -- If type is already canonical
-  | (resolveTypeFromProgram program name /= Nothing) = name
+  | (resolveTypeInProgram program name /= Nothing) = name
   -- SingleTypeImport. We don't need to worry about collisions because they're
   -- checked elsewhere (src/compiler/NameResolution)
   | (singleTypePackageContainingType /= Nothing) =

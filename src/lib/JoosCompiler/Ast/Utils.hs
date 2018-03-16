@@ -63,12 +63,12 @@ lookupPackage :: Name -> SubPackage -> Maybe Package
 lookupPackage [] (SubPackage p _) = p
 lookupPackage name (SubPackage _ m) = lookupPackageFromSubPackageMap name m
 
-resolveTypeFromProgram :: WholeProgram -> Name -> Maybe TypeDeclaration
-resolveTypeFromProgram _ [] = Nothing
-resolveTypeFromProgram _ [_] = Nothing
-resolveTypeFromProgram program@(WholeProgram _ cus) name
+resolveTypeInProgram :: WholeProgram -> Name -> Maybe TypeDeclaration
+resolveTypeInProgram _ [] = Nothing
+resolveTypeInProgram _ [_] = Nothing
+resolveTypeInProgram program@(WholeProgram _ cus) name
   | package == Nothing = Nothing
-  | length matchingUnits > 1 = error "resolveTypeFromProgram found two matching compilation units"
+  | length matchingUnits > 1 = error "resolveTypeInProgram found two matching compilation units"
   | length matchingUnits == 0 = Nothing
   | otherwise = result
   where
@@ -77,7 +77,7 @@ resolveTypeFromProgram program@(WholeProgram _ cus) name
     package = resolvePackageFromProgram program _packageName
     units = packageCompilationUnits $ fromJust package
     matchingUnits = filter (== _typeName) units
-    unit = fromMaybe (error "Could not find unit in resolveTypeFromProgram") $ find (\unit -> cuTypeName unit == _typeName) cus
+    unit = fromMaybe (error "Could not find unit in resolveTypeInProgram") $ find (\unit -> cuTypeName unit == _typeName) cus
     result = typeDecl unit
 
 resolveInScope :: WholeProgram -> Scope -> Name -> Either Field Local
