@@ -78,29 +78,29 @@ nameTransformer = match . asRule
     match [("Name", _), ("Name", xs), (".", _), ("Identifier", x)] =
       nameTransformer xs ++ [tokenString $ lhs x]
 
-methodBodyTransformer :: TaggedParseTree -> [Statement]
+methodBodyTransformer :: TaggedParseTree -> Statement
 methodBodyTransformer = match . asRule
   where
     match [("MethodBody", _), ("Block", x)] =
       blockTransformer x
     match [("MethodBody", _), (";", _)] =
-      []
+      TerminalStatement
 
-blockTransformer :: TaggedParseTree -> [Statement]
+blockTransformer :: TaggedParseTree -> Statement
 blockTransformer = match . asRule
   where
     match [("Block", _), ("{", _), ("}", _)] =
-      []
+      TerminalStatement
     match [("Block", _), ("{", _), ("BlockStatements", x), ("}", _)] =
-      blockStatementsTransformer x
+      foldr (\x y -> x{nextStatement=y}) TerminalStatement (blockStatementsTransformer x)
 
-constructorBodyTransformer :: TaggedParseTree -> [Statement]
+constructorBodyTransformer :: TaggedParseTree -> Statement
 constructorBodyTransformer = match . asRule
   where
     match [("ConstructorBody", _), ("{", _), ("}", _)] =
-      []
+      TerminalStatement
     match [("ConstructorBody", _), ("{", _), ("BlockStatements", x), ("}", _)] =
-      blockStatementsTransformer x
+      foldr (\x y -> x{nextStatement=y}) TerminalStatement (blockStatementsTransformer x)
 
 blockStatementsTransformer :: TaggedParseTree -> [Statement]
 blockStatementsTransformer = match . asRule
@@ -128,12 +128,14 @@ localVariableDeclarationTransformer :: TaggedParseTree -> Statement
 localVariableDeclarationTransformer = match . asRule
   where
     match [("LocalVariableDeclaration", _), ("Type", t), ("Identifier", n), ("=", _), ("Expression", x)] =
-      emptyScope $ LocalStatement $ Local
-        { localType      = (typeTransformer t)
-        , localModifiers = []
-        , localName      = tokenString $ lhs n
-        , localValue     = expressionTransformer x
-        }
+      LocalStatement
+        { localVariable = Variable
+          { variableType      = (typeTransformer t)
+          , variableModifiers = []
+          , variableName      = tokenString $ lhs n
+          , variableValue     = expressionTransformer x
+          }
+        , nextStatement = TerminalStatement }
 
 statementTransformer :: TaggedParseTree -> Statement
 statementTransformer = match . asRule
@@ -159,7 +161,9 @@ statementWithoutTrailingSubstatementTransformer :: TaggedParseTree -> Statement
 statementWithoutTrailingSubstatementTransformer = match . asRule
   where
     match [("StatementWithoutTrailingSubstatement", _), ("Block", x)] =
-      emptyScope $ BlockStatement $ blockTransformer x
+      BlockStatement
+        { statementBlock = blockTransformer x
+        , nextStatement = TerminalStatement }
     match [("StatementWithoutTrailingSubstatement", _), ("EmptyStatement", x)] =
       emptyStatementTransformer x
     match [("StatementWithoutTrailingSubstatement", _), ("ExpressionStatement", x)] =
@@ -183,7 +187,8 @@ emptyStatementTransformer :: TaggedParseTree -> Statement
 emptyStatementTransformer = match . asRule
   where
     match [("EmptyStatement", _), (";", _)] =
-      emptyScope EmptyStatement
+      EmptyStatement
+        { nextStatement = TerminalStatement }
 
 expressionStatementTransformer :: TaggedParseTree -> Statement
 expressionStatementTransformer = match . asRule
@@ -195,38 +200,47 @@ statementExpressionTransformer :: TaggedParseTree -> Statement
 statementExpressionTransformer = match . asRule
   where
     match [("StatementExpression", _), ("Assignment", x)] =
-      emptyScope $ ExpressionStatement (assignmentTransformer x)
+      ExpressionStatement
+        { statementExpression = assignmentTransformer x
+        , nextStatement = TerminalStatement }
     match [("StatementExpression", _), ("MethodInvocation", x)] =
-      emptyScope $ ExpressionStatement (methodInvocationTransformer x)
+      ExpressionStatement
+        { statementExpression = methodInvocationTransformer x
+        , nextStatement = TerminalStatement }
     match [("StatementExpression", _), ("ClassInstanceCreationExpression", x)] =
-      emptyScope $ ExpressionStatement (classInstanceCreationExpressionTransformer x)
+      ExpressionStatement
+        { statementExpression = classInstanceCreationExpressionTransformer x
+        , nextStatement = TerminalStatement }
 
 ifThenStatementTransformer :: TaggedParseTree -> Statement
 ifThenStatementTransformer = match . asRule
   where
     match [("IfThenStatement", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("Statement", s)] =
-      emptyScope IfStatement
+      IfStatement
         { ifPredicate = expressionTransformer e
         , ifThenStatement = statementTransformer s
-        , ifElseStatement = emptyScope EmptyStatement }
+        , ifElseStatement = TerminalStatement
+        , nextStatement = TerminalStatement }
 
 ifThenElseStatementTransformer :: TaggedParseTree -> Statement
 ifThenElseStatementTransformer = match . asRule
   where
     match [("IfThenElseStatement", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s1), ("else", _), ("Statement", s2)] =
-      emptyScope IfStatement
+      IfStatement
         { ifPredicate = expressionTransformer e
         , ifThenStatement = statementNoShortIfTransformer s1
-        , ifElseStatement = statementTransformer s2 }
+        , ifElseStatement = statementTransformer s2
+        , nextStatement = TerminalStatement }
 
 ifThenElseStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 ifThenElseStatementNoShortIfTransformer = match . asRule
   where
     match [("IfThenElseStatementNoShortIf", _), ("if", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s1), ("else", _), ("StatementNoShortIf2", s2)] =
-      emptyScope IfStatement
-       { ifPredicate = expressionTransformer e
-       , ifThenStatement = statementNoShortIfTransformer s1
-       , ifElseStatement = statementNoShortIfTransformer2 s2 }
+      IfStatement
+        { ifPredicate = expressionTransformer e
+        , ifThenStatement = statementNoShortIfTransformer s1
+        , ifElseStatement = statementNoShortIfTransformer2 s2
+        , nextStatement = TerminalStatement }
 
 statementNoShortIfTransformer2 :: TaggedParseTree -> Statement
 statementNoShortIfTransformer2 = match . asRule
@@ -238,35 +252,37 @@ whileStatementTransformer :: TaggedParseTree -> Statement
 whileStatementTransformer = match . asRule
   where
     match [("WhileStatement", _), ("while", _), ("(", _), ("Expression", e), (")", _), ("Statement", s)] =
-      emptyScope LoopStatement
-        { loopPredicate  = expressionTransformer e
-        , loopStatements = [statementTransformer s] }
+      LoopStatement
+        { loopPredicate = expressionTransformer e
+        , loopStatement = statementTransformer s
+        , nextStatement = TerminalStatement }
 
 whileStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 whileStatementNoShortIfTransformer = match . asRule
   where
     match [("WhileStatementNoShortIf", _), ("while", _), ("(", _), ("Expression", e), (")", _), ("StatementNoShortIf", s)] =
-      emptyScope LoopStatement
-        { loopPredicate  = expressionTransformer e
-        , loopStatements = [statementNoShortIfTransformer s] }
+      LoopStatement
+        { loopPredicate = expressionTransformer e
+        , loopStatement = statementNoShortIfTransformer s
+        , nextStatement = TerminalStatement }
 
 forStatementTransformer :: TaggedParseTree -> Statement
 forStatementTransformer = match . asRule
   where
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementTransformer x)
+      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementTransformer x)
+      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (emptyScope EmptyStatement) (statementTransformer x)
+      genericForLoop TerminalStatement (expressionTransformer e) TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop (forInitTransformer s1) (expressionTransformer e) (emptyScope EmptyStatement) (statementTransformer x)
+      genericForLoop (forInitTransformer s1) (expressionTransformer e) TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
+      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
       genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
-      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (forUpdateTransformer s2) (statementTransformer x)
+      genericForLoop TerminalStatement (expressionTransformer e) (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
       genericForLoop (forInitTransformer s1) (expressionTransformer e) (forUpdateTransformer s2) (statementTransformer x)
 
@@ -274,33 +290,35 @@ forStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 forStatementNoShortIfTransformer = match . asRule
   where
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+      genericForLoop TerminalStatement (expressionTransformer e) TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (forInitTransformer s1) (expressionTransformer e) (emptyScope EmptyStatement) (statementNoShortIfTransformer x)
+      genericForLoop (forInitTransformer s1) (expressionTransformer e) TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (emptyScope EmptyStatement) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (emptyScope EmptyStatement) (expressionTransformer e) (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+      genericForLoop TerminalStatement (expressionTransformer e) (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop (forInitTransformer s1) (expressionTransformer e) (forUpdateTransformer s2) (statementNoShortIfTransformer x)
 
 -- Helper function for for-statements
 genericForLoop init expr update statement =
-  emptyScope BlockStatement
-    { blockStatements =
-      [ init
-      , emptyScope LoopStatement
-        { loopPredicate = expr
-        , loopStatements =
-          [ emptyScope BlockStatement
-            { blockStatements = [statement] }
-          , statement ] } ] }
+  BlockStatement
+    { nextStatement = TerminalStatement,
+      statementBlock =
+        init{ nextStatement =
+          LoopStatement
+          { nextStatement = TerminalStatement
+          , loopPredicate = expr
+          , loopStatement =
+            BlockStatement
+            { statementBlock = statement
+            , nextStatement = update } } } }
 
 forInitTransformer :: TaggedParseTree -> Statement
 forInitTransformer = match . asRule
@@ -320,9 +338,13 @@ returnStatementTransformer :: TaggedParseTree -> Statement
 returnStatementTransformer = match . asRule
   where
     match [("ReturnStatement", _), ("return", _), (";", _)] =
-      emptyScope $ ReturnStatement Nothing
+      ReturnStatement
+        { returnExpression = Nothing
+        , nextStatement = TerminalStatement }
     match [("ReturnStatement", _), ("return", _), ("Expression", x), (";", _)] =
-      emptyScope $ ReturnStatement (Just $ expressionTransformer x)
+      ReturnStatement
+        { returnExpression = Just $ expressionTransformer x
+        , nextStatement = TerminalStatement }
 
 primaryTransformer :: TaggedParseTree -> Expression
 primaryTransformer = match . asRule

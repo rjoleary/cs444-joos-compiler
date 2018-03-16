@@ -27,39 +27,39 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
   where
     newUnitNode = f oldUnitNode
     f :: AstNode -> AstNode
-    f (Node (AstField Field { fieldType = Type { innerType = NamedType {unNamedType = oldTypeName}
-                                               , isArray = _isArray
-                                               }
-                            , fieldModifiers = m
-                            , fieldName = n
-                            , fieldValue = v
+    f (Node (AstField Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
+                                                     , isArray = _isArray
+                                                     }
+                            , variableModifiers = m
+                            , variableName = n
+                            , variableValue = v
                             }) _children) =
       Node
         (AstField
-           (Field
-            { fieldType = newType
-            , fieldModifiers = m
-            , fieldName = n
-            , fieldValue = v
+           (Variable
+            { variableType = newType
+            , variableModifiers = m
+            , variableName = n
+            , variableValue = v
             })) $
       map f _children
       where
         newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
         newTypeName = canonicalize program oldUnit oldTypeName
-    f (Node (AstLocalVariable Local { localType = Type { innerType = NamedType {unNamedType = oldTypeName}
-                                                       , isArray = _isArray
-                                                       }
-                                    , localModifiers = m
-                                    , localName = n
-                                    , localValue = v
+    f (Node (AstLocalVariable Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
+                                                             , isArray = _isArray
+                                                             }
+                                    , variableModifiers = m
+                                    , variableName = n
+                                    , variableValue = v
                                     }) _children) =
       Node
         (AstLocalVariable
-           (Local
-            { localType = newType
-            , localModifiers = m
-            , localName = n
-            , localValue = v
+           (Variable
+            { variableType = newType
+            , variableModifiers = m
+            , variableName = n
+            , variableValue = v
             })) $
       map f _children
       where

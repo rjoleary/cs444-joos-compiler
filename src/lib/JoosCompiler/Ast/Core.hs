@@ -50,8 +50,6 @@ cstsToAst ts = program
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
-  | (tokenName label) `elem` [kBlock, kConstructorBody, kMethodBody, kBlockStatements] =
-    blockTransformer
   | (tokenName label) `elem` [kClassDeclaration, kInterfaceDeclaration] =
     typeDeclarationTransformer
   | (tokenName label) == kCompilationUnit = compilationUnitTransformer
@@ -63,5 +61,4 @@ getTransformer t@(Node label _)
   | (tokenName label) == kModifier = modifierTransformer
   | (tokenName label) == kModifiers = modifiersTransformer
   | (tokenName label) == kPackageDeclaration = packageTransformer
-  | (tokenName label) == kBlockStatement = statementTransformer
   | otherwise = cstTransformer

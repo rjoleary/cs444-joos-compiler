@@ -13,13 +13,11 @@ data AstWrapper
   | AstWholeProgram { astWholeProgram :: WholeProgram }
   | AstCompilationUnit { astCompilationUnit :: CompilationUnit }
   | AstConstructor { astConstructor :: Method }
-  | AstConstructorBody { astConstructorBody :: Block }
   | AstExpression { astExpression :: Expression }
-  | AstField { astField :: Field }
+  | AstField { astField :: Variable }
   | AstImport { astImport :: ImportDeclaration }
-  | AstLocalVariable { astLocalVariable :: Local }
+  | AstLocalVariable { astLocalVariable :: Variable }
   | AstMethod { astMethod :: Method }
-  | AstMethodBody { astMethodBody :: Block }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }
   | AstPackage { astPackage :: Package }
@@ -40,7 +38,6 @@ children (AstWholeProgram (WholeProgram _ cus))    = (map AstCompilationUnit cus
 children (AstCompilationUnit x) = (map AstImport $ imports x) ++
                                   (map AstTypeDeclaration $ maybeToList $ typeDecl x)
 children (AstConstructor x)     = error "AstConstructor not in final AST"
-children (AstConstructorBody x) = error "AstConstructorBody not in final AST"
 children (AstExpression x)      = innerChildren $ innerExpression x
   where
     innerChildren (MethodInvocation x _ xs)  = AstExpression x : map AstExpression xs
@@ -55,29 +52,40 @@ children (AstExpression x)      = innerChildren $ innerExpression x
     innerChildren (CastExpression t e)       = [AstExpression e, AstType t]
     innerChildren (InstanceOfExpression e t) = [AstExpression e, AstType t]
     innerChildren (ArrayExpression e1 e2)    = [AstExpression e1, AstExpression e2]
-children (AstField x)           = [ AstType $ fieldType x
-                                  , AstExpression $ fieldValue x ]
+children (AstField x)           = [ AstType $ variableType x
+                                  , AstExpression $ variableValue x ]
 children (AstImport x)          = []
-children (AstLocalVariable x)   = [ AstType $ localType x
-                                  , AstExpression $ localValue x ]
+children (AstLocalVariable x)   = [ AstType $ variableType x
+                                  , AstExpression $ variableValue x ]
 children (AstMethod x)          = (map AstLocalVariable $ methodParameters x) ++
-                                  (map AstStatement $ methodStatements x)
-children (AstMethodBody x)      = error "AstMethodBody not in final AST"
+                                  [AstStatement $ methodStatement x]
 children (AstModifier x)        = error "AstModifier not in final AST"
 children (AstModifiers x)       = error "AstModifiers not in final AST"
 children (AstPackageDeclaration x) = error "AstPackageDeclartion not in final AST"
-children (AstStatement x)       = innerChildren $ statement x
-  where
-    innerChildren x@BlockStatement{}       = map AstStatement $ blockStatements x
-    innerChildren x@ExpressionStatement{}  = [AstExpression $ statementExpression x]
-    innerChildren x@LoopStatement{}        = (AstExpression $ loopPredicate x) :
-                                             (map AstStatement $ loopStatements x)
-    innerChildren x@IfStatement{}          = (AstExpression $ ifPredicate x) :
-                                             (AstStatement $ ifThenStatement x) :
-                                             [AstStatement $ ifElseStatement x]
-    innerChildren x@ReturnStatement{}      = fmap AstExpression $ maybeToList $ returnExpression x
-    innerChildren x@(LocalStatement local) = [AstExpression $ localValue local]
-    innerChildren x@EmptyStatement{}       = []
+children (AstStatement x@BlockStatement{}) =
+  [ AstStatement $ statementBlock x
+  , AstStatement $ nextStatement x ]
+children (AstStatement x@ExpressionStatement{}) =
+  [ AstExpression $ statementExpression x
+  , AstStatement $ nextStatement x ]
+children (AstStatement x@LoopStatement{}) =
+  [ AstExpression $ loopPredicate x
+  , AstStatement $ loopStatement x
+  , AstStatement $ nextStatement x ]
+children (AstStatement x@IfStatement{}) =
+  [ AstExpression $ ifPredicate x
+  , AstStatement $ ifThenStatement x
+  , AstStatement $ ifElseStatement x
+  , AstStatement $ nextStatement x ]
+children (AstStatement x@ReturnStatement{}) =
+  (fmap AstExpression $ maybeToList $ returnExpression x) ++
+  [ AstStatement $ nextStatement x ]
+children (AstStatement x@LocalStatement{}) =
+  [ AstExpression $ variableValue $ localVariable x
+  , AstStatement $ nextStatement x ]
+children (AstStatement x@EmptyStatement{}) =
+  [ AstStatement $ nextStatement x ]
+children (AstStatement TerminalStatement) = []
 children (AstTaggedToken x)     = error "AstTaggedToken not in final AST"
 children (AstType x)            = []
 

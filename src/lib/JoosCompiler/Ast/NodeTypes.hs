@@ -1,6 +1,8 @@
 module JoosCompiler.Ast.NodeTypes where
 
 type Name = [String]
+type Local = Variable
+type Field = Variable
 
 ---------- Packages, Types and Methods ----------
 
@@ -56,16 +58,16 @@ data TypeDeclaration = TypeDeclaration
   , isInterface    :: Bool
   , super          :: Name
   , interfaces     :: [Name]
-  , classFields    :: [Field]
+  , classFields    :: [Variable]
   , methods        :: [Method]
   , constructors   :: [Method]
   } deriving (Eq)
 
-data Field = Field
-  { fieldType      :: Type
-  , fieldModifiers :: [Modifier]
-  , fieldName      :: String
-  , fieldValue     :: Expression
+data Variable = Variable
+  { variableType      :: Type
+  , variableModifiers :: [Modifier]
+  , variableName      :: String
+  , variableValue     :: Expression
   } deriving (Eq)
 
 -- The methodReturn for a constructor is always void.
@@ -73,8 +75,8 @@ data Method = Method
   { methodReturn     :: Type
   , methodModifiers  :: [Modifier]
   , methodName       :: String
-  , methodParameters :: [Local]
-  , methodStatements :: [Statement]
+  , methodParameters :: [Variable]
+  , methodStatement  :: Statement
   } deriving (Eq)
 
 
@@ -84,34 +86,37 @@ data Block = Block
   { blockScope :: Scope
   } deriving (Eq)
 
-data Statement = Statement
-  { statement :: InnerStatement
-  } deriving (Eq)
-
-data InnerStatement
-  = BlockStatement { blockStatements :: [Statement] }
-  | ExpressionStatement { statementExpression :: Expression }
-  | LoopStatement { loopPredicate  :: Expression
-                  , loopStatements :: [Statement] }
-  | IfStatement { ifPredicate     :: Expression
-                , ifThenStatement :: Statement
-                , ifElseStatement :: Statement }
-  | ReturnStatement { returnExpression :: Maybe Expression }
-  | LocalStatement Local
+data Statement
+  = BlockStatement
+    { statementBlock :: Statement
+    , nextStatement  :: Statement }
+  | ExpressionStatement
+    { statementExpression :: Expression
+    , nextStatement       :: Statement }
+  | LoopStatement
+    { loopPredicate :: Expression
+    , loopStatement :: Statement
+    , nextStatement :: Statement }
+  | IfStatement
+    { ifPredicate     :: Expression
+    , ifThenStatement :: Statement
+    , ifElseStatement :: Statement
+    , nextStatement   :: Statement }
+  | ReturnStatement
+    { returnExpression :: Maybe Expression
+    , nextStatement    :: Statement }
+  | LocalStatement
+    { localVariable :: Variable
+    , nextStatement :: Statement }
   | EmptyStatement
+    { nextStatement :: Statement }
+  | TerminalStatement
   deriving (Eq)
 
 data Scope = Scope
-  { scopeLocals :: [Local]
-  , parentScope :: Maybe Scope
-  , scopeCuName :: Name
-  } deriving (Eq)
-
-data Local = Local
-  { localType      :: Type
-  , localModifiers :: [Modifier]
-  , localName      :: String
-  , localValue     :: Expression
+  { scopeVariables :: [Variable]
+  , parentScope    :: Maybe Scope
+  , scopeCuName    :: Name
   } deriving (Eq)
 
 data Expression = Expression

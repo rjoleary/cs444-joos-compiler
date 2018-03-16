@@ -15,7 +15,7 @@ noTwoFieldsSameName t = not $ all allUnique classFieldNames
   where
     classNodes = findChildren isTypeDeclaration t
     _classFields = map (classFields . astClass . rootLabel) classNodes
-    classFieldNames = map (map fieldName) _classFields
+    classFieldNames = map (map variableName) _classFields
 
 noTwoLocalsSameName :: AstRulePredicate
 noTwoLocalsSameName t = not $ all allUnique localNames
@@ -24,7 +24,7 @@ noTwoLocalsSameName t = not $ all allUnique localNames
     blocks = map (astBlock . rootLabel) blockNodes
     scopes = map blockScope blocks
     locals = map flattenScope scopes
-    localNames = map (map localName) locals
+    localNames = map (map variableName) locals
 
 noTwoTypesSameCanonicalName :: AstRulePredicate
 noTwoTypesSameCanonicalName t = not $ allUnique qualified

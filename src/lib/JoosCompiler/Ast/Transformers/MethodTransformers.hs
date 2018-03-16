@@ -20,7 +20,7 @@ abstractMethodTransformer transformedChildren t@(Node label _) =
   , methodModifiers = _modifiers
   , methodName = _name
   , methodParameters = _formalParams
-  , methodStatements = []
+  , methodStatement = TerminalStatement
   }
   where
     _type = getAbstractMethodType t
@@ -36,7 +36,7 @@ constructorTransformer transformedChildren t@(Node label [modifiers, declaration
   , methodModifiers = _modifiers
   , methodName = []
   , methodParameters = _formalParams
-  , methodStatements = _statements
+  , methodStatement = _statements
   }
   where
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
@@ -51,7 +51,7 @@ methodTransformer transformedChildren t@(Node label [header, body]) =
   , methodModifiers = _modifiers
   , methodName = _name
   , methodParameters = _formalParams
-  , methodStatements = _statements
+  , methodStatement = _statements
   }
   where
     _type = getMethodType header
@@ -60,17 +60,17 @@ methodTransformer transformedChildren t@(Node label [header, body]) =
     _formalParams = getFormalParams transformedChildren
     _statements = methodBodyTransformer body
 
-getFormalParams :: [AstNode] -> [Local]
+getFormalParams :: [AstNode] -> [Variable]
 getFormalParams ts = map convertToLocal formalParamNodes
   where
     formalParamNodes = findAstChildrenByTokenName1 kFormalParameter ts
-    convertToLocal :: AstNode -> Local
+    convertToLocal :: AstNode -> Variable
     convertToLocal paramNode =
-      Local
-      { localType = _type
-      , localModifiers = []
-      , localName = _name
-      , localValue = Expression _type $ LiteralExpression $ StringLiteral "3"
+      Variable
+      { variableType = _type
+      , variableModifiers = []
+      , variableName = _name
+      , variableValue = Expression _type $ LiteralExpression $ StringLiteral "3"
       }
       where
         typeNode = (subForest paramNode) !! 0

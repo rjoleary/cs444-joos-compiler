@@ -98,14 +98,14 @@ resolveInScope program scope name
   where
     firstPart = head name
     locals = flattenScope scope
-    localMatch = find (\l -> firstPart == localName l) locals
-    localMatchType = localType $ fromJust localMatch
+    localMatch = find (\l -> firstPart == variableName l) locals
+    localMatchType = variableType $ fromJust localMatch
     -- unitTypeName is the name of the class that this scope belongs to
     unitTypeName = scopeCuName scope
     maybeUnit = find ((== unitTypeName) . canonicalizeUnitName) $ programCus program
     unit = fromMaybe (error "resolveInScope couldn't find unit") maybeUnit
     resolvedField = resolveFieldInProgramUnit program unit firstPart
-    resolvedFieldType = fieldType $ fromJust resolvedField
+    resolvedFieldType = variableType $ fromJust resolvedField
 
 
 resolveFieldInProgramUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
@@ -117,7 +117,7 @@ resolveFieldInProgramUnit program unit name
     units = programCus program
     thisTypeMaybe = typeDecl unit
     thisType = fromJust thisTypeMaybe
-    fieldMaybe = find ((== name) . fieldName) $ classFields thisType
+    fieldMaybe = find ((== name) . variableName) $ classFields thisType
     field = fromJust fieldMaybe
     superMaybe = resolveUnitInProgram program $ super thisType
     superUnit = fromJust superMaybe
@@ -133,7 +133,7 @@ resolveFieldInType program _type (n:ns) = resolveFieldInType program newType ns
     maybeUnit = resolveUnitInProgram program $ unNamedType $ innerType _type
     maybeField = resolveFieldInProgramUnit program unit n
     field = fromMaybe (error "mayField is nothing") maybeField
-    newType = fieldType field
+    newType = variableType field
     unit = fromMaybe (error "maybeUnit is nothing") maybeUnit
 
 resolveFieldInSubPackage :: WholeProgram -> SubPackage -> Name -> Maybe Field
@@ -173,7 +173,7 @@ resolveUnitInProgram program name =
   find ((== name) . canonicalizeUnitName) $ programCus program
 
 resolveMethod :: Name -> Method
-resolveMethod _ = Method _type [] "method" [] []
+resolveMethod _ = Method _type [] "method" [] TerminalStatement
   where _type = Type Int False
 
 canonicalizeUnitName :: CompilationUnit -> Name

@@ -37,7 +37,7 @@ typeAstExpressionsInner cu scope (Node n _children) =
 
 typeExpression :: CompilationUnit -> Maybe Scope -> Expression -> Expression
 typeExpression cu scope (Expression _ (MethodInvocation parentObjectName methodName arguments))
-  | (map localType $ methodParameters method) == (map expressionType typedArguments) = typedExpression
+  | (map variableType $ methodParameters method) == (map expressionType typedArguments) = typedExpression
   | otherwise = error "Method signature does not match argument list types"
   where
     method = resolveMethod ["TODO"]

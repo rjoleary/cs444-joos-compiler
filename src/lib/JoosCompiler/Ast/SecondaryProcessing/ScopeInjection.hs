@@ -17,7 +17,7 @@ injectScopesIntoChildrenBlocks _t = f [] Nothing _t
       Node (AstBlock newBlock) newChildren
       where
         thisScope = blockScope block
-        newScope = Scope (scopeLocals thisScope) _parentScope cuName
+        newScope = Scope (scopeVariables thisScope) _parentScope cuName
         newBlock = Block newScope
         newChildren = map (f cuName $ Just thisScope) _children
     f cuName _parentScope (Node n _children) = (Node n newChildren)

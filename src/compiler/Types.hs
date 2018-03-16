@@ -230,14 +230,11 @@ isString t = typeSignature t == "java.lang.String"
 -- Create method signature suitable for lookup.
 createLookupSignature :: String -> [Type] -> String
 createLookupSignature name args =
-  methodSignature $ Method Void [] name (map (\t -> Local t [] "" $ emptyType This) args) []
+  methodSignature $ Method Void [] name (map (\t -> Variable t [] "" $ emptyType This) args) TerminalStatement
 
--- Fields and Locals are essentially the same and are combined here.
-resolveAsLocal :: WholeProgram -> Scope -> String -> Local
-resolveAsLocal wp s name = asLocal $ resolveInScope wp s [name]
-  where
-    asLocal (Left (Field a b c d)) = Local a b c d
-    asLocal (Right x)              = x
+leftOrRight :: Either a a -> a
+leftOrRight (Left x) = x
+leftOrRight (Right x) = x
 
 resolveToType :: WholeProgram -> Scope -> String -> Type
-resolveToType wp s name = localType $ resolveAsLocal wp s name
+resolveToType wp s name = variableType $ leftOrRight $ resolveInScope wp s [name]

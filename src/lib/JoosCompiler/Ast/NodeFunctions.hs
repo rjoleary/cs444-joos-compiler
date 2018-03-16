@@ -64,12 +64,12 @@ instance Show TypeDeclaration where
     " extends(" ++
     (showName _super) ++
     ") Fields(" ++
-    (commaDelimit $ map fieldName fields) ++
+    (commaDelimit $ map variableName fields) ++
     ")"
 
-instance Show Field where
-  show (Field _type _modifiers _name _) =
-    "Field: " ++
+instance Show Variable where
+  show (Variable _type _modifiers _name _) =
+    "Variable: " ++
     m ++ show _type ++ " " ++ _name
     where
       m =
@@ -83,14 +83,10 @@ instance Show Method where
 instance Show Block where
   show Block{blockScope=s} = "Block: Locals(" ++commaDelimit localNames ++ ")"
     where
-      locals = scopeLocals s
-      localNames = map localName locals
-
+      locals = scopeVariables s
+      localNames = map variableName locals
 
 instance Show Statement where
-  show Statement{statement=s} = show s
-
-instance Show InnerStatement where
   show BlockStatement{} = "BlockStatement"
   show ExpressionStatement{} = "ExpressionStatement"
   show LoopStatement{} = "LoopStatement"
@@ -98,15 +94,7 @@ instance Show InnerStatement where
   show ReturnStatement{} = "Return"
   show EmptyStatement{} = "EmptyStatement"
   show LocalStatement{} = "LocalStatement"
-
-instance Show Local where
-  show (Local _type _modifiers _name _) =
-    "Local: " ++  m ++ show _type ++ " " ++ _name
-    where
-      m =
-        if length _modifiers > 0
-          then (intercalate " " $ map show _modifiers) ++ " "
-          else ""
+  show TerminalStatement{} = "TerminalStatement"
 
 instance Show Expression where
   show Expression{innerExpression=e} = show e
@@ -189,9 +177,6 @@ extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"
 extractTypeName (Just c) = typeName c
 
-emptyScope :: InnerStatement -> Statement
-emptyScope s = Statement{ statement = s }
-
 emptyType :: InnerExpression -> Expression
 emptyType e = Expression{ expressionType = Void, innerExpression = e }
 
@@ -208,7 +193,7 @@ methodSignature :: Method -> String
 methodSignature x = name ++ "(" ++ commaDelimit parameterTypes ++ ")"
   where
     name = methodName x
-    parameterTypes = map (show . localType) (methodParameters x)
+    parameterTypes = map (show . variableType) (methodParameters x)
 
 -- Creates a type signature from the type name.
 typeSignature :: Type -> String

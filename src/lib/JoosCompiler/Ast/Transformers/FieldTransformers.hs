@@ -10,11 +10,11 @@ import           JoosCompiler.Treeify
 fieldTransformer :: Transformer
 fieldTransformer transformedChildren t@(Node _ (modifiers:myType:varDeclarator:_)) =
   AstField $
-  Field
-  { fieldType = _type
-  , fieldModifiers = _fieldModifiers
-  , fieldName = name
-  , fieldValue = _value
+  Variable
+  { variableType = _type
+  , variableModifiers = _fieldModifiers
+  , variableName = name
+  , variableValue = _value
   }
   where
     _type = typeTransformer myType

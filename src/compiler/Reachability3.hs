@@ -18,8 +18,9 @@ data R3 = R3 (Maybe String)
 
 instance Analysis R3 () where
   -- Store the identifier into the context.
-  analyzeLocalVariable ctx Local{localName=id, localValue=e} =
+  analyzeStatement ctx LocalStatement{localVariable=Variable{variableName=id, variableValue=e}} =
     analyzeOuterExpression (R3 (Just id)) e
+  analyzeStatement _ _ = Right ()
 
   -- Check the identifier /= the context.
   analyzeExpression (R3 (Just ctxId)) (ExpressionName [id])

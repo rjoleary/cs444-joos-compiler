@@ -16,7 +16,7 @@ class Analysis a b where
   analyzeTypeDeclaration :: Monoid b => a -> TypeDeclaration -> Either String b
   analyzeTypeDeclaration ctx x =
     concatEithers $
-      fmap (analyzeField ctx) (classFields x) ++
+      fmap (analyzeVariable ctx) (classFields x) ++
       fmap (analyzeMethod ctx) (methods x) ++
       fmap (analyzeMethod ctx) (constructors x)
 
@@ -59,51 +59,53 @@ class Analysis a b where
   analyzeExpression ctx (ArrayExpression e1 e2) =
     concatEithers $ [analyzeOuterExpression ctx e1, analyzeOuterExpression ctx e2]
 
-  analyzeField :: Monoid b => a -> Field -> Either String b
-  analyzeField ctx x =
+  analyzeVariable :: Monoid b => a -> Variable -> Either String b
+  analyzeVariable ctx x =
     concatEithers $
-      [analyzeType ctx (fieldType x)] ++
-      [analyzeOuterExpression ctx (fieldValue x)]
+      [analyzeType ctx (variableType x)] ++
+      [analyzeOuterExpression ctx (variableValue x)]
 
   analyzeImport :: Monoid b => a -> ImportDeclaration -> Either String b
   analyzeImport ctx x =
     Right mempty
 
-  analyzeLocalVariable :: Monoid b => a -> Local -> Either String b
-  analyzeLocalVariable ctx x =
-    concatEithers $
-      [analyzeType ctx (localType x)] ++
-      [analyzeOuterExpression ctx (localValue x)]
-
   analyzeMethod :: Monoid b => a -> Method -> Either String b
   analyzeMethod ctx x =
     concatEithers $
-      fmap (analyzeLocalVariable ctx) (methodParameters x) ++
-      fmap (analyzeOuterStatement ctx) (methodStatements x)
+      fmap (analyzeVariable ctx) (methodParameters x) ++
+      [analyzeStatement ctx (methodStatement x)]
 
-  -- TODO: remove this node
-  analyzeOuterStatement :: Monoid b => a -> Statement -> Either String b
-  analyzeOuterStatement ctx (Statement x) = analyzeStatement ctx x
-
-  analyzeStatement :: Monoid b => a -> InnerStatement -> Either String b
+  analyzeStatement :: Monoid b => a -> Statement -> Either String b
   analyzeStatement ctx x@BlockStatement{} =
-    concatEithers $ fmap (analyzeOuterStatement ctx) (blockStatements x)
+    concatEithers $
+      [ analyzeStatement ctx (statementBlock x)
+      , analyzeStatement ctx (nextStatement x) ]
   analyzeStatement ctx x@ExpressionStatement{} =
-    analyzeOuterExpression ctx (statementExpression x)
+    concatEithers $
+      [ analyzeOuterExpression ctx (statementExpression x)
+      , analyzeStatement ctx (nextStatement x) ]
   analyzeStatement ctx x@LoopStatement{} =
     concatEithers $
-      analyzeOuterExpression ctx (loopPredicate x) :
-      fmap (analyzeOuterStatement ctx) (loopStatements x)
+      [ analyzeOuterExpression ctx (loopPredicate x)
+      , analyzeStatement ctx (loopStatement x)
+      , analyzeStatement ctx (nextStatement x) ]
   analyzeStatement ctx x@IfStatement{} =
     concatEithers $
       [ analyzeOuterExpression ctx (ifPredicate x)
-      , analyzeOuterStatement ctx (ifThenStatement x)
-      , analyzeOuterStatement ctx (ifElseStatement x) ]
+      , analyzeStatement ctx (ifThenStatement x)
+      , analyzeStatement ctx (ifElseStatement x)
+      , analyzeStatement ctx (nextStatement x) ]
   analyzeStatement ctx x@ReturnStatement{} =
-    concatEithers $ fmap (analyzeOuterExpression ctx) (maybeToList $ returnExpression x)
-  analyzeStatement ctx (LocalStatement x) =
-    analyzeLocalVariable ctx x
-  analyzeStatement ctx EmptyStatement =
+    concatEithers $
+      fmap (analyzeOuterExpression ctx) (maybeToList $ returnExpression x) ++
+      [ analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement ctx x@LocalStatement{} =
+    concatEithers $
+      [ analyzeVariable ctx (localVariable x)
+      , analyzeStatement ctx (nextStatement x) ]
+  analyzeStatement ctx x@EmptyStatement{} =
+    analyzeStatement ctx (nextStatement x)
+  analyzeStatement ctx TerminalStatement =
     Right mempty
 
   analyzeType :: Monoid b => a -> Type -> Either String b
