@@ -42,6 +42,19 @@ checkReachability (Node (AstWholeProgram wp) _) =
 data CheckReachability = CheckReachability
 
 instance Analysis CheckReachability Status where
+  -- Skip interfaces.
+  --analyzeTypeDeclaration ctx t@TypeDeclaration{isInterface=False} =
+    --analyzeTypeDeclaration (DefaultAnalysis ctx) t
+
+  analyzeMethod ctx m@Method{methodReturn=r, methodStatement=s} =
+    if s == TerminalStatement
+      then Right CompletesNormally -- Ignore methods with not implementation.
+      else do
+        status <- analyzeStatement ctx s
+        if r /= Void && status == CompletesNormally
+          then Left ("Non-void method '" ++ methodName m ++ "' must return on all paths")
+          else return status
+
   -- TODO: how about for loop?
   -- A while loop condition must not evaluate to true.
   analyzeStatement ctx s@LoopStatement{loopPredicate=e, nextStatement=n}
@@ -49,7 +62,9 @@ instance Analysis CheckReachability Status where
       Left "Statements may not proceed a loop which does not complete normally"
     | evalExpr e == ConstBool False =
       Left "A loop condition must not always evaluate to false"
-    | otherwise                   = analyzeStatement (DefaultAnalysis ctx) s
+    | evalExpr e == ConstBool True =
+      Right CompletesAbnormally
+    | otherwise = analyzeStatement ctx n
 
   analyzeStatement ctx s@IfStatement{} = do
     ifThenStatus <- analyzeStatement ctx $ ifThenStatement s
@@ -58,7 +73,7 @@ instance Analysis CheckReachability Status where
     if ifThenStatus == CompletesAbnormally && ifElseStatus == CompletesAbnormally
     then
       if nextStatement s == TerminalStatement
-      then return CompletesNormally
+      then return CompletesAbnormally
       else Left "Statements may not proceed an if-statement which does not complete normally"
     else return nextStatus
 

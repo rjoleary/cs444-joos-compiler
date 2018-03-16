@@ -6,7 +6,7 @@ module StaticAnalysis.DefiniteAssignment
 import Data.Int
 import JoosCompiler.Ast.NodeTypes
 
-data ConstValue = ConstInt Int32 | ConstBool Bool | Unknown deriving (Show, Eq)
+data ConstValue = ConstInt Int32 | ConstBool Bool | Unknown deriving (Eq, Show)
 
 -- See JLS 16.1: Definite Assignment and Expressions
 evalExpr :: Expression -> ConstValue
@@ -23,8 +23,10 @@ binop Less         (ConstInt x) (ConstInt y)   = ConstBool (x < y)
 binop Greater      (ConstInt x) (ConstInt y)   = ConstBool (x > y)
 binop LessEqual    (ConstInt x) (ConstInt y)   = ConstBool (x <= y)
 binop GreaterEqual (ConstInt x) (ConstInt y)   = ConstBool (x >= y)
-binop Equality     x y                         = ConstBool (x == y)
-binop Inequality   x y                         = ConstBool (x /= y)
+binop Equality     (ConstInt x) (ConstInt y)   = ConstBool (x == y)
+binop Inequality   (ConstInt x) (ConstInt y)   = ConstBool (x /= y)
+binop Equality     (ConstBool x) (ConstBool y) = ConstBool (x == y)
+binop Inequality   (ConstBool x) (ConstBool y) = ConstBool (x /= y)
 binop LazyAnd      (ConstBool x) (ConstBool y) = ConstBool (x && y)
 binop LazyOr       (ConstBool x) (ConstBool y) = ConstBool (x || y)
 binop And          (ConstBool x) (ConstBool y) = ConstBool (x && y)

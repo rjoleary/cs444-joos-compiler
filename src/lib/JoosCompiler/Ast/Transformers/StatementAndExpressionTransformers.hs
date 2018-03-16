@@ -82,7 +82,8 @@ methodBodyTransformer :: TaggedParseTree -> Statement
 methodBodyTransformer = match . asRule
   where
     match [("MethodBody", _), ("Block", x)] =
-      blockTransformer x
+      if statement == TerminalStatement then EmptyStatement TerminalStatement else statement
+      where statement = blockTransformer x
     match [("MethodBody", _), (";", _)] =
       TerminalStatement
 
@@ -98,7 +99,7 @@ constructorBodyTransformer :: TaggedParseTree -> Statement
 constructorBodyTransformer = match . asRule
   where
     match [("ConstructorBody", _), ("{", _), ("}", _)] =
-      TerminalStatement
+      EmptyStatement TerminalStatement
     match [("ConstructorBody", _), ("{", _), ("BlockStatements", x), ("}", _)] =
       foldr (\x y -> x{nextStatement=y}) TerminalStatement (blockStatementsTransformer x)
 
