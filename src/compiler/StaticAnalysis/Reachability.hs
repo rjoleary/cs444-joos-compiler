@@ -42,8 +42,10 @@ instance Analysis CheckReachability () where
   -- TODO: how about for loop?
   -- A while loop condition must not evaluate to true.
   analyzeStatement ctx s@LoopStatement{loopPredicate=e, nextStatement=n}
-    | evalExpr e == Just True && n /= TerminalStatement =
-      Left "Expressions may not proceed loop which does not complete normally"
+    | evalExpr e == ConstBool True && n /= TerminalStatement =
+      Left "Statements may not proceed a loop which does not complete normally"
+    | evalExpr e == ConstBool False =
+      Left "A loop condition must not always evaluate to false"
     | otherwise                   = concatEithers $
       [ analyzeStatement ctx (loopStatement s)
       , analyzeStatement ctx (nextStatement s) ]
