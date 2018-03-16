@@ -1,7 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module JoosCompiler.Ast.Visitor.Analysis
-  (
-  Analysis(..)
+  ( Analysis(..)
   ) where
 
 import Data.Maybe

@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module StaticAnalysis.Reachability
-( checkReturnAndReachability
-, checkReachability ) where
+  ( checkReturnAndReachability
+  , checkReachability ) where
 
 import Data.List
 import Data.Maybe
@@ -31,7 +31,7 @@ checkReachability (Node (AstWholeProgram wp) _) =
 data CheckReachability = CheckReachability
 
 instance Analysis CheckReachability () where
-  -- No statment must come after the return statement.
+  -- No statement is allowed after the return statement.
   analyzeStatement ctx ReturnStatement{nextStatement=TerminalStatement} =
     Right ()
   analyzeStatement ctx ReturnStatement{nextStatement=_} =
