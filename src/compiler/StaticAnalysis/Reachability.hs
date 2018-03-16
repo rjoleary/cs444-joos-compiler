@@ -3,6 +3,7 @@ module StaticAnalysis.Reachability
   ( checkReturnAndReachability
   , checkReachability ) where
 
+import Control.Monad
 import Data.List
 import Data.Maybe
 import Data.Tree
@@ -26,19 +27,21 @@ type AnnotatedAst = Tree (Annotation, AstWrapper)
 
 -- Logic starts here
 
+data Status = CompletesNormally | CompletesAbnormally deriving (Eq, Show)
+
+instance Monoid Status where
+  mempty = CompletesNormally
+  mappend CompletesAbnormally _ = CompletesAbnormally
+  mappend _ CompletesAbnormally = CompletesAbnormally
+  mappend _ _                   = CompletesNormally
+
 checkReachability :: AstNode -> Either String ()
 checkReachability (Node (AstWholeProgram wp) _) =
-  analyzeWholeProgram CheckReachability wp
+  fmap (const ()) $ (analyzeWholeProgram CheckReachability wp :: Either String Status)
 
 data CheckReachability = CheckReachability
 
-instance Analysis CheckReachability () where
-  -- No statement is allowed after the return statement.
-  analyzeStatement ctx ReturnStatement{nextStatement=TerminalStatement} =
-    Right ()
-  analyzeStatement ctx ReturnStatement{nextStatement=_} =
-    Left "No statement allowed after the return statement"
-
+instance Analysis CheckReachability Status where
   -- TODO: how about for loop?
   -- A while loop condition must not evaluate to true.
   analyzeStatement ctx s@LoopStatement{loopPredicate=e, nextStatement=n}
@@ -46,13 +49,27 @@ instance Analysis CheckReachability () where
       Left "Statements may not proceed a loop which does not complete normally"
     | evalExpr e == ConstBool False =
       Left "A loop condition must not always evaluate to false"
-    | otherwise                   = concatEithers $
-      [ analyzeStatement ctx (loopStatement s)
-      , analyzeStatement ctx (nextStatement s) ]
+    | otherwise                   = analyzeStatement (DefaultAnalysis ctx) s
 
-  -- All other statements are allowed.
-  analyzeStatement ctx x = analyzeStatement (DefaultAnalysis ctx) x
+  analyzeStatement ctx s@IfStatement{} = do
+    ifThenStatus <- analyzeStatement ctx $ ifThenStatement s
+    ifElseStatus <- analyzeStatement ctx $ ifElseStatement s
+    nextStatus <- analyzeStatement ctx $ nextStatement s
+    if ifThenStatus == CompletesAbnormally && ifElseStatus == CompletesAbnormally
+    then
+      if nextStatement s == TerminalStatement
+      then return CompletesNormally
+      else Left "Statements may not proceed an if-statement which does not complete normally"
+    else return nextStatus
 
+  -- No statement is allowed after the return statement.
+  analyzeStatement ctx ReturnStatement{nextStatement=TerminalStatement} =
+    Right CompletesAbnormally
+  analyzeStatement ctx ReturnStatement{nextStatement=_} =
+    Left "No statement allowed after the return statement"
+
+  -- All other statements complete normally.
+  analyzeStatement ctx s = analyzeStatement (DefaultAnalysis ctx) s
 
 
 -- returns Just x if error, Nothing otherwise
