@@ -50,6 +50,8 @@ class Analysis a b where
     concatEithers $ fmap (analyzeOuterExpression ctx) [e]
   analyzeExpression ctx (ExpressionName name) =
     Right mempty
+  analyzeExpression ctx (NewExpression name es) =
+    concatEithers $ fmap (analyzeExpression ctx . innerExpression) es
   analyzeExpression ctx (NewArrayExpression name arg) =
     analyzeOuterExpression ctx arg
   analyzeExpression ctx (CastExpression t e) =

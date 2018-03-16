@@ -60,6 +60,9 @@ main = do
         Left err -> exitError err
 
       -- Return / reachability
+      case (checkReachability ast) of
+        Right _ -> return ()
+        Left err -> exitError err
       case (checkReturnAndReachability ast) of
         Nothing -> return ()
         Just err -> exitError err

@@ -1,9 +1,14 @@
-module Reachability (checkReturnAndReachability) where
+{-# LANGUAGE MultiParamTypeClasses #-}
+module Reachability
+( checkReturnAndReachability
+, checkReachability ) where
 
 import Data.List
 import Data.Maybe
 import Data.Tree
 import JoosCompiler.Ast
+import JoosCompiler.Ast.NodeTypes
+import JoosCompiler.Ast.Visitor.Analysis
 import JoosCompiler.TreeUtils
 
 -- Types
@@ -18,6 +23,22 @@ reachableCompletes = Annotation True True
 type AnnotatedAst = Tree (Annotation, AstWrapper)
 
 -- Logic starts here
+
+checkReachability :: AstNode -> Either String ()
+checkReachability (Node (AstWholeProgram wp) _) =
+  analyzeWholeProgram CheckReachability wp
+
+data CheckReachability = CheckReachability
+
+instance Analysis CheckReachability () where
+  -- No statment must come after the return statement.
+  analyzeStatement ctx ReturnStatement{nextStatement=TerminalStatement} =
+    Right ()
+  analyzeStatement ctx ReturnStatement{nextStatement=_} =
+    Left "No statement allowed after the return statement"
+  analyzeStatement _ _ = Right ()
+
+
 
 -- returns Just x if error, Nothing otherwise
 checkReturnAndReachability :: AstNode -> Maybe String
