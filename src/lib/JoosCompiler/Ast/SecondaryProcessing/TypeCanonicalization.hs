@@ -24,9 +24,8 @@ canonicalizeProgram _ = error "Invalid node type in canonicalizeProgram"
 
 canonicalizeUnit :: WholeProgram -> AstNode -> AstNode
 canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
-  newUnitNode
+  f oldUnitNode
   where
-    newUnitNode = f oldUnitNode
     f :: AstNode -> AstNode
     f (Node (AstField Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
                                                      , isArray = _isArray
@@ -47,6 +46,7 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
       where
         newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
         newTypeName = canonicalize program oldUnit oldTypeName
+
     f (Node (AstLocalVariable Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
                                                              , isArray = _isArray
                                                              }
@@ -66,6 +66,33 @@ canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
       where
         newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
         newTypeName = canonicalize program oldUnit oldTypeName
+
+    f (Node (AstTypeDeclaration TypeDeclaration { typeName = name
+                                                , classModifiers = modifiers
+                                                , isInterface    = _isInterface
+                                                , super          = oldSuper
+                                                , interfaces     = oldInterfaces
+                                                , classFields    = fields
+                                                , methods        = _methods
+                                                , constructors   = _constructors
+                                                }) oldChildren) =
+      Node
+        (AstTypeDeclaration
+         TypeDeclaration { typeName = name
+                         , classModifiers = modifiers
+                         , isInterface    = _isInterface
+                         , super          = newSuper
+                         , interfaces     = newInterfaces
+                         , classFields    = fields
+                         , methods        = _methods
+                         , constructors   = _constructors
+                         })
+        newChildren
+      where
+        newChildren = map f oldChildren
+        newSuper = canonicalize program oldUnit oldSuper
+        newInterfaces = map (canonicalize program oldUnit) oldInterfaces
+
     f (Node n _children) = Node n $ map f _children
 canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
 

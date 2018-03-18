@@ -105,7 +105,7 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
 
     -- TODO: make smart
     dumbResolve :: Name -> TypeDeclaration
-    -- TODO: make Object the default supers
+    -- TODO: make Object the default super
     dumbResolve []   = dumbResolve ["java", "lang", "Object"]
     dumbResolve name = fromMaybe
                        (error $ "Could not resolve type: " ++ showName name) $
