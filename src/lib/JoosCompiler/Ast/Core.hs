@@ -1,6 +1,7 @@
 module JoosCompiler.Ast.Core(cstsToAst) where
 
 import           Data.Tree
+import           Flow
 import           JoosCompiler.Ast.SecondaryProcessing.StatementBlocks
 import           JoosCompiler.Ast.SecondaryProcessing.Packaging
 import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
@@ -10,12 +11,6 @@ import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 import           JoosCompiler.Ast.Transformers
-
--- Inspired by Flow
--- http://taylor.fausak.me/2015/04/09/write-more-understandable-haskell-with-flow/
-infixl 0 |>
-(|>) :: a -> (a -> b) -> b
-x |> f = f x
 
 -- We first transform children so root has access to them
 cstToAstTransform :: Transformer -> TaggedParseTree -> AstNode

@@ -2,6 +2,7 @@ module JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
   ( canonicalizeProgram
   ) where
 
+import           Flow
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
@@ -74,31 +75,45 @@ canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
   -- If type is already canonical
   | (resolveTypeInProgram program name /= Nothing) = name
+
   -- SingleTypeImport. We don't need to worry about collisions because they're
   -- checked elsewhere (src/compiler/NameResolution)
+
   | (singleTypePackageContainingType /= Nothing) =
     packageName (fromJust singleTypePackageContainingType) ++ name
+
   | (onDemandPackageContainingType /= Nothing) =
     packageName (fromMaybe (error "This should never happen. Expected package to exist")
                  onDemandPackageContainingType) ++ name
+
   | otherwise = error $ "Could not canonicalize: " ++ showName name
   where
     thisPackage = makeOnDemandImportDeclaration $ cuPackage unit
+
     importsWithoutDefault = imports unit
+
     _imports = [thisPackage] ++ importsWithoutDefault ++ [javaLang]
+
     onDemandImports = filter (\i -> onDemand i) _imports
+
     singleTypeImports = filter (\i -> not $ onDemand i) _imports
+
       -- HACK: This can fail, but if it fails then the program is wrong
     onDemandPackages =
-      map
-        (fromMaybe (error "Imported on-demand package not found") . resolvePackageFromProgram program . importPackageName)
-        onDemandImports
-      -- HACK: This can fail, but if it fails then the program is wrong
+      onDemandImports |>
+      map (importPackageName .>
+           (resolvePackageFromProgram program) .>
+           (fromMaybe (error "Imported on-demand package not found")))
+
+    -- HACK: This can fail, but if it fails then the program is wrong
     singleTypePackages =
-      map
-        (fromMaybe (error "Imported single-type package not found") . resolvePackageFromProgram program . importPackageName)
-        singleTypeImports
+      singleTypeImports |>
+      map (importPackageName .>
+           (resolvePackageFromProgram program) .>
+           (fromMaybe (error "Imported single-type package not found")))
+
     singleTypePackageContainingType = find (typeIsInPackage name) singleTypePackages
+
     onDemandPackageContainingType = find (typeIsInPackage name) onDemandPackages
 
 typeIsInPackage :: Name -> Package -> Bool
