@@ -9,7 +9,7 @@ import Data.Either
 import Data.Function
 import Data.List
 import Data.List.Unique
-import qualified Data.Map as Map
+import qualified Data.Map.Strict as Map
 import Data.Maybe
 import Data.Tree
 import JoosCompiler.Ast
@@ -29,7 +29,7 @@ type LocalEnvironment = Map.Map String Type
 
 -- TODO: add global environment
 data TypeAnalysis = TypeAnalysis
-  { localEnvironment :: LocalEnvironment }
+  { localEnv :: LocalEnvironment }
 
 -- Analysis on classes/methods/statements. No Type is returned.
 instance Analysis TypeAnalysis () where
@@ -37,29 +37,34 @@ instance Analysis TypeAnalysis () where
   analyze ctx (AstCompilationUnit (CompilationUnit{cuPackage=("java":_)})) =
     return ()
 
-  analyze ctx (AstStatement s@ExpressionStatement{}) = do
+  analyze ctx (AstStatement s@ExpressionStatement{nextStatement=n}) = do
     -- The type annotation is required here because the return is ignored.
     exprType <- analyze' ctx (statementExpression s) :: Either String Type
-    return ()
+    analyze' ctx n
 
-  analyze ctx (AstStatement s@LoopStatement{}) = do
+  analyze ctx (AstStatement s@LoopStatement{nextStatement=n}) = do
     predicateType <- analyze' ctx (loopPredicate s)
     when (not $ isBoolean $ predicateType)
       (Left "Loop predicate must be a boolean")
+    analyze' ctx n
 
-  analyze ctx (AstStatement s@IfStatement{}) = do
+  analyze ctx (AstStatement s@IfStatement{nextStatement=n}) = do
     predicateType <- analyze' ctx (ifPredicate s)
     when (not $ isBoolean $ predicateType)
       (Left "If predicate must be a boolean")
+    analyze' ctx n
 
-  analyze ctx (AstStatement ReturnStatement{returnExpression=Just e}) = do
+  analyze ctx (AstStatement ReturnStatement{returnExpression=Just e, nextStatement=n}) = do
     returnType <- analyze' ctx e
     when (returnType == Void) (Left "Cannot return void")
+    analyze' ctx n
 
   -- TODO: add local variable type to scope
-  analyze ctx (AstStatement LocalStatement{localVariable=l}) = do
+  analyze ctx (AstStatement LocalStatement{localVariable=l, nextStatement=n}) = do
     exprType <- analyze' ctx (variableValue l)
     when (exprType /= variableType l) (Left "Local statement type doesn't match")
+    let newEnv = Map.insert (variableName l) (variableType l) (localEnv ctx)
+    analyze' ctx{ localEnv = newEnv } n
 
   analyze ctx x = propagateAnalyze ctx x
 
@@ -157,7 +162,7 @@ instance Analysis TypeAnalysis Type where
         then return (Type (NamedType ["java", "lang", "String"]) False)
         else if isNumeric expr1Type && isNumeric expr2Type
           then return (Type Int False) -- TODO: promotions
-          else Left ("Bad addition types " ++ show e)
+          else Left ("Bad additive types " ++ show e)
 
     -- JLS 15.18.2: Additive Operators (-) for Numeric Types
     | op `elem` [Subtract] = do
@@ -165,7 +170,7 @@ instance Analysis TypeAnalysis Type where
       expr2Type <- analyze' ctx expr2
       if isNumeric expr1Type && isNumeric expr2Type
         then return (Type Int False)
-        else Left ("Bad Subtract types " ++ show e)
+        else Left ("Bad additive types " ++ show e)
 
     -- JLS 15.20: Relational Operators (<, >, <=, >=)
     | op `elem` [Less, Greater, LessEqual, GreaterEqual] = do
@@ -173,7 +178,7 @@ instance Analysis TypeAnalysis Type where
       expr2Type <- analyze' ctx expr2
       if (isNumeric expr1Type && isNumeric expr2Type)
         then return (Type Boolean False) -- TODO: more checks are required
-        else Left ("Bad binary operator " ++ show e)
+        else Left ("Bad relational types " ++ show e)
 
     -- JLS 15.21: Equality Operators (==, !=)
     | op `elem` [Equality, Inequality] = do
@@ -181,7 +186,7 @@ instance Analysis TypeAnalysis Type where
       expr2Type <- analyze' ctx expr2
       if ((expr1Type :: Type) == (expr2Type :: Type))
          then return (Type Boolean False)
-         else Left ("Bad Equality types " ++ show e)
+         else Left ("Bad equality types " ++ show e)
 
     -- JLS 15.22.2: Boolean Logical Operators &, ^, and |
     -- JLS 15.23: Conditional-And Operator (&&)
@@ -191,7 +196,7 @@ instance Analysis TypeAnalysis Type where
       expr2Type <- analyze' ctx expr2
       if (isBoolean expr1Type && isBoolean expr2Type)
         then return (Type Boolean False) -- TODO: more checks are required
-        else Left ("Bad binary operator " ++ show e)
+        else Left ("Bad conditional types " ++ show e)
 
     -- JLS 15.26: Assignment Operators (=)
     | op `elem` [Assign] = do
@@ -199,7 +204,7 @@ instance Analysis TypeAnalysis Type where
       expr2Type <- analyze' ctx expr2
       if expr1Type == expr2Type
         then return expr1Type -- TODO: more checks are required
-        else Left ("Bad binary operator " ++ show e)
+        else Left ("Bad assignment operator " ++ show e)
 
   -- JLS 15.20.2: Type Comparison Operator instanceof
   analyze ctx (AstExpression e@(InstanceOfExpression expr t)) = do
@@ -208,18 +213,9 @@ instance Analysis TypeAnalysis Type where
       then return (Type Boolean False)
       else Left ("Bad instanceof operator " ++ show e)
 
-  {-
-
-  analyze ctx (ExpressionName name) =
-    return $ fromMaybe localType typeType
-    where typeDecl = resolveTypeFromProgram wp name
-          typeType = fmap (\x -> Type (NamedType [typeName x]) False) typeDecl
-          localType = resolveToType wp s (showName name)
-
-  -}
-
   analyze ctx (AstExpression (ExpressionName name)) =
-    return $ Type Int False -- TODO: this is wrong
+    return $ fromMaybe (Type Int False) maybeLocalType -- TODO: global env
+    where maybeLocalType = Map.lookup (head name) (localEnv ctx) -- TODO: head is wrong
 
 ---------- Helper Functions ----------
 

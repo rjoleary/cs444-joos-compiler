@@ -124,11 +124,12 @@ instance Show InnerType where
   show (NamedType x) = showName x
 
 instance Show Literal where
-  show (IntegerLiteral x)   = show x
-  show (BooleanLiteral x)   = show x
-  show (CharacterLiteral x) = show x
-  show (StringLiteral x)    = show x
-  show NullLiteral          = "null"
+  show (IntegerLiteral x)     = show x
+  show (BooleanLiteral True)  = "true"
+  show (BooleanLiteral False) = "false"
+  show (CharacterLiteral x)   = show x
+  show (StringLiteral x)      = show x
+  show NullLiteral            = "null"
 
 instance Show BinaryOperator where
   show Multiply     = "*"
