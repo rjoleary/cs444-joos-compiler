@@ -11,19 +11,19 @@ import JoosCompiler.Ast.Visitor.Analysis
 -- initializer, and the variable must not occur in its own initializer
 
 checkReachability3 :: AstNode -> Either String ()
-checkReachability3 (Node (AstWholeProgram wp) _) =
-  analyzeWholeProgram (R3 Nothing) wp
+checkReachability3 (Node x _) = analyze (R3 Nothing) x
 
 data R3 = R3 (Maybe String)
 
 instance Analysis R3 () where
   -- Store the identifier into the context.
-  analyzeStatement ctx LocalStatement{localVariable=Variable{variableName=id, variableValue=e}} =
-    analyzeOuterExpression (R3 (Just id)) e
-  analyzeStatement ctx x = analyzeStatement (DefaultAnalysis ctx) x
+  analyze ctx (AstStatement LocalStatement{localVariable=Variable{variableName=id, variableValue=e}}) =
+    analyze' (R3 (Just id)) e
 
   -- Check the identifier /= the context.
-  analyzeExpression (R3 (Just ctxId)) (ExpressionName [id])
+  analyze (R3 (Just ctxId)) (AstExpression (Expression _ (ExpressionName [id])))
     | id == ctxId = Left "Variable must not occur in its own initializer"
     | otherwise = Right ()
-  analyzeExpression ctx x = analyzeExpression (DefaultAnalysis ctx) x
+
+  -- Everything else propagates.
+  analyze ctx x = propagateAnalyze ctx x

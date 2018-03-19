@@ -55,6 +55,7 @@ children (AstExpression x)      = innerChildren $ innerExpression x
 children (AstField x)           = [ AstType $ variableType x
                                   , AstExpression $ variableValue x ]
 children (AstImport x)          = []
+-- TODO: this is part of statement
 children (AstLocalVariable x)   = [ AstType $ variableType x
                                   , AstExpression $ variableValue x ]
 children (AstMethod x)          = (map AstLocalVariable $ methodParameters x) ++
@@ -96,6 +97,37 @@ asTree x = Node x (map asTree $ children x)
 -- Convert to AstWrapper representation.
 asAst :: AstNode -> AstWrapper
 asAst = rootLabel
+
+class AstWrappable a where
+  wrap :: a -> AstWrapper
+
+instance AstWrappable TypeDeclaration where
+  wrap = AstTypeDeclaration
+
+instance AstWrappable WholeProgram where
+  wrap = AstWholeProgram
+
+instance AstWrappable CompilationUnit where
+  wrap = AstCompilationUnit
+
+instance AstWrappable Expression where
+  wrap = AstExpression
+
+instance AstWrappable Variable where
+  wrap = AstField
+
+instance AstWrappable ImportDeclaration where
+  wrap = AstImport
+
+instance AstWrappable Method where
+  wrap = AstMethod
+
+instance AstWrappable Statement where
+  wrap = AstStatement
+
+instance AstWrappable Type where
+  wrap = AstType
+
 
 type Transformer = [AstNode] -> TaggedParseTree -> AstWrapper
 
