@@ -1,6 +1,6 @@
 #!/bin/bash
 
-COMPILER=${COMPILER-./stdjoosc}
+COMPILER=${COMPILER-timeout 5s ./stdjoosc}
 TESTSET=${TESTSET-test}
 
 RUN=0
