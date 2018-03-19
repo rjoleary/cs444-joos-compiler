@@ -22,7 +22,7 @@ import JoosCompiler.Error
 import JoosCompiler.TreeUtils
 
 checkTypes :: AstNode -> Either String ()
-checkTypes (Node x _) = analyze (TypeAnalysis Map.empty Nothing) x
+checkTypes (Node x _) = analyze (TypeAnalysis Map.empty Nothing Nothing) x
 
 -- For local types only.
 type LocalEnvironment = Map.Map String Type
@@ -30,7 +30,8 @@ type LocalEnvironment = Map.Map String Type
 -- TODO: add global environment
 data TypeAnalysis = TypeAnalysis
   { ctxLocalEnv :: LocalEnvironment
-  , ctxThis     :: Maybe Name }
+  , ctxThis     :: Maybe Name
+  , ctxThisType :: Maybe TypeDeclaration } -- TODO: this last field is temporary
 
 -- Analysis on classes/methods/statements. No Type is returned.
 instance Analysis TypeAnalysis () where
@@ -40,10 +41,13 @@ instance Analysis TypeAnalysis () where
 
   -- Add `this` to context.
   analyze ctx a@(AstTypeDeclaration x) =
-    propagateAnalyze ctx{ ctxThis = Just [typeName x] } a
+    propagateAnalyze ctx{ ctxThis = Just [typeName x], ctxThisType = Just x } a
 
-  -- `this` is inaccessible in field declarations.
-  analyze ctx a@(AstField x) =
+  analyze ctx a@(AstField v) = do
+    exprType <- analyze' ctx (variableValue v)
+    when (exprType /= variableType v)
+      (Left $ "Field type doesn't match (got " ++ show exprType ++ ", expected " ++ show (variableType v) ++ ")")
+    -- `this` is inaccessible in field declarations.
     propagateAnalyze ctx{ ctxThis = Nothing } a
 
   analyze ctx (AstStatement s@ExpressionStatement{nextStatement=n}) = do
@@ -69,10 +73,11 @@ instance Analysis TypeAnalysis () where
     analyze' ctx n
 
   -- TODO: add local variable type to scope
-  analyze ctx (AstStatement LocalStatement{localVariable=l, nextStatement=n}) = do
-    exprType <- analyze' ctx (variableValue l)
-    when (exprType /= variableType l) (Left "Local statement type doesn't match")
-    let newEnv = Map.insert (variableName l) (variableType l) (ctxLocalEnv ctx)
+  analyze ctx (AstStatement LocalStatement{localVariable=v, nextStatement=n}) = do
+    exprType <- analyze' ctx (variableValue v)
+    when (exprType /= variableType v)
+      (Left $ "Local statement type doesn't match (got " ++ show exprType ++ ", expected " ++ show (variableType v) ++ ")")
+    let newEnv = Map.insert (variableName v) (variableType v) (ctxLocalEnv ctx)
     analyze' ctx{ ctxLocalEnv = newEnv } n
 
   analyze ctx x = propagateAnalyze ctx x
@@ -92,7 +97,7 @@ instance Analysis TypeAnalysis Type where
   -- JLS 15.9: Class Instance Creation Expressions
   analyze ctx (AstExpression e@(NewExpression name arguments))
     = if foundConstructor
-      then Right (Type Int False)
+      then Right (Type (NamedType name) False) -- TODO: qualify
       else Left ("Could not find a matching constructor" ++ show e)
     where foundConstructor = and $ map (isRight . analyze'') arguments
           analyze'' x = analyze' ctx x :: Either String Type
@@ -111,8 +116,8 @@ instance Analysis TypeAnalysis Type where
     classType <- analyze' ctx primary
     if not $ isName classType -- TODO: arrays have a length field
       then Left ("Can only access fields of reference types " ++ show e)
-      else return $ Type Int False
-      --else return $ resolveToType wp s name -- TODO: wrong resolve
+      else fromMaybe (Left "Cannot find field") $ fmap Right $ lookup name [(variableName x, variableType x) | x <- classFields $ fromJust $ ctxThisType ctx]
+      -- TODO: the above assumes the primary is of this type
 
   -- JLS 15.12: Method Invocation Expressions
   analyze ctx (AstExpression e@(MethodInvocation expr name argExprs)) = do
@@ -224,9 +229,13 @@ instance Analysis TypeAnalysis Type where
       then return (Type Boolean False)
       else Left ("Bad instanceof operator " ++ show e)
 
+  -- TODO: disambiguation
   analyze ctx (AstExpression (ExpressionName name)) =
-    return $ fromMaybe (Type Int False) maybeLocalType -- TODO: global env
-    where maybeLocalType = Map.lookup (head name) (ctxLocalEnv ctx) -- TODO: head is wrong
+    if (isJust maybeLocalType)
+    then (return $ fromJust maybeLocalType)
+    else analyze' ctx (FieldAccess This (last name))
+    -- TODO: global env
+    where maybeLocalType = Map.lookup (last name) (ctxLocalEnv ctx) -- TODO: last is wrong
 
 ---------- Helper Functions ----------
 
