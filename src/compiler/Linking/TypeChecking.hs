@@ -22,20 +22,29 @@ import JoosCompiler.Error
 import JoosCompiler.TreeUtils
 
 checkTypes :: AstNode -> Either String ()
-checkTypes (Node x _) = analyze (TypeAnalysis Map.empty) x
+checkTypes (Node x _) = analyze (TypeAnalysis Map.empty Nothing) x
 
 -- For local types only.
 type LocalEnvironment = Map.Map String Type
 
 -- TODO: add global environment
 data TypeAnalysis = TypeAnalysis
-  { localEnv :: LocalEnvironment }
+  { ctxLocalEnv :: LocalEnvironment
+  , ctxThis     :: Maybe Name }
 
 -- Analysis on classes/methods/statements. No Type is returned.
 instance Analysis TypeAnalysis () where
   -- TODO: This skips type checking on standard libraries. However, it should pass.
   analyze ctx (AstCompilationUnit (CompilationUnit{cuPackage=("java":_)})) =
     return ()
+
+  -- Add `this` to context.
+  analyze ctx a@(AstTypeDeclaration x) =
+    propagateAnalyze ctx{ ctxThis = Just [typeName x] } a
+
+  -- `this` is inaccessible in field declarations.
+  analyze ctx a@(AstField x) =
+    propagateAnalyze ctx{ ctxThis = Nothing } a
 
   analyze ctx (AstStatement s@ExpressionStatement{nextStatement=n}) = do
     -- The type annotation is required here because the return is ignored.
@@ -63,8 +72,8 @@ instance Analysis TypeAnalysis () where
   analyze ctx (AstStatement LocalStatement{localVariable=l, nextStatement=n}) = do
     exprType <- analyze' ctx (variableValue l)
     when (exprType /= variableType l) (Left "Local statement type doesn't match")
-    let newEnv = Map.insert (variableName l) (variableType l) (localEnv ctx)
-    analyze' ctx{ localEnv = newEnv } n
+    let newEnv = Map.insert (variableName l) (variableType l) (ctxLocalEnv ctx)
+    analyze' ctx{ ctxLocalEnv = newEnv } n
 
   analyze ctx x = propagateAnalyze ctx x
 
@@ -75,8 +84,10 @@ instance Analysis TypeAnalysis Type where
     = Right (literalType t)
 
   -- JLS 15.8.3: this
-  analyze ctx (AstExpression This)
-    = Right (Type (NamedType ["java", "lang", "String"]) False) -- TODO: resolve to this class
+  analyze TypeAnalysis{ctxThis=Nothing} (AstExpression This)
+    = Left ("Not a valid location for the this keyword")
+  analyze TypeAnalysis{ctxThis=Just name} (AstExpression This)
+    = Right (Type (NamedType name) False)
 
   -- JLS 15.9: Class Instance Creation Expressions
   analyze ctx (AstExpression e@(NewExpression name arguments))
@@ -215,7 +226,7 @@ instance Analysis TypeAnalysis Type where
 
   analyze ctx (AstExpression (ExpressionName name)) =
     return $ fromMaybe (Type Int False) maybeLocalType -- TODO: global env
-    where maybeLocalType = Map.lookup (head name) (localEnv ctx) -- TODO: head is wrong
+    where maybeLocalType = Map.lookup (head name) (ctxLocalEnv ctx) -- TODO: head is wrong
 
 ---------- Helper Functions ----------
 
