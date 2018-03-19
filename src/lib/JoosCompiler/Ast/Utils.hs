@@ -65,7 +65,6 @@ lookupPackage name (SubPackage _ m) = lookupPackageFromSubPackageMap name m
 
 resolveTypeInProgram :: WholeProgram -> Name -> Maybe TypeDeclaration
 resolveTypeInProgram _ [] = Nothing
-resolveTypeInProgram _ [_] = Nothing
 resolveTypeInProgram program@(WholeProgram _ cus) name
   | package == Nothing = Nothing
   | length matchingUnits > 1 = error "resolveTypeInProgram found two matching compilation units"

@@ -16,10 +16,10 @@ instance Show Modifier where
   show Native    = "native"
 
 instance Show WholeProgram where
-  show WholeProgram{} = "WholeProgram"
+  show WholeProgram{programPackages = p} = "WholeProgram. Packages: " ++ show p
 
 instance Show SubPackage where
-  show (SubPackage x y) = "Subpackage: " ++ show x ++ " " ++ show y
+  show (SubPackage x y) = (if x == Nothing then "" else "Package. Subs: ") ++  show y
 
 instance Show Package where
   show (Package name subs units) =

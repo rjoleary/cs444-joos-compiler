@@ -153,7 +153,7 @@ typeIsInPackage n Package {subPackages = subs}
   | (maybePackage /= Nothing) = if length matches > 1
                                     then error "Duplicate definition for type in package"
                                     else (length matches == 1)
-  | otherwise = error "typeIsInPackage could not resolve package"
+  | otherwise = error $ "typeIsInPackage could not resolve package: " ++ showName pName ++ show subs
   where
     pName = init n
     uName = last n

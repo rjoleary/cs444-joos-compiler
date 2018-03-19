@@ -38,7 +38,6 @@ subPackage packageAList = subPackageMapEntries
 startsWithSameName :: (Name, Package) -> (Name, Package) -> Bool
 startsWithSameName p1 p2 = (head $ fst p1) == (head $ fst p2)
 
-
 -- This function expects that
 -- 1. No input tuple has fst = []
 -- 2. All input tuples have the same String at the beginning of their Name
