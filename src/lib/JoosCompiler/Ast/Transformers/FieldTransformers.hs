@@ -36,4 +36,4 @@ getFieldExpression :: TaggedParseTree -> Expression
 getFieldExpression (Node _ [(Node (TaggedToken "Identifier" _ _ _) []), (Node (TaggedToken "=" _ _ _) []), e]) =
   expressionTransformer e
 getFieldExpression (Node _ [(Node (TaggedToken "Identifier" _ _ _) [])]) =
-  Expression Void $ LiteralExpression $ StringLiteral "TODO" -- TODO: default value?
+  LiteralExpression $ StringLiteral "TODO" -- TODO: default value?

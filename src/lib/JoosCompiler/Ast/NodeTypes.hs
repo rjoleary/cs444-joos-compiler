@@ -119,12 +119,7 @@ data Scope = Scope
   , scopeCuName    :: Name
   } deriving (Eq)
 
-data Expression = Expression
-  { expressionType  :: Type
-  , innerExpression :: InnerExpression
-  } deriving(Eq)
-
-data InnerExpression
+data Expression
   = MethodInvocation Expression String [Expression]
   | BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression

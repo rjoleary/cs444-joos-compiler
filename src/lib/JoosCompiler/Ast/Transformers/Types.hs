@@ -38,20 +38,18 @@ children (AstWholeProgram (WholeProgram _ cus))    = (map AstCompilationUnit cus
 children (AstCompilationUnit x) = (map AstImport $ imports x) ++
                                   (map AstTypeDeclaration $ maybeToList $ typeDecl x)
 children (AstConstructor x)     = error "AstConstructor not in final AST"
-children (AstExpression x)      = innerChildren $ innerExpression x
-  where
-    innerChildren (MethodInvocation x _ xs)  = AstExpression x : map AstExpression xs
-    innerChildren (BinaryOperation _ x y)    = map AstExpression [x, y]
-    innerChildren (UnaryOperation _ x)       = [AstExpression x]
-    innerChildren (LiteralExpression _)      = []
-    innerChildren This                       = []
-    innerChildren (FieldAccess e _)          = [AstExpression e]
-    innerChildren (ExpressionName _)         = []
-    innerChildren (NewExpression name args)  = map AstExpression args
-    innerChildren (NewArrayExpression t e)   = [AstExpression e]
-    innerChildren (CastExpression t e)       = [AstExpression e, AstType t]
-    innerChildren (InstanceOfExpression e t) = [AstExpression e, AstType t]
-    innerChildren (ArrayExpression e1 e2)    = [AstExpression e1, AstExpression e2]
+children (AstExpression (MethodInvocation x _ xs))  = AstExpression x : map AstExpression xs
+children (AstExpression (BinaryOperation _ x y))    = map AstExpression [x, y]
+children (AstExpression (UnaryOperation _ x))       = [AstExpression x]
+children (AstExpression (LiteralExpression _))      = []
+children (AstExpression This)                       = []
+children (AstExpression (FieldAccess e _))          = [AstExpression e]
+children (AstExpression (ExpressionName _))         = []
+children (AstExpression (NewExpression name args))  = map AstExpression args
+children (AstExpression (NewArrayExpression t e))   = [AstExpression e]
+children (AstExpression (CastExpression t e))       = [AstExpression e, AstType t]
+children (AstExpression (InstanceOfExpression e t)) = [AstExpression e, AstType t]
+children (AstExpression (ArrayExpression e1 e2))    = [AstExpression e1, AstExpression e2]
 children (AstField x)           = [ AstType $ variableType x
                                   , AstExpression $ variableValue x ]
 children (AstImport x)          = []

@@ -10,7 +10,11 @@ data ConstValue = ConstInt Int32 | ConstBool Bool | Unknown deriving (Eq, Show)
 
 -- See JLS 16.1: Definite Assignment and Expressions
 evalExpr :: Expression -> ConstValue
-evalExpr Expression{ innerExpression = e } = evalInnerExpr e
+evalExpr (BinaryOperation op e1 e2)             = binop op (evalExpr e1) (evalExpr e2)
+evalExpr (UnaryOperation op e)                  = unop op (evalExpr e)
+evalExpr (LiteralExpression (IntegerLiteral x)) = ConstInt (fromIntegral x)
+evalExpr (LiteralExpression (BooleanLiteral x)) = ConstBool x
+evalExpr _ = Unknown
 
 -- TODO: Some of these may be incorrect (especially for integer ranges) or missing (like Assign).
 binop :: BinaryOperator -> ConstValue -> ConstValue -> ConstValue
@@ -37,10 +41,3 @@ unop :: UnaryOperator -> ConstValue -> ConstValue
 unop Negate (ConstInt x) = ConstInt (-x)
 unop Not (ConstBool x)   = ConstBool (not x)
 unop _ _                 = Unknown
-
-evalInnerExpr :: InnerExpression -> ConstValue
-evalInnerExpr (BinaryOperation op e1 e2)             = binop op (evalExpr e1) (evalExpr e2)
-evalInnerExpr (UnaryOperation op e)                  = unop op (evalExpr e)
-evalInnerExpr (LiteralExpression (IntegerLiteral x)) = ConstInt (fromIntegral x)
-evalInnerExpr (LiteralExpression (BooleanLiteral x)) = ConstBool x
-evalInnerExpr _ = Unknown

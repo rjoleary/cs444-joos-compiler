@@ -70,7 +70,7 @@ getFormalParams ts = map convertToLocal formalParamNodes
       { variableType = _type
       , variableModifiers = []
       , variableName = _name
-      , variableValue = Expression _type $ LiteralExpression $ StringLiteral "3"
+      , variableValue = LiteralExpression $ StringLiteral "TODO"
       }
       where
         typeNode = (subForest paramNode) !! 0

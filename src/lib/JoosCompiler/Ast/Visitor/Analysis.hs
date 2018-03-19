@@ -40,29 +40,29 @@ instance (Analysis c b, Monoid b) => Analysis (PropagateAnalysis c) b where
       fmap (analyze' ctx) (maybeToList (typeDecl x))
 
   -- TODO: remove the outer node
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (MethodInvocation x _ xs))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (MethodInvocation x _ xs)) =
     concatEithers $ fmap (analyze' ctx) (x:xs)
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (BinaryOperation _ x y))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (BinaryOperation _ x y)) =
     concatEithers $ fmap (analyze' ctx) [x, y]
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (UnaryOperation _ x))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (UnaryOperation _ x)) =
     analyze' ctx x
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (LiteralExpression _))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (LiteralExpression _)) =
     Right mempty
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ This)) =
+  analyze (PropagateAnalysis ctx) (AstExpression This) =
     Right mempty
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (FieldAccess e _))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (FieldAccess e _)) =
     concatEithers $ fmap (analyze' ctx) [e]
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (ExpressionName name))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (ExpressionName name)) =
     Right mempty
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (NewExpression name es))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (NewExpression name es)) =
     concatEithers $ fmap (analyze' ctx) es
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (NewArrayExpression name arg))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (NewArrayExpression name arg)) =
     analyze' ctx arg
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (CastExpression t e))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (CastExpression t e)) =
     concatEithers $ [analyze' ctx t, analyze' ctx e]
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (InstanceOfExpression e t))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (InstanceOfExpression e t)) =
     concatEithers $ [analyze' ctx e, analyze' ctx t]
-  analyze (PropagateAnalysis ctx) (AstExpression (Expression _ (ArrayExpression e1 e2))) =
+  analyze (PropagateAnalysis ctx) (AstExpression (ArrayExpression e1 e2)) =
     concatEithers $ [analyze' ctx e1, analyze' ctx e2]
 
   analyze (PropagateAnalysis ctx) (AstField x) =

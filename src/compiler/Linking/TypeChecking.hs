@@ -14,8 +14,7 @@ import JoosCompiler.Ast.Transformers.Types
 import JoosCompiler.Ast.Utils
 import JoosCompiler.Error
 import JoosCompiler.TreeUtils
-import Linking.TypeChecking.BinaryOperation
-import Types
+import Linking.Types
 
 -- Returns a error message if hierarchy checking fails.
 checkTypes :: AstNode -> Either String ()
@@ -77,7 +76,3 @@ findScopedExpressions t = f (Scope [] Nothing []) t
     f scope (Node (AstExpression e) children) = (scope, e) : (mconcat $ map (f scope) children)
     f _ (Node (AstBlock (Block scope)) children) = mconcat $ map (f scope) children
     f scope (Node _ children) = mconcat $ map (f scope) children
-
-isBinaryOperation :: Expression -> Bool
-isBinaryOperation (Expression _ (BinaryOperation _ _ _)) = True
-isBinaryOperation _ = False

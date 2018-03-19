@@ -1,4 +1,4 @@
-module Types
+module Linking.Types
   ( getType
   , getExpressionType
   , isName
@@ -30,15 +30,15 @@ getType _ _ _ = Type Int False
 getExpressionType :: WholeProgram -> Scope -> Expression -> Either String Type
 
 -- JLS 15.8.1: Lexical Literals
-getExpressionType _ _ (Expression _ (LiteralExpression t))
+getExpressionType _ _ (LiteralExpression t)
   = Right (literalType t)
 
 -- JLS 15.8.3: this
-getExpressionType _ _ (Expression _ (This))
+getExpressionType _ _ (This)
   = Right (Type (NamedType ["java", "lang", "String"]) False) -- TODO: resolve to this class
 
 -- JLS 15.9: Class Instance Creation Expressions
-getExpressionType wp s e@(Expression _ (NewExpression name arguments))
+getExpressionType wp s e@(NewExpression name arguments)
   = if foundConstructor
     then Right (Type (NamedType name) False)
     else Left ("Could not find a matching constructor" ++ show e)
@@ -47,14 +47,14 @@ getExpressionType wp s e@(Expression _ (NewExpression name arguments))
 -- TODO: we also need to lookup the constructor and overload
 
 -- JLS 15.10: Array Creation Expressions
-getExpressionType wp s e@(Expression _ (NewArrayExpression t sizeExpr)) = do
+getExpressionType wp s e@(NewArrayExpression t sizeExpr) = do
   sizeType <- getExpressionType wp s sizeExpr
   if isNumeric sizeType
     then return (toArray t)
     else Left ("Array size must be numeric type " ++ show e)
 
 -- JLS 15.11: Field Access Expressions
-getExpressionType wp s e@(Expression _ (FieldAccess primary name)) = do
+getExpressionType wp s e@(FieldAccess primary name) = do
   classType <- getExpressionType wp s primary
   if not $ isName classType -- TODO: arrays have a length field
     then Left ("Can only access fields of reference types " ++ show e)
@@ -62,7 +62,7 @@ getExpressionType wp s e@(Expression _ (FieldAccess primary name)) = do
     --else return $ resolveToType wp s name -- TODO: wrong resolve
 
 -- JLS 15.12: Method Invocation Expressions
-getExpressionType wp s e@(Expression _ (MethodInvocation expr name argExprs)) = do
+getExpressionType wp s e@(MethodInvocation expr name argExprs) = do
   exprType <- getExpressionType wp s expr
   when (not $ isReference exprType)
     (Left $ "Method may only be invoked on reference types " ++ show e)
@@ -71,7 +71,7 @@ getExpressionType wp s e@(Expression _ (MethodInvocation expr name argExprs)) = 
   return (Type Int False) -- TODO: lookup
 
 -- JLS 15.13: Array Access Expressions
-getExpressionType wp s e@(Expression _ (ArrayExpression arrayExpr sizeExpr)) = do
+getExpressionType wp s e@(ArrayExpression arrayExpr sizeExpr) = do
   arrayType <- getExpressionType wp s arrayExpr
   sizeExpr <- getExpressionType wp s sizeExpr
   if not $ isArray arrayType
@@ -82,26 +82,26 @@ getExpressionType wp s e@(Expression _ (ArrayExpression arrayExpr sizeExpr)) = d
         else return (toScalar arrayType)
 
 -- JLS 15.15.4: Unary Minus Operator (-)
-getExpressionType wp s e@(Expression _ (UnaryOperation Negate expr)) = do
+getExpressionType wp s e@(UnaryOperation Negate expr) = do
   exprType <- getExpressionType wp s expr
   if not $ isNumeric exprType
     then Left ("Can only negate numeric types " ++ show e)
     else return (Type Int False) -- promotion
 
 -- JLS 15.15.6: Logical Complement Operator (!)
-getExpressionType wp s e@(Expression _ (UnaryOperation Not expr)) = do
+getExpressionType wp s e@(UnaryOperation Not expr) = do
   exprType <- getExpressionType wp s expr
   if not $ isBoolean exprType
     then Left ("Can only not boolean types" ++ show e)
     else return exprType
 
 -- JLS 15.16: Cast Expressions
-getExpressionType wp s e@(Expression _ (CastExpression t expr)) = do
+getExpressionType wp s e@(CastExpression t expr) = do
   exprType <- getExpressionType wp s expr
   return $ t -- TODO: there are more rules
 
 -- Binary Operations
-getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
+getExpressionType wp s e@(BinaryOperation op expr1 expr2)
 
   -- JLS 15.17: Multiplicative Operators (*, /, %)
   | op `elem` [Multiply, Divide, Modulus] = do
@@ -165,7 +165,7 @@ getExpressionType wp s e@(Expression _ (BinaryOperation op expr1 expr2))
       else Left ("Bad binary operator " ++ show e)
 
 -- JLS 15.20.2: Type Comparison Operator instanceof
-getExpressionType wp s e@(Expression _ (InstanceOfExpression expr t)) = do
+getExpressionType wp s e@(InstanceOfExpression expr t) = do
   exprType <- getExpressionType wp s expr
   if (isReference exprType || exprType == Null) && (isReference t)
     then return (Type Boolean False)
@@ -173,7 +173,7 @@ getExpressionType wp s e@(Expression _ (InstanceOfExpression expr t)) = do
 
 {-
 
-getExpressionType wp s (Expression _ (ExpressionName name)) =
+getExpressionType wp s (ExpressionName name) =
   return $ fromMaybe localType typeType
   where typeDecl = resolveTypeFromProgram wp name
         typeType = fmap (\x -> Type (NamedType [typeName x]) False) typeDecl
@@ -181,7 +181,7 @@ getExpressionType wp s (Expression _ (ExpressionName name)) =
 
 -}
 
-getExpressionType wp s (Expression _ (ExpressionName name)) =
+getExpressionType wp s (ExpressionName name) =
   return $ Type Int False -- TODO: this is wrong
 
 getExpressionType _ _ _ = return $ Type Int False
@@ -230,7 +230,7 @@ isString t = typeSignature t == "java.lang.String"
 -- Create method signature suitable for lookup.
 createLookupSignature :: String -> [Type] -> String
 createLookupSignature name args =
-  methodSignature $ Method Void [] name (map (\t -> Variable t [] "" $ emptyType This) args) TerminalStatement
+  methodSignature $ Method Void [] name (map (\t -> Variable t [] "" $ This) args) TerminalStatement
 
 leftOrRight :: Either a a -> a
 leftOrRight (Left x) = x

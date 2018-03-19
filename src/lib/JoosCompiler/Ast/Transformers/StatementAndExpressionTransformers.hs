@@ -271,17 +271,17 @@ forStatementTransformer :: TaggedParseTree -> Statement
 forStatementTransformer = match . asRule
   where
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementTransformer x)
+      genericForLoop TerminalStatement (LiteralExpression $ StringLiteral "true") TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("Statement", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementTransformer x)
+      genericForLoop (forInitTransformer s1) (LiteralExpression $ StringLiteral "true") TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
       genericForLoop TerminalStatement (expressionTransformer e) TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("Statement", x)] =
       genericForLoop (forInitTransformer s1) (expressionTransformer e) TerminalStatement (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
-      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
+      genericForLoop TerminalStatement (LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
+      genericForLoop (forInitTransformer s1) (LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
       genericForLoop TerminalStatement (expressionTransformer e) (forUpdateTransformer s2) (statementTransformer x)
     match [("ForStatement", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("Statement", x)] =
@@ -291,17 +291,17 @@ forStatementNoShortIfTransformer :: TaggedParseTree -> Statement
 forStatementNoShortIfTransformer = match . asRule
   where
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementNoShortIfTransformer x)
+      genericForLoop TerminalStatement (LiteralExpression $ StringLiteral "true") TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") TerminalStatement (statementNoShortIfTransformer x)
+      genericForLoop (forInitTransformer s1) (LiteralExpression $ StringLiteral "true") TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop TerminalStatement (expressionTransformer e) TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop (forInitTransformer s1) (expressionTransformer e) TerminalStatement (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop TerminalStatement (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+      genericForLoop TerminalStatement (LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
-      genericForLoop (forInitTransformer s1) (emptyType $ LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
+      genericForLoop (forInitTransformer s1) (LiteralExpression $ StringLiteral "true") (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
       genericForLoop TerminalStatement (expressionTransformer e) (forUpdateTransformer s2) (statementNoShortIfTransformer x)
     match [("ForStatementNoShortIf", _), ("for", _), ("(", _), ("ForInit", s1), (";", _), ("Expression", e), (";", _), ("ForUpdate", s2), (")", _), ("StatementNoShortIf", x)] =
@@ -359,9 +359,9 @@ primaryNoNewArrayTransformer :: TaggedParseTree -> Expression
 primaryNoNewArrayTransformer = match . asRule
   where
     match [("PrimaryNoNewArray", _), ("Literal", x)] =
-      emptyType $ LiteralExpression $ literalTransformer x
+      LiteralExpression $ literalTransformer x
     match [("PrimaryNoNewArray", _), ("this", _)] =
-      emptyType This
+      This
     match [("PrimaryNoNewArray", _), ("(", _), ("Expression", x), (")", _)] =
       expressionTransformer x
     match [("PrimaryNoNewArray", _), ("ClassInstanceCreationExpression", x)] =
@@ -377,9 +377,9 @@ classInstanceCreationExpressionTransformer :: TaggedParseTree -> Expression
 classInstanceCreationExpressionTransformer = match . asRule
   where
     match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", x), ("(", _), (")", _)] =
-      emptyType $ NewExpression (nameTransformer x) []
+      NewExpression (nameTransformer x) []
     match [("ClassInstanceCreationExpression", _), ("new", _), ("Name", x), ("(", _), ("ArgumentList", y), (")", _)] =
-      emptyType $ NewExpression (nameTransformer x) (argumentListTransformer y)
+      NewExpression (nameTransformer x) (argumentListTransformer y)
 
 argumentListTransformer :: TaggedParseTree -> [Expression]
 argumentListTransformer = match . asRule
@@ -393,45 +393,45 @@ arrayCreationExpressionTransformer :: TaggedParseTree -> Expression
 arrayCreationExpressionTransformer = match . asRule
   where
     match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("Expression", e), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (NamedType $ nameTransformer t) False) (expressionTransformer e) -- TODO: convert char to Char, etc..
+      NewArrayExpression (Type (NamedType $ nameTransformer t) False) (expressionTransformer e) -- TODO: convert char to Char, etc..
     match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("Expression", e), ("]", _)] =
-      emptyType $ NewArrayExpression (Type (primitiveTypeTransformer t) False) (expressionTransformer e)
+      NewArrayExpression (Type (primitiveTypeTransformer t) False) (expressionTransformer e)
 
 fieldAccessTransformer :: TaggedParseTree -> Expression
 fieldAccessTransformer = match . asRule
   where
     match [("FieldAccess", _), ("Primary", x), (".", _), ("Identifier", y)] =
-      emptyType $ FieldAccess (primaryTransformer x) (tokenString $ lhs y)
+      FieldAccess (primaryTransformer x) (tokenString $ lhs y)
 
 methodInvocationTransformer :: TaggedParseTree -> Expression
 methodInvocationTransformer = match . asRule
   where
     match [("MethodInvocation", _), ("Name", n), ("(", _), (")", _)] =
-      emptyType $ MethodInvocation expression (last name) []
+      MethodInvocation expression (last name) []
       where name = nameTransformer n
-            expression = emptyType $ if null (init name) then This else ExpressionName (init name)
+            expression = if null (init name) then This else ExpressionName (init name)
     match [("MethodInvocation", _), ("Name", n), ("(", _), ("ArgumentList", xs), (")", _)] =
-      emptyType $ MethodInvocation expression (last name) (argumentListTransformer xs)
+      MethodInvocation expression (last name) (argumentListTransformer xs)
       where name = nameTransformer n
-            expression = emptyType $ if null (init name) then This else ExpressionName (init name)
+            expression = if null (init name) then This else ExpressionName (init name)
     match [("MethodInvocation", _), ("Primary", e), (".", _), ("Identifier", n), ("(", _), (")", _)] =
-      emptyType $ MethodInvocation (primaryTransformer e) (tokenString $ lhs n) []
+      MethodInvocation (primaryTransformer e) (tokenString $ lhs n) []
     match [("MethodInvocation", _), ("Primary", e), (".", _), ("Identifier", n), ("(", _), ("ArgumentList", xs), (")", _)] =
-      emptyType $ MethodInvocation (primaryTransformer e) (tokenString $ lhs n) (argumentListTransformer xs)
+      MethodInvocation (primaryTransformer e) (tokenString $ lhs n) (argumentListTransformer xs)
 
 arrayAccessTransformer :: TaggedParseTree -> Expression
 arrayAccessTransformer = match . asRule
   where
     match [("ArrayAccess", _), ("Name", e1), ("[", _), ("Expression", e2), ("]", _)] =
-      emptyType $ ArrayExpression (emptyType $ ExpressionName $ nameTransformer e1) (expressionTransformer e2)
+      ArrayExpression (ExpressionName $ nameTransformer e1) (expressionTransformer e2)
     match [("ArrayAccess", _), ("PrimaryNoNewArray", e1), ("[", _), ("Expression", e2), ("]", _)] =
-      emptyType $ ArrayExpression (primaryNoNewArrayTransformer e1) (expressionTransformer e2)
+      ArrayExpression (primaryNoNewArrayTransformer e1) (expressionTransformer e2)
 
 unaryExpressionTransformer :: TaggedParseTree -> Expression
 unaryExpressionTransformer = match . asRule
   where
     match [("UnaryExpression", _), ("-", _), ("UnaryExpression", x)] =
-      emptyType $ UnaryOperation Negate (unaryExpressionTransformer x)
+      UnaryOperation Negate (unaryExpressionTransformer x)
     match [("UnaryExpression", _), ("UnaryExpressionNotPlusMinus", x)] =
       unaryExpressionNotPlusMinusTransformer x
 
@@ -441,9 +441,9 @@ unaryExpressionNotPlusMinusTransformer = match . asRule
     match [("UnaryExpressionNotPlusMinus", _), ("Primary", x)] =
       primaryTransformer x
     match [("UnaryExpressionNotPlusMinus", _), ("Name", x)] =
-      emptyType $ ExpressionName (nameTransformer x)
+      ExpressionName (nameTransformer x)
     match [("UnaryExpressionNotPlusMinus", _), ("!", _), ("UnaryExpression", x)] =
-      emptyType $ UnaryOperation Not (unaryExpressionTransformer x)
+      UnaryOperation Not (unaryExpressionTransformer x)
     match [("UnaryExpressionNotPlusMinus", _), ("CastExpression", x)] =
       castExpressionTransformer x
 
@@ -451,15 +451,15 @@ castExpressionTransformer :: TaggedParseTree -> Expression
 castExpressionTransformer = match . asRule
   where
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), (")", _), ("UnaryExpression", x)] =
-      emptyType $ CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
+      CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), ("[", _), ("]", _), (")", _), ("UnaryExpression", x)] =
-      emptyType $ CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
+      CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("Expression", t), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
-      emptyType $ CastExpression (getType $ expressionTransformer t) (unaryExpressionNotPlusMinusTransformer x)
-      where getType (Expression _ (ExpressionName name)) = Type (NamedType name) False
-            getType _                                    = error "Cast expression name should have been checked by the weeder"
+      CastExpression (getType $ expressionTransformer t) (unaryExpressionNotPlusMinusTransformer x)
+      where getType (ExpressionName name) = Type (NamedType name) False -- TODO: this doesn't seem right
+            getType _                     = error "Cast expression name should have been checked by the weeder"
     match [("CastExpression", _), ("(", _), ("Name", t), ("[", _), ("]", _), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
-      emptyType $ CastExpression (Type (NamedType $ nameTransformer t) False) (unaryExpressionNotPlusMinusTransformer x)
+      CastExpression (Type (NamedType $ nameTransformer t) False) (unaryExpressionNotPlusMinusTransformer x)
 
 multiplicativeExpressionTransformer :: TaggedParseTree -> Expression
 multiplicativeExpressionTransformer = match . asRule
@@ -467,11 +467,11 @@ multiplicativeExpressionTransformer = match . asRule
     match [("MultiplicativeExpression", _), ("UnaryExpression", x)] =
       unaryExpressionTransformer x
     match [("MultiplicativeExpression", _), ("MultiplicativeExpression", x), ("*", _), ("UnaryExpression", y)] =
-      emptyType $ BinaryOperation Multiply (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
+      BinaryOperation Multiply (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
     match [("MultiplicativeExpression", _), ("MultiplicativeExpression", x), ("/", _), ("UnaryExpression", y)] =
-      emptyType $ BinaryOperation Divide (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
+      BinaryOperation Divide (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
     match [("MultiplicativeExpression", _), ("MultiplicativeExpression", x), ("%", _), ("UnaryExpression", y)] =
-      emptyType $ BinaryOperation Modulus (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
+      BinaryOperation Modulus (multiplicativeExpressionTransformer x) (unaryExpressionTransformer y)
 
 additiveExpressionTransformer :: TaggedParseTree -> Expression
 additiveExpressionTransformer = match . asRule
@@ -479,9 +479,9 @@ additiveExpressionTransformer = match . asRule
     match [("AdditiveExpression", _), ("MultiplicativeExpression", x)] =
       multiplicativeExpressionTransformer x
     match [("AdditiveExpression", _), ("AdditiveExpression", x), ("+", _), ("MultiplicativeExpression", y)] =
-      emptyType $ BinaryOperation Add (additiveExpressionTransformer x) (multiplicativeExpressionTransformer y)
+      BinaryOperation Add (additiveExpressionTransformer x) (multiplicativeExpressionTransformer y)
     match [("AdditiveExpression", _), ("AdditiveExpression", x), ("-", _), ("MultiplicativeExpression", y)] =
-      emptyType $ BinaryOperation Subtract (additiveExpressionTransformer x) (multiplicativeExpressionTransformer y)
+      BinaryOperation Subtract (additiveExpressionTransformer x) (multiplicativeExpressionTransformer y)
 
 relationalExpressionTransformer :: TaggedParseTree -> Expression
 relationalExpressionTransformer = match . asRule
@@ -489,15 +489,15 @@ relationalExpressionTransformer = match . asRule
     match [("RelationalExpression", _), ("AdditiveExpression", x)] =
       additiveExpressionTransformer x
     match [("RelationalExpression", _), ("RelationalExpression", x), ("<", _), ("AdditiveExpression", y)] =
-      emptyType $ BinaryOperation Less (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+      BinaryOperation Less (relationalExpressionTransformer x) (additiveExpressionTransformer y)
     match [("RelationalExpression", _), ("RelationalExpression", x), (">", _), ("AdditiveExpression", y)] =
-      emptyType $ BinaryOperation Greater (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+      BinaryOperation Greater (relationalExpressionTransformer x) (additiveExpressionTransformer y)
     match [("RelationalExpression", _), ("RelationalExpression", x), ("<=", _), ("AdditiveExpression", y)] =
-      emptyType $ BinaryOperation LessEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+      BinaryOperation LessEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
     match [("RelationalExpression", _), ("RelationalExpression", x), (">=", _), ("AdditiveExpression", y)] =
-      emptyType $ BinaryOperation GreaterEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
+      BinaryOperation GreaterEqual (relationalExpressionTransformer x) (additiveExpressionTransformer y)
     match [("RelationalExpression", _), ("RelationalExpression", x), ("instanceof", _), ("ReferenceType", y)] =
-      emptyType $ InstanceOfExpression (relationalExpressionTransformer x) (referenceTypeTransformer y)
+      InstanceOfExpression (relationalExpressionTransformer x) (referenceTypeTransformer y)
 
 equalityExpressionTransformer :: TaggedParseTree -> Expression
 equalityExpressionTransformer = match . asRule
@@ -505,9 +505,9 @@ equalityExpressionTransformer = match . asRule
     match [("EqualityExpression", _), ("RelationalExpression", x)] =
       relationalExpressionTransformer x
     match [("EqualityExpression", _), ("EqualityExpression", x), ("==", _), ("RelationalExpression", y)] =
-      emptyType $ BinaryOperation Equality (equalityExpressionTransformer x) (relationalExpressionTransformer y)
+      BinaryOperation Equality (equalityExpressionTransformer x) (relationalExpressionTransformer y)
     match [("EqualityExpression", _), ("EqualityExpression", x), ("!=", _), ("RelationalExpression", y)] =
-      emptyType $ BinaryOperation Inequality (equalityExpressionTransformer x) (relationalExpressionTransformer y)
+      BinaryOperation Inequality (equalityExpressionTransformer x) (relationalExpressionTransformer y)
 
 andExpressionTransformer :: TaggedParseTree -> Expression
 andExpressionTransformer = match . asRule
@@ -515,7 +515,7 @@ andExpressionTransformer = match . asRule
     match [("AndExpression", _), ("EqualityExpression", x)] =
       equalityExpressionTransformer x
     match [("AndExpression", _), ("AndExpression", x), ("&", _), ("EqualityExpression", y)] =
-      emptyType $ BinaryOperation LazyAnd (andExpressionTransformer x) (equalityExpressionTransformer y)
+      BinaryOperation LazyAnd (andExpressionTransformer x) (equalityExpressionTransformer y)
 
 inclusiveOrExpressionTransformer :: TaggedParseTree -> Expression
 inclusiveOrExpressionTransformer = match . asRule
@@ -523,7 +523,7 @@ inclusiveOrExpressionTransformer = match . asRule
     match [("InclusiveOrExpression", _), ("AndExpression", x)] =
       andExpressionTransformer x
     match [("InclusiveOrExpression", _), ("InclusiveOrExpression", x), ("|", _), ("AndExpression", y)] =
-      emptyType $ BinaryOperation LazyOr (inclusiveOrExpressionTransformer x) (andExpressionTransformer y)
+      BinaryOperation LazyOr (inclusiveOrExpressionTransformer x) (andExpressionTransformer y)
 
 conditionalAndExpressionTransformer :: TaggedParseTree -> Expression
 conditionalAndExpressionTransformer = match . asRule
@@ -531,7 +531,7 @@ conditionalAndExpressionTransformer = match . asRule
     match [("ConditionalAndExpression", _), ("InclusiveOrExpression", x)] =
       inclusiveOrExpressionTransformer x
     match [("ConditionalAndExpression", _), ("ConditionalAndExpression", x), ("&&", _), ("InclusiveOrExpression", y)] =
-      emptyType $ BinaryOperation And (conditionalAndExpressionTransformer x) (inclusiveOrExpressionTransformer y)
+      BinaryOperation And (conditionalAndExpressionTransformer x) (inclusiveOrExpressionTransformer y)
 
 conditionalOrExpressionTransformer :: TaggedParseTree -> Expression
 conditionalOrExpressionTransformer = match . asRule
@@ -539,7 +539,7 @@ conditionalOrExpressionTransformer = match . asRule
     match [("ConditionalOrExpression", _), ("ConditionalAndExpression", x)] =
       conditionalAndExpressionTransformer x
     match [("ConditionalOrExpression", _), ("ConditionalOrExpression", x), ("||", _), ("ConditionalAndExpression", y)] =
-      emptyType $ BinaryOperation Or (conditionalOrExpressionTransformer x) (conditionalAndExpressionTransformer y)
+      BinaryOperation Or (conditionalOrExpressionTransformer x) (conditionalAndExpressionTransformer y)
 
 assignmentExpressionTransformer :: TaggedParseTree -> Expression
 assignmentExpressionTransformer = match . asRule
@@ -553,11 +553,11 @@ assignmentTransformer :: TaggedParseTree -> Expression
 assignmentTransformer = match . asRule
   where
     match [("Assignment", _), ("Name", x), ("=", _), ("AssignmentExpression", y)] =
-      emptyType $ BinaryOperation Assign (emptyType $ ExpressionName (nameTransformer x)) (assignmentExpressionTransformer y)
+      BinaryOperation Assign (ExpressionName (nameTransformer x)) (assignmentExpressionTransformer y)
     match [("Assignment", _), ("FieldAccess", x), ("=", _), ("AssignmentExpression", y)] =
-      emptyType $ BinaryOperation Assign (fieldAccessTransformer x) (assignmentExpressionTransformer y)
+      BinaryOperation Assign (fieldAccessTransformer x) (assignmentExpressionTransformer y)
     match [("Assignment", _), ("ArrayAccess", x), ("=", _), ("AssignmentExpression", y)] =
-      emptyType $ BinaryOperation Assign (arrayAccessTransformer x) (assignmentExpressionTransformer y)
+      BinaryOperation Assign (arrayAccessTransformer x) (assignmentExpressionTransformer y)
 
 expressionTransformer :: TaggedParseTree -> Expression
 expressionTransformer = match . asRule

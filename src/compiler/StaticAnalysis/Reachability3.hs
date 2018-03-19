@@ -21,7 +21,7 @@ instance Analysis R3 () where
     analyze' (R3 (Just id)) e
 
   -- Check the identifier /= the context.
-  analyze (R3 (Just ctxId)) (AstExpression (Expression _ (ExpressionName [id])))
+  analyze (R3 (Just ctxId)) (AstExpression (ExpressionName [id]))
     | id == ctxId = Left "Variable must not occur in its own initializer"
     | otherwise = Right ()
 
