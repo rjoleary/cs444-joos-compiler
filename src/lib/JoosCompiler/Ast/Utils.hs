@@ -4,6 +4,7 @@ import           Data.List
 import           Data.Maybe
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
+import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Treeify
 
@@ -102,7 +103,7 @@ resolveInScope program scope name
     -- unitTypeName is the name of the class that this scope belongs to
     unitTypeName = scopeCuName scope
     maybeUnit = find ((== unitTypeName) . canonicalizeUnitName) $ programCus program
-    unit = fromMaybe (error "resolveInScope couldn't find unit") maybeUnit
+    unit = fromMaybe (error $ "resolveInScope couldn't find unit: " ++ showName unitTypeName) maybeUnit
     resolvedField = resolveFieldInProgramUnit program unit firstPart
     resolvedFieldType = variableType $ fromJust resolvedField
 

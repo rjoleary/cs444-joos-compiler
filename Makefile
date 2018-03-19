@@ -9,21 +9,18 @@ DOC_INPUT := $(sort $(wildcard ./docs/*.md))
 DOC_OUTPUT := $(patsubst %.md,%.pdf,${DOC_INPUT})
 
 HS_LIB   := src/lib
-HS_LIB_FILES := $(sort $(wildcard ${HS_LIB}/*.hs \
-			${HS_LIB}/*/*.hs \
-			${HS_LIB}/*/*/*.hs \
-			${HS_LIB}/*/*/*/*.hs))
+HS_LIB_FILES := $(wildcard ${HS_LIB}/*.hs ${HS_LIB}/**/*.hs)
 
 COMPILER_SRC  := src/compiler
-COMPILER_FILES := $(sort $(wildcard ${COMPILER_SRC}/*.hs ${COMPILER_SRC}/*/*.hs))
+COMPILER_FILES := $(wildcard ${COMPILER_SRC}/*.hs ${COMPILER_SRC}/**/*.hs)
 COMPILER_MAIN := ${COMPILER_SRC}/Main.hs
 
 LEXER_SRC  := src/lexer
-LEXER_FILES := $(sort $(wildcard ${LEXER_SRC}/*.hs))
+LEXER_FILES := $(wildcard ${LEXER_SRC}/*.hs ${LEXER_SRC}/**/*.hs)
 LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
 
 WEEDER_SRC  := src/weeder
-WEEDER_FILES := $(sort $(wildcard ${WEEDER_SRC}/*.hs))
+WEEDER_FILES := $(wildcard ${WEEDER_SRC}/*.hs ${WEEDER_SRC}/**/*.hs)
 
 HS_BUILD := ghc_build
 

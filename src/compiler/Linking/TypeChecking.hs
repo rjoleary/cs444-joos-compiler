@@ -20,6 +20,7 @@ import JoosCompiler.Ast.Visitor.Analysis
 import JoosCompiler.Ast.Utils
 import JoosCompiler.Error
 import JoosCompiler.TreeUtils
+import Types
 
 checkTypes :: AstNode -> Either String ()
 checkTypes (Node x _) = analyze (TypeAnalysis Map.empty) x
