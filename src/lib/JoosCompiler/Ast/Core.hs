@@ -38,8 +38,8 @@ cstsToAst ts = program
       |> subForest
       |> packageProgram
       -- TODO this is disabled so hierarchy checking works
-      -- |> asAst
-      -- |> asTree
+      |> asAst
+      |> asTree
       |> insertBlocksAroundStatements
       |> injectScopesIntoChildrenBlocks
 

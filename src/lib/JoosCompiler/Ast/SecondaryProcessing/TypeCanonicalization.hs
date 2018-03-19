@@ -23,75 +23,29 @@ canonicalizeProgram (Node p@(AstWholeProgram program) oldUnits) =
 canonicalizeProgram _ = error "Invalid node type in canonicalizeProgram"
 
 canonicalizeUnit :: WholeProgram -> AstNode -> AstNode
-canonicalizeUnit program oldUnitNode@(Node (AstCompilationUnit oldUnit) _) =
-  f oldUnitNode
+canonicalizeUnit program (Node (AstCompilationUnit oldUnit) _children) =
+  (Node (AstCompilationUnit canonicalizedUnit) $ map f _children)
   where
+    canonicalizedUnit = CompilationUnit { cuPackage = cuPackage oldUnit
+                                        , imports = imports oldUnit
+                                        , typeDecl = canonicalizedTypeDecl
+                                        , cuTypeName = cuTypeName oldUnit
+                                        }
+    canonicalizedTypeDecl
+      | typeDecl oldUnit == Nothing = Nothing
+      | otherwise = Just (typeDecl oldUnit |>
+                          fromJust |>
+                          canonicalizeTypeDecl program oldUnit)
     f :: AstNode -> AstNode
-    f (Node (AstField Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
-                                                     , isArray = _isArray
-                                                     }
-                            , variableModifiers = m
-                            , variableName = n
-                            , variableValue = v
-                            }) _children) =
-      Node
-        (AstField
-           (Variable
-            { variableType = newType
-            , variableModifiers = m
-            , variableName = n
-            , variableValue = v
-            })) $
-      map f _children
+    f (Node (AstField field) _children) =
+      Node (AstField newField) (map f _children)
       where
-        newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
-        newTypeName = canonicalize program oldUnit oldTypeName
+        newField = canonicalizeVar program oldUnit field
 
-    f (Node (AstLocalVariable Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
-                                                             , isArray = _isArray
-                                                             }
-                                    , variableModifiers = m
-                                    , variableName = n
-                                    , variableValue = v
-                                    }) _children) =
-      Node
-        (AstLocalVariable
-           (Variable
-            { variableType = newType
-            , variableModifiers = m
-            , variableName = n
-            , variableValue = v
-            })) $
-      map f _children
+    f (Node (AstLocalVariable local) _children) =
+      Node (AstLocalVariable newLocal) (map f _children)
       where
-        newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
-        newTypeName = canonicalize program oldUnit oldTypeName
-
-    f (Node (AstTypeDeclaration TypeDeclaration { typeName = name
-                                                , classModifiers = modifiers
-                                                , isInterface    = _isInterface
-                                                , super          = oldSuper
-                                                , interfaces     = oldInterfaces
-                                                , classFields    = fields
-                                                , methods        = _methods
-                                                , constructors   = _constructors
-                                                }) oldChildren) =
-      Node
-        (AstTypeDeclaration
-         TypeDeclaration { typeName = name
-                         , classModifiers = modifiers
-                         , isInterface    = _isInterface
-                         , super          = newSuper
-                         , interfaces     = newInterfaces
-                         , classFields    = fields
-                         , methods        = _methods
-                         , constructors   = _constructors
-                         })
-        newChildren
-      where
-        newChildren = map f oldChildren
-        newSuper = canonicalize program oldUnit oldSuper
-        newInterfaces = map (canonicalize program oldUnit) oldInterfaces
+        newLocal = canonicalizeVar program oldUnit local
 
     f (Node n _children) = Node n $ map f _children
 canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
@@ -169,3 +123,52 @@ makeOnDemandImportDeclaration name =
   , importTypeName = Nothing
   , onDemand = True
   }
+
+canonicalizeVar :: WholeProgram -> CompilationUnit -> Variable -> Variable
+canonicalizeVar
+  program
+  unit
+  Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
+                                 , isArray = _isArray
+                                 }
+           , variableModifiers = m
+           , variableName = n
+           , variableValue = v
+           } =
+  Variable { variableType = newType
+           , variableModifiers = m
+           , variableName = n
+           , variableValue = v
+           }
+  where
+    newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
+    newTypeName = canonicalize program unit oldTypeName
+-- Not NamedType
+canonicalizeVar _ _ var = var
+
+canonicalizeTypeDecl :: WholeProgram -> CompilationUnit -> TypeDeclaration -> TypeDeclaration
+canonicalizeTypeDecl
+  program
+  unit
+  TypeDeclaration { typeName = name
+                  , classModifiers = modifiers
+                  , isInterface    = _isInterface
+                  , super          = oldSuper
+                  , interfaces     = oldInterfaces
+                  , classFields    = fields
+                  , methods        = _methods
+                  , constructors   = _constructors
+                  } =
+  TypeDeclaration { typeName = name
+                     , classModifiers = modifiers
+                     , isInterface    = _isInterface
+                     , super          = newSuper
+                     , interfaces     = newInterfaces
+                     , classFields    = newFields
+                     , methods        = _methods
+                     , constructors   = _constructors
+                     }
+  where
+    newSuper = canonicalize program unit oldSuper
+    newInterfaces = map (canonicalize program unit) oldInterfaces
+    newFields = map (canonicalizeVar program unit) fields
