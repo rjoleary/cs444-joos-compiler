@@ -39,7 +39,6 @@ instance Analysis TypeAnalysis () where
   analyze ctx (AstCompilationUnit (CompilationUnit{cuPackage=("java":_)})) =
     return ()
 
-  -- Add `this` to context.
   analyze ctx a@(AstTypeDeclaration x) =
     propagateAnalyze ctx{ ctxThis = Just [typeName x], ctxThisType = Just x } a
 
@@ -72,7 +71,6 @@ instance Analysis TypeAnalysis () where
     when (returnType == Void) (Left "Cannot return void")
     analyze' ctx n
 
-  -- TODO: add local variable type to scope
   analyze ctx (AstStatement LocalStatement{localVariable=v, nextStatement=n}) = do
     exprType <- analyze' ctx (variableValue v)
     when (exprType /= variableType v)
