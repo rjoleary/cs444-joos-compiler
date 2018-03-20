@@ -311,15 +311,41 @@ statements. This made it easier to go through the statements in order.
 Similarly to type checking, `checkReachability` returns `Left errorString` in
 the event of an error and `Right ()` otherwise.
 
+`Reachability3.hs` is named that because it checks the third reachability
+condition.
+
 # Challenges
+
+In addition to the challenges described above, our biggest challenge in this set
+of assignments was the shift in mindset required to work in a pure language. Not
+being able to create loops and update data in a global table meant that we
+needed to spend a lot of time planning and thinking about alternate methods for
+implementing the compiler features we needed.
+
+Another challenge was recovering in future assignments after facing problems in
+a previous assignment. Our method for dealing with this has been to disable
+error checking from previous assignments that is not necessary and trying to fix
+the problems bit by bit as time permits.
 
 # Testing
 
+Testing for this assignment was mostly done on the marmoset test suite. The test
+harness has been configured so that running `make a2` will run the tests for
+`a2`. This allowed for a quick feedback loop in our development
 
-## Parallelized tests
+## Parallelizing tests
 
-Sequential: 126s
+When we included the stdlib in our tests, our tests took almost 10 minutes to
+complete. To improve that situation, we parallelized testing (and reduced the
+amount of work) by making a few changes:
 
-Parallel: 22.44s
+  * instead of one output location, the compiler outputs files next to each
+    input file that match the input file name. (e.g. file1.java -> file1.tokens,
+    file1.parse)
 
-Which is a 5.6x improvement
+  * reuse stdlib parse between runs
+
+  * some arguments that had been passed through files were now being passed as
+    arguments
+
+The improvement was drastic.
