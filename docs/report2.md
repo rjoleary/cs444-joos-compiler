@@ -126,16 +126,16 @@ A transformer is a function with signature
 `[AstNode] -> TaggedParseTree -> AstWrapper`. The reason for that
 weird signature is that it accepts those two arguments:
 
-- transformedChildren, a list of the node's children after they had
+- `transformedChildren`, a list of the node's children after they had
   been transformed with `cstToAst`
-- rootNode, the node that we are going to transform now
+- `rootNode`, the node that we are going to transform now
 
 The reason behind this signature is that we want to have access to the ASTs
 for the children nodes by the time we get to the root node. This makes
-our work much easier since it's easier to work with the AST than the
+our work much easier since it is easier to work with the AST than the
 CST, and the children are ASTs.
 
-For example, we don't have to traverse the tree to find out the type of a
+For example, we do not have to traverse the tree to find out the type of a
 variable. We can simply look for its `AstType` node.
 
 There is a bunch of transformers that we have defined in
@@ -148,13 +148,12 @@ which defines our grammar.
 
 ### AST Types
 
-The types for our AST are messy and a little convoluted. The reasons
-are:
+The types for our AST were hard to define for the following reasons:
 
 1. Haskell does not allow some type operations that would have made
-   our types simpler
-2. We are trying to take advantage of type checking as much as we can,
-   even if our types become somewhat cumbersome
+   our types simpler.
+2. We are trying to take advantage of type checking (and pattern matching!) as
+   much as we can, even if our types become somewhat cumbersome.
 
 The types are essentially:
 
@@ -258,7 +257,7 @@ exists. They will be used in a disambiguation phase to check that no conflicts
 occur.
 
 The reason this is not finished yet is due to challenges we faced writing the
-functions that resolve names. That was due to the fact that we don't have a
+functions that resolve names. That was due to the fact that we do not have a
 proper symbol table because the idea did not make much sense in Haskell (as it
 disallows mutation). Instead, our resolve functions accept the program (a node
 type which contains all packages) and a scope (or compilation unit where
@@ -272,7 +271,7 @@ This is the first phase where we use our AST without the parse tree nodes. Type
 checking is done by implementing the `Analysis` typeclass on our AST. The reason
 we created this typeclass is to enable us to easily traverse expressions and
 statements in our AST. Statements and expressions are different from the rest of
-the program because they undergo heavy processing, and they don't look like a
+the program because they undergo heavy processing, and they do not look like a
 typical Haskell tree.
 
 The different forms statements and expressions can take are in
@@ -367,13 +366,11 @@ When we included the stdlib in our tests, our tests took almost 10 minutes to
 complete. To improve that situation, we parallelized testing (and reduced the
 amount of work) by making a few changes:
 
-  * instead of one output location, the compiler outputs files next to each
+  * Instead of one output location, the compiler outputs files next to each
     input file that match the input file name. (e.g. file1.java -> file1.tokens,
     file1.parse)
+  * Parsing for stdlib is cached between tests.
+  * Some arguments that had been passed through files are now being passed as
+    arguments.
 
-  * reuse stdlib parse between runs
-
-  * some arguments that had been passed through files were now being passed as
-    arguments
-
-The improvement was drastic -- a factor of more than 20.
+The improvement was drastic with a speedup of more than 20x.
