@@ -242,7 +242,48 @@ appropriate) as the context and resolve the name using those.
 
 Type checking is done in `src/compiler/Linking/TypeChecking.hs`.
 
+This is the first phase where we use our AST without the parse tree nodes. Type
+checking is done by implementing the `Analysis` typeclass on our AST. The reason
+we created this typeclass is to enable us to easily traverse expressions and
+statements in our AST. Statements and expressions are different from the rest of
+the program because they undergo heavy processing, and they don't look like a
+typical Haskell tree.
 
+The different forms statements and expressions can take are in
+`src/lib/JoosCompiler/Ast/NodeTypes.hs`. The reason for the special treatment
+they receive is that it is easier to represent them as abstract data types than
+as a tree. For example, an addition expression would look something along the
+lines of:
+
+`BinaryOperation Add expression1 expression2`
+
+If expressions were represented as trees, then it would be more similar to:
+
+`Node (BinarryOperation Add) [expression1, expression2]`
+
+where the list at the end is the children. While representing the expressions
+and statements as trees would have made it simpler to deal with them in some
+ways, it would have in fact been harder to do the kind of computation we need to
+do since it would require relying on the children indices.
+
+What the `Analysis` typeclass does is define a function for handling each
+statement and expression. Then it recursively runs those functions as if we were
+traversing a tree, but giving us the benefit of working with a datatype that
+suits our usecase.
+
+The type checking implements the `Analysis` typeclass functions appropriately so
+that they traverse methods in our tree and return an error if one is found.
+
+The mechanism for returning an error is the `Either` data type, which allows for
+wrapping a result in either a `Left` or a `Right`. Conventionally, `Left`
+represents an error. Thus our analysis code checks for error conditions and
+returns an error string wrapped in a `Left` if one is found (short circuiting)
+and `Right ()` otherwise. () is the void expression in Haskell.
+
+Our type checking code currently fails many of the positive marmoset tests due
+to the problems described above with our resolve functions. Anytime a name is
+resolved, we receive an error which bubbles up and causes the whole program to
+reported as erroneous.
 
 ## Reachability
 
@@ -254,6 +295,9 @@ trees
 Analysis "instance" was used to implement all the rules
 
 -->
+
+Reachability checking also relies on the `Analysis` typeclass. The code is in
+`src/compiler/StaticAnalysis/Reachability.hs` and `src/compiler/StaticAnalysis/Reachability3.hs`
 
 # Challenges
 
