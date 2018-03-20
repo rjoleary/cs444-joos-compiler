@@ -285,7 +285,7 @@ to the problems described above with our resolve functions. Anytime a name is
 resolved, we receive an error which bubbles up and causes the whole program to
 reported as erroneous.
 
-## Reachability
+## Reachability and Definite Return
 
 <!--
 
@@ -297,7 +297,19 @@ Analysis "instance" was used to implement all the rules
 -->
 
 Reachability checking also relies on the `Analysis` typeclass. The code is in
-`src/compiler/StaticAnalysis/Reachability.hs` and `src/compiler/StaticAnalysis/Reachability3.hs`
+`src/compiler/StaticAnalysis/`
+
+Reachability checking is done by going through the statements in order and
+keeping track of the state the program would be in. For example, after a return
+statements, we expect not to see any statements since return does not complete
+normally.
+
+Because we do not have access to imperative constructs (loops) and statements
+are not represented as a tree, we added `nextStatement` as a record in every
+statements. This made it easier to go through the statements in order.
+
+Similarly to type checking, `checkReachability` returns `Left errorString` in
+the event of an error and `Right ()` otherwise.
 
 # Challenges
 
