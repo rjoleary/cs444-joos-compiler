@@ -51,31 +51,31 @@ in A2.
 
 Our compiler gradually shifted from using the parse tree to an AST. This
 was accomplished by keeping the parse tree structure and replacing the nodes in
-the  tree by AST nodes one at a time. The conversion from parse tree to AST is
+the tree by AST nodes one at a time. The conversion from parse tree to AST is
 driven by `Ast/Core.hs`, which traverses the parse tree and calls the correct
 transformer for each node if the transformer is defined.
 
 The default transformer returns the original parse tree.
 
-Because we used Haskell for our compiler, replacing the parse tree nodes was not
-as simple as returning the AST node. It was necessary to create two levels of
-new types:
+Due to limitations of Haskell, replacing the parse tree nodes was not as simple
+as returning the AST node. It was necessary to create two levels of new types:
 
-  * The AST Node Types (`src/lib/JoosCompiler/Ast/NodeTypes.hs`)
+  * The AST Node Types (`src/lib/JoosCompiler/Ast/NodeTypes.hs`) contains
+    individual types for each node such as `Statement`, `Expression`, etc...
   * The AST Wrapper Type (`src/lib/JoosCompiler/Ast/Transformers/Types.hs`)
+    contains one union type for all nodes.
 
-The reason that was necessary is that the AST Node Types were disjoint by
+The Ast Wrapper is necessary because AST Node Types were disjoint by
 design, and in order to combine them into a tree in a way that Haskell accepts,
-we needed to create a "tagged union", which the AST Wrapper is. One benefit of
+we needed to create a "tagged union", which is the `ASTWrapper`. One benefit of
 this approach is that it allowed us to also wrap parse tree nodes with the AST Wrapper.
 
-By the time we were working on A4, the AST contained all the input information.
-So the compiler discarded the parse tree nodes starting then since the data they
-contained was redundant at that point.
-
-One issue that we struggled with several times is the immutability and lack of
-reference types in Haskell. Every time a transformation was added to the AST, we
-had to decide where the data would be updated since it was stored in multiple
+One issue that we struggled with several times is immutable data. In Haskell,
+all data is immutable, so it cannot be modified after created. This made it
+difficult to tag information onto AST nodes. For example, it is desirable to
+tag type information onto expressions or reachability information onto
+statements. Haskell. Every time a transformation was added to the AST, we had
+to decide where the data would be updated since it was stored in multiple
 locations.
 
 For example, type declarations were added to the compilation unit
@@ -88,7 +88,33 @@ where possible and storing the name everywhere else, which could be treated as a
 
 ## AST Details
 
-(This is documentation for our team, so it might go too deep!)
+### Statements are Linked Lists
+
+Rather than storing lists of statement types at AST nodes, a single statement
+is stored which is the head of linked list of statements.
+
+Here are some examples:
+
+  * A `Method` node contains a single statement.
+  * An `ExpressionStatement` contains a link to the next statement.
+  * A `BlockStatement` contains two statements: the statement inside the block
+    and the next statement after the block.
+  * An `IfStatement` node contains three statements: the then-statement, the
+    else-statement and a next statement.
+  * A `TerminalStatement` is the only statement type without a next statement.
+
+Using this recursive definition for the AST works well in a language such as
+Haskell which relies heavily on recursion. Additionally, it allows for some
+useful properties such as:
+
+  * Local identifiers are always declared in a local declaration which is an
+    ancestor of the current node.
+  * For basic reachability, simply assert the `ReturnStatement`'s next
+    statement is the `TerminalNode`.
+  * For more advanced reachability, it is easy to create constraints which
+    recursively assert properties regarding the reachability of the next
+    statement. For example, a `LoopStatements` next statement must be a
+    `TerminalStatement` if the loop's condition is always true.
 
 ### How the AST is converted
 
@@ -269,7 +295,7 @@ do since it would require relying on the children indices.
 What the `Analysis` typeclass does is define a function for handling each
 statement and expression. Then it recursively runs those functions as if we were
 traversing a tree, but giving us the benefit of working with a datatype that
-suits our usecase.
+suits our use case.
 
 The type checking implements the `Analysis` typeclass functions appropriately so
 that they traverse methods in our tree and return an error if one is found.
