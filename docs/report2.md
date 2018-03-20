@@ -176,7 +176,44 @@ Type linking was the first phase where we needed to handle multiple input files.
 Previously, each of our phases accepted one file and output one file (for
 the next stage and debugging).
 
+Our compiler was modified in the following ways:
 
+  * the `joosc` script accepts multiple parameters and calls each of the initial
+    phases on all of them. Once the initial phases are over, we call
+    `bin/compiler` and pass in all the resulting parse trees
+  * `bin/compiler` reads all the parse trees, converts them into ASTs, then
+    combines them into one big AST and runs the error checking code on the
+    resulting AST.
+
+We later made some changes to allow for parallel processing, which speeded up
+our feedback cycle.
+
+In our code, the hierarchy is represented as packages, subpackages, and types.
+There is one package at the top (default package), which has as subpackages all
+declared packages that are one level below (e.g. `java`). Each of those
+subpackages will in turn have subpackages that are one level below them (so
+`java` would have `lang` as one subpackage).
+
+The subpackages are stored in a map-like structure, associated lists. This
+allows for easy lookup without adding unnecessary complexity.
+
+Each subpackage either has a `Package` or `Nothing`. For example, the `java`
+subpackage has `Nothing` as its package, but `java.lang` has a `Package` which
+contains all of the default compilation units and their types.
+
+This hierarchy makes it easy to look up types: we simply need to go to the
+default package and recursively descend the subpackages. Then we find the
+compilation unit for the type using the last part of the compound name.
+
+Of course, that requires the canonical name. So what we do before any types are
+looked up is traverse the entire program and canonicalize all type names in
+local/field declarations and in super/interface types. If the type cannot be
+canonicalized due to a missing package or type declaration, it is treated as a
+program error.
+
+## Disambiguation
+
+## Type Checking
 
 ## Reachability
 
