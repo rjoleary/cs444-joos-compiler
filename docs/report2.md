@@ -281,7 +281,7 @@ returns an error string wrapped in a `Left` if one is found (short circuiting)
 and `Right ()` otherwise. `()` is the void expression in Haskell.
 
 Our type checking code currently fails many of the positive marmoset tests due
-to the problems described above with our resolve functions. Anytime a name is
+to the problems described above with our resolve functions. Any time a name is
 resolved, we receive an error which bubbles up and causes the whole program to
 reported as erroneous.
 
@@ -305,8 +305,9 @@ statements, we expect not to see any statements since return does not complete
 normally.
 
 Because we do not have access to imperative constructs (loops) and statements
-are not represented as a tree, we added `nextStatement` as a record in every
-statements. This made it easier to go through the statements in order.
+are not represented as trees (which would have given us some utilities to use),
+we added `nextStatement` as a record in every statements. This made it easier to
+go through the statements in order.
 
 Similarly to type checking, `checkReachability` returns `Left errorString` in
 the event of an error and `Right ()` otherwise.
