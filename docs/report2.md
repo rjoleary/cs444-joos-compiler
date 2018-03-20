@@ -332,7 +332,8 @@ the problems bit by bit as time permits.
 
 Testing for this assignment was mostly done on the marmoset test suite. The test
 harness has been configured so that running `make a2` will run the tests for
-`a2`. This allowed for a quick feedback loop in our development
+`a2` and similarly for other assignments. This allowed for a quick feedback loop
+in our development
 
 ## Parallelizing tests
 
