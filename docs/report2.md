@@ -348,4 +348,4 @@ amount of work) by making a few changes:
   * some arguments that had been passed through files were now being passed as
     arguments
 
-The improvement was drastic.
+The improvement was drastic -- a factor of more than 20.
