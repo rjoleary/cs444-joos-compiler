@@ -217,7 +217,7 @@ Disambiguation is something our compiler does not do fully yet.
 
 When generating code, the function used will be `resolveInScope`. It receives a
 name (and the context) and handles disambiguating it and classifying it as a
-type, field, local, or package. It returns
+type, field, local, or package.
 
 What is missing is checking all imports to ensure that there are no conflicts.
 
@@ -278,7 +278,7 @@ The mechanism for returning an error is the `Either` data type, which allows for
 wrapping a result in either a `Left` or a `Right`. Conventionally, `Left`
 represents an error. Thus our analysis code checks for error conditions and
 returns an error string wrapped in a `Left` if one is found (short circuiting)
-and `Right ()` otherwise. () is the void expression in Haskell.
+and `Right ()` otherwise. `()` is the void expression in Haskell.
 
 Our type checking code currently fails many of the positive marmoset tests due
 to the problems described above with our resolve functions. Anytime a name is
