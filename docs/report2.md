@@ -82,7 +82,7 @@ For example, type declarations were added to the compilation unit
 nodes, but they were also children of that node. For that case, we decided to
 update both. In other cases, we usually updated one node and treated it as the
 source of truth, and the other nodes were discarded. We also tried to reduce the
-number of places where this issue can occur by treating the data in one place
+number of places where this issue can occur by storing the data in one place
 where possible and storing the name everywhere else, which could be treated as a
 "pointer".
 
