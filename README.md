@@ -68,7 +68,7 @@ are:
 The types are essentially:
 
 * `a`, where `a` stands for some node type defined in
-  [src/lib/haskell/JoosCompiler/Ast/NodeTypes.hs](src/lib/haskell/JoosCompiler/Ast/NodeTypes.hs). This
+  [src/lib/JoosCompiler/Ast/NodeTypes.hs](src/lib/haskell/JoosCompiler/Ast/NodeTypes.hs). This
   can be something like `Type`, `ClassDeclaration`, `Block`, etc.
 
 * `AstWrapper`, which wraps the node types in `NodeTypes.hs`. It can

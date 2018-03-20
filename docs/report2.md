@@ -4,9 +4,9 @@
 * Ryan O'Leary (rj2olear)
 * Xia Liu (x397liu)
 
-## Code Structure
+# Code Structure
 
-### Directory Structure
+## Directory Structure
 
 * `src/lexer/`: Haskell source code for the lexer
 * `src/rust/`: Rust source code for the parse engine
@@ -24,7 +24,7 @@
 * `joosc`: A script which ties all the stages together
 * `stdjoosc`: Invokes `joosc` on the stdlib as well as the input Java files
 
-### Build System
+## Build System
 
 In addition to building compiler, `MAKEFILE` contains a number of other useful
 utilities:
@@ -35,14 +35,14 @@ utilities:
     make test.unit      # Run Haskell unit tests
     make test           # Run our own test files
     make zip            # Generate zip file for submitting to Marmoset
-    make report         # Compile the report into a PDF
+    make docs           # Compile the docs into PDFs
     make clean          # Delete intermediate files
 
-## Phases in A2-A4
+# Phases in A2-A4
 
 <!-- Don't forget to add a lot of technical details this time -->
 
-### AST Generation
+## AST Generation
 
 Code in: `src/lib/JoosCompiler/Ast`
 
@@ -86,7 +86,62 @@ number of places where this issue can occur by treating the data in one place
 where possible and storing the name everywhere else, which could be treated as a
 "pointer".
 
-### Environment Building
+## AST Details
+
+(This is documentation for our team, so it might go too deep!)
+
+### How the AST is converted
+
+There is a function `cstToAst` in
+[Core.hs](src/lib/haskell/JoosCompiler/Ast/Core.hs). This function
+recursively calls the correct "transformer" on each node of the tree.
+
+A transformer is a function with signature
+`[AstNode] -> TaggedParseTree -> AstWrapper`. The reason for that
+weird signature is that it accepts those two arguments:
+
+- transformedChildren, a list of the node's children after they had
+  been transformed with `cstToAst`
+- rootNode, the node that we are going to transform now
+
+The reason behind this signature is that we want to have access to the ASTs
+for the children nodes by the time we get to the root node. This makes
+our work much easier since it's easier to work with the AST than the
+CST, and the children are ASTs.
+
+For example, we don't have to traverse the tree to find out the type of a
+variable. We can simply look for its `AstType` node.
+
+There is a bunch of transformers that we have defined in
+[src/lib/JoosCompiler/Ast/Transformers](src/lib/haskell/JoosCompiler/Ast/Transformers).
+The correct transformer is picked by `getTransformer` in
+[Core.hs](src/lib/JoosCompiler/Ast/Core.hs), which decides
+based on the `tokenName` (which can be `Identifier`, `Modifier`,
+`int`, etc.). The complete list is in `def/joos.cfg2`, of course,
+which defines our grammar.
+
+### AST Types
+
+The types for our AST are messy and a little convoluted. The reasons
+are:
+
+1. Haskell does not allow some type operations that would have made
+   our types simpler
+2. We are trying to take advantage of type checking as much as we can,
+   even if our types become somewhat cumbersome
+
+The types are essentially:
+
+* `a`, where `a` stands for some node type defined in
+  [src/lib/JoosCompiler/Ast/NodeTypes.hs](src/lib/haskell/JoosCompiler/Ast/NodeTypes.hs). This
+  can be something like `Type`, `ClassDeclaration`, `Block`, etc.
+
+* `AstWrapper`, which wraps the node types in `NodeTypes.hs`. It can
+  also wrap a `TaggedToken`, which is how we keep the parse tree
+
+* `AstNode :: Tree AstWrapper`
+
+## Environment Building
 
 In our compiler, we use `Scope`s to represent environments.
 
@@ -104,7 +159,7 @@ imported packages (also through the compilation unit)
 
 The error checking for this phase is done in `src/compiler/NameResolution/EnvironmentBuilding.hs`
 
-### Type Linking and Hierarchy Checking
+## Type Linking and Hierarchy Checking
 
 <!--
 
@@ -123,7 +178,7 @@ the next stage and debugging).
 
 
 
-### Reachability
+## Reachability
 
 <!--
 
@@ -134,10 +189,12 @@ Analysis "instance" was used to implement all the rules
 
 -->
 
-## Testing
+# Challenges
+
+# Testing
 
 
-### Parallelize tests
+## Parallelized tests
 
 Sequential: 126s
 
