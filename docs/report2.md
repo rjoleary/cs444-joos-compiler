@@ -213,7 +213,36 @@ program error.
 
 ## Disambiguation
 
+Disambiguation is something our compiler does not do fully yet.
+
+When generating code, the function used will be `resolveInScope`. It receives a
+name (and the context) and handles disambiguating it and classifying it as a
+type, field, local, or package. It returns
+
+What is missing is checking all imports to ensure that there are no conflicts.
+
+Currently, we have the following two functions: (in
+`src/lib/JoosCompiler/Ast/Utils.hs`)
+
+  * `resolveTypeInProgram`
+  * `resolvePackageFromProgram`
+
+Those functions resolve to a type or a package only if that type or package
+exists. They will be used in a disambiguation phase to check that no conflicts
+occur.
+
+The reason this is not finished yet is due to challenges we faced writing the
+functions that resolve names. That was due to the fact that we don't have a
+proper symbol table because the idea did not make much sense in Haskell (as it
+disallows mutation). Instead, our resolve functions accept the program (a node
+type which contains all packages) and a scope (or compilation unit where
+appropriate) as the context and resolve the name using those.
+
 ## Type Checking
+
+Type checking is done in `src/compiler/Linking/TypeChecking.hs`.
+
+
 
 ## Reachability
 
