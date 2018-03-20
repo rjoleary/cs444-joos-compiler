@@ -155,7 +155,7 @@ Thus the scope makes it possible to resolve all names at any point inside a
 method. That is done by checking for a local that matches the name. If no local
 matches, the fields are checked (they are found using the compilation unit,
 which points to the type declaration). If no field matches, then we check the
-imported packages (also through the compilation unit)
+imported packages (also through the compilation unit).
 
 The error checking for this phase is done in `src/compiler/NameResolution/EnvironmentBuilding.hs`
 
@@ -185,7 +185,7 @@ Our compiler was modified in the following ways:
     combines them into one big AST and runs the error checking code on the
     resulting AST.
 
-We later made some changes to allow for parallel processing, which speeded up
+We later made some changes to allow for parallel processing, which sped up
 our feedback cycle.
 
 In our code, the hierarchy is represented as packages, subpackages, and types.
