@@ -32,40 +32,29 @@ runtests() {
             local files=$testname
         fi
 
-        $COMPILER $files > "$testname.stdout" 2> "$testname.stderr" &
-        PROCESSES="$PROCESSES $testname $!"
-    done
-
-    accumulatetests $PROCESSES
-}
-
-accumulatetests() {
-    while [ "$#" != 0 ]; do
-        local testname=$1
-        local process=$2
-        shift 2
+        $COMPILER $files > "$testname.stdout" 2> "$testname.stderr"; ret=$?
 
         RUN=$((RUN+1))
-        echo -n "$RUN: $testname ... "
-        wait $process
-        case $? in
+        case $ret in
             $PASS_CODE)
                 PASSED=$((PASSED+1))
-                echo PASSED
+                echo -n PASSED
                 ;;
             $FAIL_CODE)
                 FAILED=$((FAILED+1))
-                echo FAILED
+                echo -n FAILED "($FAIL_CODE)"
                 ;;
             *)
                 ERROR=$((ERROR+1))
-                echo ERROR
+                echo -n ERROR
                 ;;
         esac
+
+        echo '' $testname
+
         cat "$testname.stderr" | sed 's/^/  /'
     done
 }
-
 
 # Delete intermediate files from previous testing.
 find 'test' -name '*.ast' -delete

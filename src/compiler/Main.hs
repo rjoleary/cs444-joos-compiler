@@ -47,7 +47,7 @@ main = do
       Right _  -> return ()
       Left err -> exitError err
 
-    when (testNum == 3) $ do
+    when (testNum > 3) $ do
       -- Type checking
       case (checkTypes ast) of
         Right _ -> return ()

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-ERROR_CODE=${ERROR_CODE-42}
-
 # TODO: check for whitespace
 
 # Check extensions.
@@ -49,12 +47,9 @@ for FILE; do
     esac
 done
 
-AST="test/ast.ast"
-
 bin/compiler "$@"; ret="$?"
-# Print AST with AST nodes highlighted
 case "$ret" in
     0) ;;
     42) exit 42; ;;
-    *) echo "Exiting due to compiler error"; exit $ERROR_CODE; ;; # TODO: should return $ret
+    *) echo "Exiting due to compiler error"; exit 42; ;;
 esac
