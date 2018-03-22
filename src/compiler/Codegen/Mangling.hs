@@ -1,7 +1,5 @@
 module Codegen.Mangling
-  ( mangleField
-  , mangleMethod
-  , mangleType
+  ( Mangleable(..)
   ) where
 
 import Data.List
@@ -15,32 +13,33 @@ import JoosCompiler.Ast.NodeTypes
 --   int ma (int i, java.lang.String s) {}
 -- }
 
+class Mangleable a where
+    mangle :: a -> String
+
 -- Field$p$q$A$fa
-mangleField :: Field -> String
-mangleField field = mangledCanonical
-  where
-    canonicalized = variableCanonicalName field -- [p, q, A, fa]
-    mangledCanonical = intercalate "$" ("Field" : canonicalized)
+instance Mangleable Variable where
+  mangle field = mangledCanonical
+    where
+      canonicalized = variableCanonicalName field -- [p, q, A, fa]
+      mangledCanonical = intercalate "$" ("Field" : canonicalized)
 
 -- Method$p$q$A$ma#int#java.lang.String#
-mangleMethod :: Method -> String
-mangleMethod method = mangledCanonical -- methodName method
-  where
-    canonicalized = methodCanonicalName method
-    firstPart = intercalate "$" ("Method" : canonicalized)
-    v = methodParameters method
-    t = map (show . variableType) v
-    secondPart = intercalate "#" t
-    prepare = [firstPart, secondPart]
-    mangledCanonical = (intercalate "#" prepare) ++ "#"
-
-
+instance Mangleable Method where
+  mangle method = mangledCanonical -- methodName method
+    where
+      canonicalized = methodCanonicalName method
+      firstPart = intercalate "$" ("Method" : canonicalized)
+      v = methodParameters method
+      t = map (show . variableType) v
+      secondPart = intercalate "#" t
+      prepare = [firstPart, secondPart]
+      mangledCanonical = (intercalate "#" prepare) ++ "#"
 
 -- Class$p$q$A
 -- Can also be interface
-mangleType :: TypeDeclaration -> String
-mangleType t = mangledCanonical
-  where
-    canonicalized = typeCanonicalName t
- --   canonicalized = typeCanonicalName s
-    mangledCanonical = intercalate "$" ("Class" : canonicalized)
+instance Mangleable TypeDeclaration where
+  mangle t = mangledCanonical
+    where
+      canonicalized = typeCanonicalName t
+   --   canonicalized = typeCanonicalName s
+      mangledCanonical = intercalate "$" ("Class" : canonicalized)
