@@ -171,6 +171,13 @@ literalType CharacterLiteral{} = Type Char False
 literalType StringLiteral{}    = Type (NamedType ["java", "lang", "String"]) False
 literalType NullLiteral{}      = Null
 
+-- Returns the default value for fields if they are left uninitialized.
+unitializedLiteral :: Type -> Literal
+unitializedLitearl (Type (NamedType _) _) = NullLiteral
+unitializedLiteral (Type _ True)          = NullLiteral
+unitializedLiteral (Type Boolean _)       = BooleanLiteral False
+unitializedLiteral (Type _ _)             = IntegerLiteral 0
+
 extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"
 extractTypeName (Just c) = typeName c
