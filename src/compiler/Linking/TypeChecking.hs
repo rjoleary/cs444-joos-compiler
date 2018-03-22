@@ -278,7 +278,7 @@ isString t = typeSignature t == "java.lang.String"
 -- Create method signature suitable for lookup.
 createLookupSignature :: String -> [Type] -> String
 createLookupSignature name args =
-  methodSignature $ Method Void [] name (map (\t -> Variable t [] "" $ This) args) TerminalStatement
+  methodSignature $ Method Void [] name (map (\t -> Variable t [] "" This []) args) TerminalStatement []
 
 leftOrRight :: Either a a -> a
 leftOrRight (Left x) = x

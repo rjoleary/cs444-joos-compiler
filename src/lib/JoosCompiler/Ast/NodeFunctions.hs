@@ -49,7 +49,7 @@ instance Show ImportDeclaration where
   show i                                  = showName $ importName i
 
 instance Show TypeDeclaration where
-  show (TypeDeclaration name _modifiers _isInterface _super _interfaces fields _methods _) =
+  show (TypeDeclaration name _modifiers _isInterface _super _interfaces fields _methods _ _) =
     "TypeDeclaration: " ++
     show _modifiers ++
     " " ++
@@ -68,7 +68,7 @@ instance Show TypeDeclaration where
     ")"
 
 instance Show Variable where
-  show (Variable _type _modifiers _name _) =
+  show (Variable _type _modifiers _name _ _) =
     "Variable: " ++
     m ++ show _type ++ " " ++ _name
     where

@@ -53,30 +53,33 @@ data ImportDeclaration = ImportDeclaration
 
 -- A type is a class or an interface.
 data TypeDeclaration = TypeDeclaration
-  { typeName       :: String
-  , classModifiers :: [Modifier]
-  , isInterface    :: Bool
-  , super          :: Name
-  , interfaces     :: [Name]
-  , classFields    :: [Variable]
-  , methods        :: [Method]
-  , constructors   :: [Method]
+  { typeName             :: String
+  , classModifiers       :: [Modifier]
+  , isInterface          :: Bool
+  , super                :: Name
+  , interfaces           :: [Name]
+  , classFields          :: [Variable]
+  , methods              :: [Method]
+  , constructors         :: [Method]
+  , typeCanonicalName    :: [Method]
   } deriving (Eq)
 
 data Variable = Variable
-  { variableType      :: Type
-  , variableModifiers :: [Modifier]
-  , variableName      :: String
-  , variableValue     :: Expression
+  { variableType            :: Type
+  , variableModifiers       :: [Modifier]
+  , variableName            :: String
+  , variableValue           :: Expression
+  , variableCanonicalName   :: Name
   } deriving (Eq)
 
 -- The methodReturn for a constructor is always void.
 data Method = Method
-  { methodReturn     :: Type
-  , methodModifiers  :: [Modifier]
-  , methodName       :: String
-  , methodParameters :: [Variable]
-  , methodStatement  :: Statement
+  { methodReturn           :: Type
+  , methodModifiers        :: [Modifier]
+  , methodName             :: String
+  , methodParameters       :: [Variable]
+  , methodStatement        :: Statement
+  , methodCanonicalName    :: Name
   } deriving (Eq)
 
 

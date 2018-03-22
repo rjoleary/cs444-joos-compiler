@@ -173,7 +173,7 @@ resolveUnitInProgram program name =
   find ((== name) . canonicalizeUnitName) $ programCus program
 
 resolveMethod :: Name -> Method
-resolveMethod _ = Method _type [] "method" [] TerminalStatement
+resolveMethod _ = Method _type [] "method" [] TerminalStatement []
   where _type = Type Int False
 
 canonicalizeUnitName :: CompilationUnit -> Name
