@@ -61,7 +61,7 @@ data TypeDeclaration = TypeDeclaration
   , classFields          :: [Variable]
   , methods              :: [Method]
   , constructors         :: [Method]
-  , typeCanonicalName    :: [Method]
+  , typeCanonicalName    :: Name
   } deriving (Eq)
 
 data Variable = Variable
@@ -83,7 +83,7 @@ data Method = Method
   } deriving (Eq)
 
 
----------- Statements and Expressions ----------
+---------- Statemen ts and Expressions ----------
 
 data Block = Block
   { blockScope :: Scope

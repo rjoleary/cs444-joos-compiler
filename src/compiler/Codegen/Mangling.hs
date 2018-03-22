@@ -4,8 +4,10 @@ module Codegen.Mangling
   , mangleType
   ) where
 
+import Data.List
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.NodeTypes
+
 
 -- package p.q;
 -- class A {
@@ -15,9 +17,10 @@ import JoosCompiler.Ast.NodeTypes
 
 -- Field$p$q$A$fa
 mangleField :: Field -> String
-mangleField field = variableName field
+mangleField field = mangledCanonical
   where
-    canonicalized = variableCanonicalName field
+    canonicalized = variableCanonicalName field -- [p, q, A, fa]
+    mangledCanonical = intercalate "$" ("Field" : canonicalized)
 
 -- Method$p$q$A$ma#int#java.lang.String#
 mangleMethod :: Method -> String
@@ -28,6 +31,8 @@ mangleMethod method = methodName method
 -- Class$p$q$A
 -- Can also be interface
 mangleType :: TypeDeclaration -> String
-mangleType t = typeName t
+mangleType t = mangledCanonical
   where
     canonicalized = typeCanonicalName t
+ --   canonicalized = typeCanonicalName s
+    mangledCanonical = intercalate "$" ("Class" : canonicalized)
