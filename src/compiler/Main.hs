@@ -3,9 +3,11 @@
 -- conversion facilities where they're needed
 import           AstRule
 import           Control.Monad
+import           Data.Either
 import           Data.List
 import           Data.Tree
 import           JoosCompiler.Ast
+import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
 import           Linking.TypeChecking
@@ -34,7 +36,7 @@ main = do
     -- AST generation
     filenames <- getArgs
     taggedTrees <- mapM taggedTreeFromFile filenames
-    let ast = cstsToAst taggedTrees
+    let ast@(Node (AstWholeProgram program) unitNodes) = cstsToAst taggedTrees
     putStrLn $ drawTree (fmap show ast)
 
     -- Environment building & type linking
@@ -49,9 +51,9 @@ main = do
 
     when (testNum > 3) $ do
       -- Type checking
-      case (checkTypes ast) of
-        Right _ -> return ()
-        Left err -> exitError err
+      case (lefts $ map (checkUnitTypes program) unitNodes) of
+        [] -> return ()
+        err:_ -> exitError err
 
     when (testNum > 3) $ do
       -- 3rd reachability rule
@@ -63,6 +65,11 @@ main = do
       case (checkReachability ast) of
         Right _ -> return ()
         Left err -> exitError err
+
+checkUnitTypes :: WholeProgram -> AstNode -> Either String ()
+checkUnitTypes program unitNode@(Node (AstCompilationUnit unit) _) =
+  checkTypes program unit unitNode
+checkUnitTypes _ _ = error "Wrong node type in checkUnitTypes"
 
 stripSuffix :: String -> String
 stripSuffix ".java" = ""

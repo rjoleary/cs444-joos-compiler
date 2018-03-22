@@ -21,8 +21,10 @@ import JoosCompiler.Ast.Utils
 import JoosCompiler.Error
 import JoosCompiler.TreeUtils
 
-checkTypes :: AstNode -> Either String ()
-checkTypes (Node x _) = analyze (TypeAnalysis Map.empty Nothing Nothing) x
+checkTypes :: WholeProgram -> CompilationUnit -> AstNode -> Either String ()
+checkTypes program unit (Node x _) = analyze ctx x
+  where
+    ctx = TypeAnalysis Map.empty Nothing Nothing program unit
 
 -- For local types only.
 type LocalEnvironment = Map.Map String Type
@@ -31,7 +33,10 @@ type LocalEnvironment = Map.Map String Type
 data TypeAnalysis = TypeAnalysis
   { ctxLocalEnv :: LocalEnvironment
   , ctxThis     :: Maybe Name
-  , ctxThisType :: Maybe TypeDeclaration } -- TODO: this last field is temporary
+  , ctxThisType :: Maybe TypeDeclaration
+  , ctxProgram  :: WholeProgram
+  , ctxUnit     :: CompilationUnit -- TODO: this last field is temporary
+  }
 
 -- Analysis on classes/methods/statements. No Type is returned.
 instance Analysis TypeAnalysis () where
@@ -283,6 +288,3 @@ createLookupSignature name args =
 leftOrRight :: Either a a -> a
 leftOrRight (Left x) = x
 leftOrRight (Right x) = x
-
-resolveToType :: WholeProgram -> Scope -> String -> Type
-resolveToType wp s name = variableType $ leftOrRight $ resolveInScope wp s [name]
