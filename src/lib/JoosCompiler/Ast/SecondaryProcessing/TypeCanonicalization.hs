@@ -149,7 +149,7 @@ canonicalizeVar _ _ var = var
 canonicalizeTypeDecl :: WholeProgram -> CompilationUnit -> TypeDeclaration -> TypeDeclaration
 canonicalizeTypeDecl
   program
-  unit
+  unit@(CompilationUnit pName _ _ _)
   TypeDeclaration { typeName = name
                   , classModifiers = modifiers
                   , isInterface    = _isInterface
@@ -167,8 +167,10 @@ canonicalizeTypeDecl
                      , classFields    = newFields
                      , methods        = _methods
                      , constructors   = _constructors
+                     , typeCanonicalName = _typeCanonicalName
                      }
   where
     newSuper = canonicalize program unit oldSuper
     newInterfaces = map (canonicalize program unit) oldInterfaces
     newFields = map (canonicalizeVar program unit) fields
+    _typeCanonicalName = pName ++ [name]
