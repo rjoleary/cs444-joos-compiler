@@ -5,22 +5,22 @@ GHC_WARNINGS := -w -Wmissing-fields
 
 GHC = stack build --only-dependencies && stack ghc -- -outputdir ${HS_BUILD} -O2 ${GHC_WARNINGS} -i${HS_INCLUDE}
 
-DOC_INPUT := $(sort $(wildcard ./docs/*.md))
+DOC_INPUT := $(sort $(shell find ./docs -name '*.md'))
 DOC_OUTPUT := $(patsubst %.md,%.pdf,${DOC_INPUT})
 
 HS_LIB   := src/lib
-HS_LIB_FILES := $(wildcard ${HS_LIB}/*.hs ${HS_LIB}/**/*.hs)
+HS_LIB_FILES := $(shell find ${HS_LIB} -name '*.hs')
 
 COMPILER_SRC  := src/compiler
-COMPILER_FILES := $(wildcard ${COMPILER_SRC}/*.hs ${COMPILER_SRC}/**/*.hs)
+COMPILER_FILES := $(shell find ${COMPILER_SRC} -name '*.hs')
 COMPILER_MAIN := ${COMPILER_SRC}/Main.hs
 
 LEXER_SRC  := src/lexer
-LEXER_FILES := $(wildcard ${LEXER_SRC}/*.hs ${LEXER_SRC}/**/*.hs)
+LEXER_FILES := $(shell find ${LEXER_SRC} -name '*.hs')
 LEXER_MAIN := ${LEXER_SRC}/Lexer.hs
 
 WEEDER_SRC  := src/weeder
-WEEDER_FILES := $(wildcard ${WEEDER_SRC}/*.hs ${WEEDER_SRC}/**/*.hs)
+WEEDER_FILES := $(shell find ${WEEDER_SRC} -name '*.hs')
 
 HS_BUILD := ghc_build
 
