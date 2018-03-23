@@ -18,3 +18,5 @@ bin/
 *.tree
 *.stdout
 *.stderr
+
+/output/

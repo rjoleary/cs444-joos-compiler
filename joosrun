@@ -1,0 +1,23 @@
+#!/bin/bash
+
+mkdir -p output
+rm output/*
+
+# Compile
+./stdjoosc "$@"; ret=$?
+case "$ret" in
+    0) ;;
+    42) exit 42; ;;
+    *) echo "Exiting due to lexer error"; exit $ret; ;;
+esac
+
+# Assemble
+for filename in $(echo output/*.s); do
+    test/nasm -O1 -f elf -g -F dwarf $filename
+done
+
+# Link
+ld -melf_i386 -o output/main output/*.o
+
+# Run
+exec output/main
