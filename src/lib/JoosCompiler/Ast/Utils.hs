@@ -47,18 +47,9 @@ qualifyTypeName u@(CompilationUnit _packageName _ (Just _typeDecl) _) =
   _packageName ++ [typeName _typeDecl]
 qualifyTypeName _ = error "Can't qualify a compilation unit without a class"
 
-resolvePackageFromProgram :: WholeProgram -> Name -> Maybe Package
-resolvePackageFromProgram (WholeProgram subPackage _) _name =
-  lookupPackage _name subPackage
-
-lookupPackageFromSubPackageMap :: Name -> SubPackageMap -> Maybe Package
-lookupPackageFromSubPackageMap name m
-  | result == Nothing = Nothing
-  | otherwise = lookupPackage tailOfName $ fromJust result
-  where
-    headOfname = head name
-    tailOfName = tail name
-    result = lookup headOfname m
+resolvePackageInProgram :: WholeProgram -> Name -> Maybe Package
+resolvePackageInProgram (WholeProgram packages _) _name =
+  find ((== _name) . packageName) packages
 
 resolveTypeInProgram :: WholeProgram -> Name -> Maybe TypeDeclaration
 resolveTypeInProgram _ [] = Nothing
@@ -70,39 +61,11 @@ resolveTypeInProgram program@(WholeProgram _ cus) name
   where
     _typeName = last name
     _packageName = init name
-    package = resolvePackageFromProgram program _packageName
+    package = resolvePackageInProgram program _packageName
     units = packageCompilationUnits $ fromJust package
     matchingUnits = filter (== _typeName) units
     unit = fromMaybe (error "Could not find unit in resolveTypeInProgram") $ find (\unit -> cuTypeName unit == _typeName) cus
     result = typeDecl unit
-
-resolveInScope :: WholeProgram -> Scope -> Name -> Either Field Local
-resolveInScope program scope name
-  | localMatch /= Nothing && length name == 1 =
-    Right $ fromMaybe (error "LocalMatch was nothing") localMatch
-  | localMatch /= Nothing =
-    Left $ fromMaybe (error "Could not resolve localMatch.field")
-         $ resolveFieldInType program localMatchType $ tail name
-  | resolvedField /= Nothing && length name == 1 =
-    Left $ fromMaybe (error "resolvedField was nothing") resolvedField
-  | resolvedField /= Nothing =
-    Left $ fromMaybe (error "Could not resolve field.field")
-         $ resolveFieldInType program resolvedFieldType $ tail name
-  | otherwise =
-    Left $ fromMaybe (error "Could not resolve in package")
-         $ resolveFieldInCuPackages program unit name
-  where
-    firstPart = head name
-    locals = flattenScope scope
-    localMatch = find (\l -> firstPart == variableName l) locals
-    localMatchType = variableType $ fromJust localMatch
-    -- unitTypeName is the name of the class that this scope belongs to
-    unitTypeName = scopeCuName scope
-    maybeUnit = find ((== unitTypeName) . canonicalizeUnitName) $ programCus program
-    unit = fromMaybe (error $ "resolveInScope couldn't find unit: " ++ showName unitTypeName) maybeUnit
-    resolvedField = resolveFieldInProgramUnit program unit firstPart
-    resolvedFieldType = variableType $ fromJust resolvedField
-
 
 resolveFieldInProgramUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
 resolveFieldInProgramUnit program unit name
@@ -131,38 +94,6 @@ resolveFieldInType program _type (n:ns) = resolveFieldInType program newType ns
     field = fromMaybe (error "mayField is nothing") maybeField
     newType = variableType field
     unit = fromMaybe (error "maybeUnit is nothing") maybeUnit
-
-resolveFieldInSubPackage :: WholeProgram -> SubPackage -> Name -> Maybe Field
-resolveFieldInSubPackage _ _ [] = error "Name should never be empty"
-resolveFieldInSubPackage _ _ [_] = Nothing
-resolveFieldInSubPackage program (SubPackage maybePackage subPackageMap) (n:ns)
-  | foundSubPackage /= Nothing =
-    resolveFieldInSubPackage program (fromJust foundSubPackage) ns
-  | maybeUnitName /= Nothing = resolveFieldInProgramUnit program unit n
-  | otherwise = Nothing
-  where
-    foundSubPackage = lookup n subPackageMap
-    package = fromMaybe (error "maybePackage is nothing") maybePackage
-    maybeUnitName = find (== n) $ packageCompilationUnits package
-    unitName = fromMaybe (error "maybeUnitName is nothing") maybeUnitName
-    canonicalUnitName = (packageName package) ++ [unitName]
-    maybeUnit = resolveUnitInProgram program canonicalUnitName
-    unit = fromMaybe (error "maybeUnit is nothing") maybeUnit
-
-resolveFieldInCuPackages :: WholeProgram -> CompilationUnit -> Name -> Maybe Field
-resolveFieldInCuPackages _ _ [] = error "Name should never be empty"
-resolveFieldInCuPackages _ _ [_] = Nothing
-resolveFieldInCuPackages program unit (n:ns)
-  | length matchingSubPackageMaps == 0 = Nothing
-  | length matchingSubPackageMaps == 1 =
-    resolveFieldInSubPackage program subPackage ns
-  | otherwise = error "Found more than one matching subpackage"
-  where
-    onDemandImports = filter (\i -> onDemand i) $ imports unit
-    packages = map (resolvePackageFromProgram program . importPackageName) onDemandImports
-    subPackageMaps = map subPackages $ catMaybes packages
-    matchingSubPackageMaps = filter ((/= Nothing) . lookup n) subPackageMaps
-    subPackage = fromJust $ lookup n $ head matchingSubPackageMaps
 
 resolveUnitInProgram :: WholeProgram -> Name -> Maybe CompilationUnit
 resolveUnitInProgram program name =

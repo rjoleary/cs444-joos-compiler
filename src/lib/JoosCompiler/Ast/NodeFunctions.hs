@@ -18,19 +18,10 @@ instance Show Modifier where
 instance Show WholeProgram where
   show WholeProgram{programPackages = p} = "WholeProgram. Packages: " ++ show p
 
-instance Show SubPackage where
-  show (SubPackage x y) = (if x == Nothing then "" else "Package. Subs: ") ++  show y
-
 instance Show Package where
-  show (Package name subs units) =
+  show (Package name units) =
     "Package: n=" ++
     (showName name) ++
-    (if length subs > 0
-       then " subs(" ++
-            (commaDelimit $
-             map fst subs) ++
-            ")"
-       else "") ++
     (if length units > 0
        then " units(" ++ commaDelimit units ++ ")"
        else "")

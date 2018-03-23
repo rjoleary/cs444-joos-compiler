@@ -83,14 +83,14 @@ canonicalize program unit name
     onDemandPackages =
       onDemandImports |>
       map (importPackageName .>
-           (resolvePackageFromProgram program) .>
-           (fromMaybe (error "Imported on-demand package not found")))
+           (resolvePackageInProgram program) .>
+           (fromMaybe (error $ "Imported on-demand package not found: " ++ showName name)))
 
     -- HACK: This can fail, but if it fails then the program is wrong
     singleTypePackages =
       singleTypeImports |>
       map (importPackageName .>
-           (resolvePackageFromProgram program) .>
+           (resolvePackageInProgram program) .>
            (fromMaybe (error "Imported single-type package not found")))
 
     singleTypePackageContainingType = find (typeIsInPackage name) singleTypePackages
@@ -103,17 +103,12 @@ typeIsInPackage [n] Package {packageCompilationUnits = units}
   | otherwise = length matches == 1
   where
     matches = filter (== n) units
-typeIsInPackage n Package {subPackages = subs}
-  | (maybePackage /= Nothing) = if length matches > 1
-                                    then error "Duplicate definition for type in package"
-                                    else (length matches == 1)
-  | otherwise = error $ "typeIsInPackage could not resolve package: " ++ showName pName ++ show subs
+typeIsInPackage n (Package _ units)
+  | length matches > 1 = error "Duplicate definition for type in package"
+  | (length matches == 1) = True
+  | otherwise = False
   where
-    pName = init n
     uName = last n
-    maybePackage = lookupPackageFromSubPackageMap pName subs
-    package = fromJust maybePackage
-    units = packageCompilationUnits package
     matches = filter (== uName) units
 
 makeOnDemandImportDeclaration :: Name -> ImportDeclaration
