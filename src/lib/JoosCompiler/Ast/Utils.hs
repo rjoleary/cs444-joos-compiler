@@ -60,10 +60,6 @@ lookupPackageFromSubPackageMap name m
     tailOfName = tail name
     result = lookup headOfname m
 
-lookupPackage :: Name -> SubPackage -> Maybe Package
-lookupPackage [] (SubPackage p _) = p
-lookupPackage name (SubPackage _ m) = lookupPackageFromSubPackageMap name m
-
 resolveTypeInProgram :: WholeProgram -> Name -> Maybe TypeDeclaration
 resolveTypeInProgram _ [] = Nothing
 resolveTypeInProgram program@(WholeProgram _ cus) name

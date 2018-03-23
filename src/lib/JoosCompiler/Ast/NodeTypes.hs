@@ -16,14 +16,9 @@ data Modifier
   deriving (Eq)
 
 data WholeProgram = WholeProgram
-  { programPackages :: SubPackage
+  { programPackages :: [Package]
   , programCus :: [CompilationUnit]
   } deriving (Eq)
-
-data SubPackage = SubPackage (Maybe Package) SubPackageMap
-  deriving (Eq)
-type SubPackageMapEntry = (String, SubPackage)
-type SubPackageMap = [SubPackageMapEntry]
 
 data PackageDeclaration = PackageDeclaration
   { packageDeclarationName :: Name
@@ -33,7 +28,6 @@ type PackageCompilationUnits = [String]
 
 data Package = Package
   { packageName             :: Name
-  , subPackages             :: SubPackageMap
   , packageCompilationUnits :: PackageCompilationUnits
   } deriving (Eq)
 
