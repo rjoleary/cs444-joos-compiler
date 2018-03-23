@@ -16,6 +16,7 @@ import           NameResolution.HierarchyChecking
 import           NameResolution.TypeLinking
 import           StaticAnalysis.Reachability
 import           StaticAnalysis.Reachability3
+import           Codegen.CodeGenMain
 import           System.Environment
 import           Data.Maybe
 
@@ -65,6 +66,12 @@ main = do
       case (checkReachability ast) of
         Right _ -> return ()
         Left err -> exitError err
+
+    when (testNum > 4) $ do
+      -- Code generation
+      case (codeGenMain ast) of
+        Right asm -> writeFile "output/main.s" (show asm)
+        Left err  -> exitError err
 
 checkUnitTypes :: WholeProgram -> AstNode -> Either String ()
 checkUnitTypes program unitNode@(Node (AstCompilationUnit unit) _) =

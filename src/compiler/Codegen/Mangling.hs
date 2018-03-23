@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Codegen.Mangling
   ( Mangleable(..)
   ) where
@@ -43,3 +45,6 @@ instance Mangleable TypeDeclaration where
       canonicalized = typeCanonicalName t
    --   canonicalized = typeCanonicalName s
       mangledCanonical = intercalate "$" ("Class" : canonicalized)
+
+instance Mangleable String where
+  mangle s = s
