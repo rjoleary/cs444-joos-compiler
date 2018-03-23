@@ -10,6 +10,7 @@ import           JoosCompiler.Ast
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
+import           JoosCompiler.TreeUtils
 import           Linking.TypeChecking
 import           NameResolution.EnvironmentBuilding
 import           NameResolution.HierarchyChecking
@@ -17,6 +18,7 @@ import           NameResolution.TypeLinking
 import           StaticAnalysis.Reachability
 import           StaticAnalysis.Reachability3
 import           Codegen.CodeGenMain
+import           Codegen.CodeGenType
 import           System.Environment
 import           Data.Maybe
 
@@ -72,6 +74,15 @@ main = do
       case (codeGenMain ast) of
         Right asm -> writeFile "output/main.s" (show asm)
         Left err  -> exitError err
+
+      mapM_ (\t -> case (codeGenType t) of
+          Right asm -> writeFile (asmFileName t) (show asm)
+          Left err  -> exitError err)
+        (map (astClass . rootLabel) $ findChildren isTypeDeclaration ast)
+
+-- TODO: qualify filename
+asmFileName :: TypeDeclaration -> String
+asmFileName t = "output/" ++ typeName t ++ ".s"
 
 checkUnitTypes :: WholeProgram -> AstNode -> Either String ()
 checkUnitTypes program unitNode@(Node (AstCompilationUnit unit) _) =
