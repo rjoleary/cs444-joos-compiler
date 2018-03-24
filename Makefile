@@ -127,6 +127,7 @@ test.all : compiler
 	OUT="$${OUT}A2 $$(make test.a2 | tee /dev/stderr | grep Passed)\n"; \
 	OUT="$${OUT}A3 $$(make test.a3 | tee /dev/stderr | grep Passed)\n"; \
 	OUT="$${OUT}A4 $$(make test.a4 | tee /dev/stderr | grep Passed)\n"; \
+	OUT="$${OUT}A5 $$(make test.a5 | tee /dev/stderr | grep Passed)\n"; \
 	echo -e "\n\n$${OUT}"
 
 clean :
