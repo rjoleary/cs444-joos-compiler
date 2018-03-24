@@ -17,7 +17,10 @@ public class Main {
         String A = "Local shadows package name";
         System.out.println(A);
 
+        System.out.println(P.C.D.p);
+
         System.out.println("============================\n");
+
         M m = new M();
         m.nonStaticMethod();
     }
