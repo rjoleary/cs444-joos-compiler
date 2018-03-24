@@ -103,6 +103,7 @@ instance Show Expression where
 
 instance Show Type where
   show Void           = "void"
+  show Null           = "null"
   show (Type x False) = show x
   show (Type x True)  = show (Type x False) ++ "[]"
 
