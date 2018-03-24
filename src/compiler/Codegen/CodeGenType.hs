@@ -34,38 +34,10 @@ instance Analysis CodeGenType (Asm ()) where
 
 data Context
 
+
 generateExpression :: Context -> Expression -> Asm Type
-generateExpression ctx e@(BinaryOperation Multiply x y) = do
-  comment (show e)
-  t1 <- generateExpression ctx x
-  push Eax
-  t2 <- generateExpression ctx y
-  mov Ebx Eax
-  pop Eax
-  imul Eax Ebx
-  return (Type Int False)
 
-generateExpression ctx e@(BinaryOperation Modulus x y) = do
-  comment (show e)
-  t1 <- generateExpression ctx x
-  push Eax
-  t2 <- generateExpression ctx y
-  mov Ebx Eax
-  pop Eax
-  idiv Ebx
-  mov Edx Eax
-  return (Type Int False)
-
-generateExpression ctx e@(BinaryOperation Divide x y) = do
-  comment (show e)
-  t1 <- generateExpression ctx x
-  push Eax
-  t2 <- generateExpression ctx y
-  mov Ebx Eax
-  pop Eax
-  idiv Ebx
-  return (Type Int False)
-
+-- Add is a special binary operator because it is overloaded for strings.
 generateExpression ctx e@(BinaryOperation Add x y) = do
   comment (show e)
   t1 <- generateExpression ctx x
@@ -76,32 +48,25 @@ generateExpression ctx e@(BinaryOperation Add x y) = do
   add Eax Ebx
   return (Type Int False) -- TODO: strings
 
-generateExpression ctx e@(BinaryOperation Subtract x y) = do
+generateExpression ctx e@(BinaryOperation op x y) = do
   comment (show e)
   t1 <- generateExpression ctx x
   push Eax
   t2 <- generateExpression ctx y
   mov Ebx Eax
   pop Eax
-  sub Eax Ebx
-  return (Type Int False)
+  binaryOperatorAsm op
 
-generateExpression ctx e@(BinaryOperation LazyAnd x y) = do
-  comment (show e)
-  t1 <- generateExpression ctx x
-  push Eax
-  t2 <- generateExpression ctx y
-  mov Ebx Eax
-  pop Eax
-  X86.and Eax Ebx
-  return (Type Boolean False)
-
-generateExpression ctx e@(BinaryOperation LazyOr x y) = do
-  comment (show e)
-  t1 <- generateExpression ctx x
-  push Eax
-  t2 <- generateExpression ctx y
-  mov Ebx Eax
-  pop Eax
-  X86.or Eax Ebx
-  return (Type Boolean False)
+binaryOperatorAsm :: BinaryOperator -> Asm Type
+binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
+binaryOperatorAsm Modulus      = idiv Ebx >> mov Edx Eax >> return (Type Int False)
+binaryOperatorAsm Divide       = idiv Ebx >> return (Type Int False)
+binaryOperatorAsm Subtract     = sub Eax Ebx >> return (Type Int False)
+binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
+binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
+binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> return (Type Boolean False)
+binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> return (Type Boolean False)
+binaryOperatorAsm LessEqual    = cmp Eax Ebx >> setle Al >> return (Type Boolean False)
+binaryOperatorAsm GreaterEqual = cmp Eax Ebx >> setge Al >> return (Type Boolean False)
+binaryOperatorAsm Equality     = cmp Eax Ebx >> sete Al >> return (Type Boolean False)
+binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)

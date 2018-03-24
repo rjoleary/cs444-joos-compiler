@@ -71,7 +71,7 @@ import Data.Int
 import Codegen.Mangling
 
 data Asm a = Asm [String]
-data Reg = Eax | Ebx | Ecx | Edx | Esp | Ebp | Esi | Edi | Eip
+data Reg = Eax | Ebx | Ecx | Edx | Esp | Ebp | Esi | Edi | Eip | Al | Bl | Cl | Dl
 data Addr = Addr Reg | Offset Reg Int32
 data I = I Int32
 data L a = L a
