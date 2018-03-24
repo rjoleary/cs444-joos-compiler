@@ -8,6 +8,7 @@ import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Visitor.Analysis
 import Codegen.X86
+import qualified Codegen.X86 as X86
 
 codeGenType :: TypeDeclaration -> Either String (Asm ())
 codeGenType = analyze' CodeGenType
@@ -34,16 +35,18 @@ instance Analysis CodeGenType (Asm ()) where
 data Context
 
 generateExpression :: Context -> Expression -> Asm Type
-generateExpression ctx (BinaryOperation Multiply x y) = do
+generateExpression ctx e@(BinaryOperation Multiply x y) = do
+  comment (show e)
   t1 <- generateExpression ctx x
   push Eax
   t2 <- generateExpression ctx y
   mov Ebx Eax
   pop Eax
   imul Eax Ebx
-  return (Type Int False) -- TODO: strings
+  return (Type Int False)
 
-generateExpression ctx (BinaryOperation Modulus x y) = do
+generateExpression ctx e@(BinaryOperation Modulus x y) = do
+  comment (show e)
   t1 <- generateExpression ctx x
   push Eax
   t2 <- generateExpression ctx y
@@ -53,7 +56,8 @@ generateExpression ctx (BinaryOperation Modulus x y) = do
   mov Edx Eax
   return (Type Int False)
 
-generateExpression ctx (BinaryOperation Divide x y) = do
+generateExpression ctx e@(BinaryOperation Divide x y) = do
+  comment (show e)
   t1 <- generateExpression ctx x
   push Eax
   t2 <- generateExpression ctx y
@@ -62,16 +66,18 @@ generateExpression ctx (BinaryOperation Divide x y) = do
   idiv Ebx
   return (Type Int False)
 
-generateExpression ctx (BinaryOperation Add x y) = do
+generateExpression ctx e@(BinaryOperation Add x y) = do
+  comment (show e)
   t1 <- generateExpression ctx x
   push Eax
   t2 <- generateExpression ctx y
   mov Ebx Eax
   pop Eax
   add Eax Ebx
-  return (Type Int False)
+  return (Type Int False) -- TODO: strings
 
-generateExpression ctx (BinaryOperation Subtract x y) = do
+generateExpression ctx e@(BinaryOperation Subtract x y) = do
+  comment (show e)
   t1 <- generateExpression ctx x
   push Eax
   t2 <- generateExpression ctx y
@@ -79,3 +85,23 @@ generateExpression ctx (BinaryOperation Subtract x y) = do
   pop Eax
   sub Eax Ebx
   return (Type Int False)
+
+generateExpression ctx e@(BinaryOperation LazyAnd x y) = do
+  comment (show e)
+  t1 <- generateExpression ctx x
+  push Eax
+  t2 <- generateExpression ctx y
+  mov Ebx Eax
+  pop Eax
+  X86.and Eax Ebx
+  return (Type Boolean False)
+
+generateExpression ctx e@(BinaryOperation LazyOr x y) = do
+  comment (show e)
+  t1 <- generateExpression ctx x
+  push Eax
+  t2 <- generateExpression ctx y
+  mov Ebx Eax
+  pop Eax
+  X86.or Eax Ebx
+  return (Type Boolean False)

@@ -5,20 +5,39 @@ module Codegen.X86
   , Addr(..)
   , I(..)
   , comment
-  , add
-  , sub
-  , imul
+  , label
+  , global
+
+  -- generic 1
   , idiv
-  , mov
   , jmp
   , push
   , pop
   , int
-  , label
-  , global
   , dd
+  , je
+  , jne
+  , jg
+  , jge
+  , jle
+  , ja
+  , jb
+  , jae
+  , jbe
+
+
+  -- generic 2
+  , add
+  , sub
+  , imul
+  , or
+  , and
+  , mov
+  , cmp
+
   ) where
 
+import Prelude hiding (and, or)
 import Data.Int
 import Codegen.Mangling
 
@@ -85,62 +104,68 @@ raw x = Asm [x]
 comment :: String -> Asm ()
 comment x = Asm ["; " ++ x]
 
--- Generic instruction taking one argument.
-generic1 :: (Arg b) => String -> b -> Asm ()
-generic1 op x = raw (op ++ " " ++ showArg x ++ ";")
-
--- Generic instruction taking two arguments.
-generic2 :: (Arg a, Arg b) => String -> a -> b -> Asm ()
-generic2 op x y = raw (op ++ " " ++ showArg x ++ ", " ++ showArg y ++ ";")
-
--- add eax, ebx;
---   eax <- eax + ebx
-add :: (Arg a, Arg b) => a -> b -> Asm ()
-add = generic2 "  add"
-
--- sub eax, ebx;
---   sub <- eax - ecx
-sub :: (Arg a, Arg b) => a -> b -> Asm ()
-sub = generic2 "  sub"
-
--- imul eax, ebx;
---   edx:eax <- eax * ebx
-imul :: (Arg a, Arg b) => a -> b -> Asm ()
-imul = generic2 "  mul"
-
--- idiv eax;
---   eax <- edx:eax / ebx
---   edx <- edx:eax % ebx
-idiv :: (Arg b) => b -> Asm ()
-idiv = generic1 "  idiv"
-
--- mov eax, 22;
--- mov eax, Label;
--- mov eax, [label]; TODO
--- mov eax, [esp+8];
--- mov [eax], ebx;
-mov :: (Arg a, Arg b) => a -> b -> Asm ()
-mov = generic2 "  mov"
-
-jmp :: (Arg b) => b -> Asm ()
-jmp = generic1 "  jmp"
-
-push :: (Arg b) => b -> Asm ()
-push = generic1 "  push"
-
-pop :: (Arg b) => b -> Asm ()
-pop = generic1 "  pop"
-
-int :: (Arg b) => b -> Asm ()
-int = generic1 "  int"
-
--- TODO: cmp, je, jne, jg, jge, je, jle, ja, jb, jae, jbe
-
 label :: (Mangleable a) => a -> Asm ()
 label m = raw (mangle m ++ ":")
 
 global :: (Mangleable a) => a -> Asm ()
 global m = raw ("global " ++ mangle m)
 
-dd :: (Arg a) => a -> Asm ()
-dd = generic1 "dd"
+-- Generic instruction taking zero arguments.
+generic0 :: String -> Asm ()
+generic0 op = raw ("  " ++ op ++ ";")
+
+-- Generic instruction taking one argument.
+generic1 :: (Arg b) => String -> b -> Asm ()
+generic1 op x = raw ("  " ++ op ++ " " ++ showArg x ++ ";")
+
+idiv :: Arg a => a -> Asm ()
+jmp  :: Arg a => a -> Asm ()
+push :: Arg a => a -> Asm ()
+pop  :: Arg a => a -> Asm ()
+int  :: Arg a => a -> Asm ()
+dd   :: Arg a => a -> Asm ()
+je   :: Arg a => a -> Asm ()
+jne  :: Arg a => a -> Asm ()
+jg   :: Arg a => a -> Asm ()
+jge  :: Arg a => a -> Asm ()
+jle  :: Arg a => a -> Asm ()
+ja   :: Arg a => a -> Asm ()
+jb   :: Arg a => a -> Asm ()
+jae  :: Arg a => a -> Asm ()
+jbe  :: Arg a => a -> Asm ()
+
+idiv = generic1 "idiv"
+jmp  = generic1 "jmp"
+push = generic1 "push"
+pop  = generic1 "pop"
+int  = generic1 "int"
+dd   = generic1 "dd"
+je   = generic1 "je"
+jne  = generic1 "jne"
+jg   = generic1 "jg"
+jge  = generic1 "jge"
+jle  = generic1 "jle"
+ja   = generic1 "ja"
+jb   = generic1 "jb"
+jae  = generic1 "jae"
+jbe  = generic1 "jbe"
+
+-- Generic instruction taking two arguments.
+generic2 :: (Arg a, Arg b) => String -> a -> b -> Asm ()
+generic2 op x y = raw ("  " ++ op ++ " " ++ showArg x ++ ", " ++ showArg y ++ ";")
+
+add  :: (Arg a, Arg b) => a -> b -> Asm ()
+sub  :: (Arg a, Arg b) => a -> b -> Asm ()
+imul :: (Arg a, Arg b) => a -> b -> Asm ()
+or   :: (Arg a, Arg b) => a -> b -> Asm ()
+and  :: (Arg a, Arg b) => a -> b -> Asm ()
+mov  :: (Arg a, Arg b) => a -> b -> Asm ()
+cmp  :: (Arg a, Arg b) => a -> b -> Asm ()
+
+add  = generic2 "add"
+sub  = generic2 "sub"
+imul = generic2 "mul"
+or   = generic2 "or"
+and  = generic2 "and"
+mov  = generic2 "mov"
+cmp  = generic2 "cmp"
