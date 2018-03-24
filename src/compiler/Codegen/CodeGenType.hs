@@ -16,11 +16,11 @@ data CodeGenType = CodeGenType
 
 instance Analysis CodeGenType (Asm ()) where
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
-    label ("Class$" ++ typeName t) -- TODO: use the mangle
+    label t
     dd (I 0x12345678)
 
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=True}) = Right $ do
-    label ("Class$" ++ typeName t) -- TODO: use the mangle
+    label t
     dd (I 0x87654321)
 
   -- Everything else propagates.
