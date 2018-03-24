@@ -19,4 +19,6 @@ bin/
 *.stdout
 *.stderr
 
+*.class
+
 /output/

@@ -250,7 +250,7 @@ Currently, we have the following two functions: (in
 `src/lib/JoosCompiler/Ast/Utils.hs`)
 
   * `resolveTypeInProgram`
-  * `resolvePackageFromProgram`
+  * `resolvePackageInProgram`
 
 Those functions resolve to a type or a package only if that type or package
 exists. They will be used in a disambiguation phase to check that no conflicts
