@@ -4,6 +4,7 @@ module Codegen.X86
   , Reg(..)
   , Addr(..)
   , I(..)
+  , indent
   , comment
   , label
   , global
@@ -125,6 +126,10 @@ instance Arg I where
 instance (Mangleable a) => Arg (L a) where
   showArg (L x) = mangle x
 
+-- Indent a block of assembly.
+indent :: Asm a -> Asm a
+indent (Asm xs) = Asm $ map ("  "++) xs
+
 -- Instructions
 
 raw :: String -> Asm ()
@@ -141,11 +146,11 @@ global m = raw ("global " ++ mangle m)
 
 -- Generic instruction taking zero arguments.
 generic0 :: String -> Asm ()
-generic0 op = raw ("  " ++ op ++ ";")
+generic0 op = raw (op ++ ";")
 
 -- Generic instruction taking one argument.
 generic1 :: (Arg b) => String -> b -> Asm ()
-generic1 op x = raw ("  " ++ op ++ " " ++ showArg x ++ ";")
+generic1 op x = raw (op ++ " " ++ showArg x ++ ";")
 
 idiv   :: Arg a => a -> Asm ()
 jmp    :: Arg a => a -> Asm ()

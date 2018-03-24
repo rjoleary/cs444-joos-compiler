@@ -34,15 +34,21 @@ instance Analysis CodeGenType (Asm ()) where
 
 data Context
 
+-- This gets placed between each recursive call to generateExpression to indent
+-- the block and add extra debug information.
+generateExpression' :: Context -> Expression -> Asm Type
+generateExpression' ctx e = do
+  comment (show e)
+  indent (generateExpression ctx e)
 
 generateExpression :: Context -> Expression -> Asm Type
 
 -- Add is a special binary operator because it is overloaded for strings.
 generateExpression ctx e@(BinaryOperation Add x y) = do
   comment (show e)
-  t1 <- generateExpression ctx x
+  t1 <- generateExpression' ctx x
   push Eax
-  t2 <- generateExpression ctx y
+  t2 <- generateExpression' ctx y
   mov Ebx Eax
   pop Eax
   add Eax Ebx
@@ -50,12 +56,13 @@ generateExpression ctx e@(BinaryOperation Add x y) = do
 
 generateExpression ctx e@(BinaryOperation op x y) = do
   comment (show e)
-  t1 <- generateExpression ctx x
+  t1 <- generateExpression' ctx x
   push Eax
-  t2 <- generateExpression ctx y
+  t2 <- generateExpression' ctx y
   mov Ebx Eax
   pop Eax
   binaryOperatorAsm op
+
 
 binaryOperatorAsm :: BinaryOperator -> Asm Type
 binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
