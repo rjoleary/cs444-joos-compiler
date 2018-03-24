@@ -2,6 +2,7 @@ module JoosCompiler.Ast.Core(cstsToAst) where
 
 import           Data.Tree
 import           Flow
+import           JoosCompiler.Ast.SecondaryProcessing.Disambiguation
 import           JoosCompiler.Ast.SecondaryProcessing.StatementBlocks
 import           JoosCompiler.Ast.SecondaryProcessing.Packaging
 import           JoosCompiler.Ast.SecondaryProcessing.ScopeInjection
@@ -37,9 +38,9 @@ cstsToAst ts = program
       -- WholeProgram are updated
       |> subForest
       |> packageProgram
-      -- TODO this is disabled so hierarchy checking works
       |> asAst
       |> asTree
+      |> disambiguate
       |> insertBlocksAroundStatements
       |> injectScopesIntoChildrenBlocks
 
