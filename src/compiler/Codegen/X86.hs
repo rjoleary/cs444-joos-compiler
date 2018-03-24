@@ -24,7 +24,36 @@ module Codegen.X86
   , jb
   , jae
   , jbe
-
+  , seta
+  , setae
+  , setb
+  , setbe
+  , setc
+  , sete
+  , setg
+  , setge
+  , setl
+  , setle
+  , setna
+  , setnae
+  , setnb
+  , setnbe
+  , setnc
+  , setne
+  , setng
+  , setnge
+  , setnl
+  , setnle
+  , setno
+  , setnp
+  , setns
+  , setnz
+  , seto
+  , setp
+  , setpe
+  , setpo
+  , sets
+  , setz
 
   -- generic 2
   , add
@@ -118,37 +147,97 @@ generic0 op = raw ("  " ++ op ++ ";")
 generic1 :: (Arg b) => String -> b -> Asm ()
 generic1 op x = raw ("  " ++ op ++ " " ++ showArg x ++ ";")
 
-idiv :: Arg a => a -> Asm ()
-jmp  :: Arg a => a -> Asm ()
-push :: Arg a => a -> Asm ()
-pop  :: Arg a => a -> Asm ()
-int  :: Arg a => a -> Asm ()
-dd   :: Arg a => a -> Asm ()
-je   :: Arg a => a -> Asm ()
-jne  :: Arg a => a -> Asm ()
-jg   :: Arg a => a -> Asm ()
-jge  :: Arg a => a -> Asm ()
-jle  :: Arg a => a -> Asm ()
-ja   :: Arg a => a -> Asm ()
-jb   :: Arg a => a -> Asm ()
-jae  :: Arg a => a -> Asm ()
-jbe  :: Arg a => a -> Asm ()
+idiv   :: Arg a => a -> Asm ()
+jmp    :: Arg a => a -> Asm ()
+push   :: Arg a => a -> Asm ()
+pop    :: Arg a => a -> Asm ()
+int    :: Arg a => a -> Asm ()
+dd     :: Arg a => a -> Asm ()
+je     :: Arg a => a -> Asm ()
+jne    :: Arg a => a -> Asm ()
+jg     :: Arg a => a -> Asm ()
+jge    :: Arg a => a -> Asm ()
+jle    :: Arg a => a -> Asm ()
+ja     :: Arg a => a -> Asm ()
+jb     :: Arg a => a -> Asm ()
+jae    :: Arg a => a -> Asm ()
+jbe    :: Arg a => a -> Asm ()
+seta   :: Arg a => a -> Asm ()
+setae  :: Arg a => a -> Asm ()
+setb   :: Arg a => a -> Asm ()
+setbe  :: Arg a => a -> Asm ()
+setc   :: Arg a => a -> Asm ()
+sete   :: Arg a => a -> Asm ()
+setg   :: Arg a => a -> Asm ()
+setge  :: Arg a => a -> Asm ()
+setl   :: Arg a => a -> Asm ()
+setle  :: Arg a => a -> Asm ()
+setna  :: Arg a => a -> Asm ()
+setnae :: Arg a => a -> Asm ()
+setnb  :: Arg a => a -> Asm ()
+setnbe :: Arg a => a -> Asm ()
+setnc  :: Arg a => a -> Asm ()
+setne  :: Arg a => a -> Asm ()
+setng  :: Arg a => a -> Asm ()
+setnge :: Arg a => a -> Asm ()
+setnl  :: Arg a => a -> Asm ()
+setnle :: Arg a => a -> Asm ()
+setno  :: Arg a => a -> Asm ()
+setnp  :: Arg a => a -> Asm ()
+setns  :: Arg a => a -> Asm ()
+setnz  :: Arg a => a -> Asm ()
+seto   :: Arg a => a -> Asm ()
+setp   :: Arg a => a -> Asm ()
+setpe  :: Arg a => a -> Asm ()
+setpo  :: Arg a => a -> Asm ()
+sets   :: Arg a => a -> Asm ()
+setz   :: Arg a => a -> Asm ()
 
-idiv = generic1 "idiv"
-jmp  = generic1 "jmp"
-push = generic1 "push"
-pop  = generic1 "pop"
-int  = generic1 "int"
-dd   = generic1 "dd"
-je   = generic1 "je"
-jne  = generic1 "jne"
-jg   = generic1 "jg"
-jge  = generic1 "jge"
-jle  = generic1 "jle"
-ja   = generic1 "ja"
-jb   = generic1 "jb"
-jae  = generic1 "jae"
-jbe  = generic1 "jbe"
+idiv   = generic1 "idiv"
+jmp    = generic1 "jmp"
+push   = generic1 "push"
+pop    = generic1 "pop"
+int    = generic1 "int"
+dd     = generic1 "dd"
+je     = generic1 "je"
+jne    = generic1 "jne"
+jg     = generic1 "jg"
+jge    = generic1 "jge"
+jle    = generic1 "jle"
+ja     = generic1 "ja"
+jb     = generic1 "jb"
+jae    = generic1 "jae"
+jbe    = generic1 "jbe"
+seta   = generic1 "seta"
+setae  = generic1 "setae"
+setb   = generic1 "setb"
+setbe  = generic1 "setbe"
+setc   = generic1 "setc"
+sete   = generic1 "sete"
+setg   = generic1 "setg"
+setge  = generic1 "setge"
+setl   = generic1 "setl"
+setle  = generic1 "setle"
+setna  = generic1 "setna"
+setnae = generic1 "setnae"
+setnb  = generic1 "setnb"
+setnbe = generic1 "setnbe"
+setnc  = generic1 "setnc"
+setne  = generic1 "setne"
+setng  = generic1 "setng"
+setnge = generic1 "setnge"
+setnl  = generic1 "setnl"
+setnle = generic1 "setnle"
+setno  = generic1 "setno"
+setnp  = generic1 "setnp"
+setns  = generic1 "setns"
+setnz  = generic1 "setnz"
+seto   = generic1 "seto"
+setp   = generic1 "setp"
+setpe  = generic1 "setpe"
+setpo  = generic1 "setpo"
+sets   = generic1 "sets"
+setz   = generic1 "setz"
 
 -- Generic instruction taking two arguments.
 generic2 :: (Arg a, Arg b) => String -> a -> b -> Asm ()
