@@ -8,6 +8,7 @@ import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Visitor.Analysis
 import Codegen.X86
+import Codegen.Mangling
 import qualified Codegen.X86 as X86
 
 codeGenType :: TypeDeclaration -> Either String (Asm ())
@@ -18,12 +19,16 @@ data CodeGenType = CodeGenType
 instance Analysis CodeGenType (Asm ()) where
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
     label t
-    dd (I 0x12345678)
+    -- TODO: instance of information
     comment (show (length (classFields t)) ++ " fields")
-    mapM_ (\field -> do
+    mapM_ (\(field, offset) -> do
       comment (variableName field)
+      -- TODO: use actual canonicalized label
+      label (mangle t ++ "$static" ++ show offset)
       dd (I 0)
-      ) (classFields t) -- TODO: only static fields
+      ) (zip (classFields t) [0,4..]) -- TODO: only static fields
+    -- TODO: vtable
+    label ("Init$" ++ mangle t)
 
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=True}) = Right $ do
     label t
@@ -64,17 +69,17 @@ generateExpression ctx (BinaryOperation And x y) = do
   return (Type Boolean False)
 
 -- Or is special because short circuiting.
-generateExpression ctx e@(BinaryOperation Or x y) = do
+generateExpression ctx (BinaryOperation Or x y) = do
   t1 <- generateExpression' ctx x
   cmp Eax (I 1)
-  let l = "label1" -- TODO: unique label
+  let l = "label2" -- TODO: unique label
   je (L l)
   t2 <- generateExpression' ctx y
   label l
   return (Type Boolean False)
 
 -- The rest of the operators are fairly generic.
-generateExpression ctx e@(BinaryOperation op x y) = do
+generateExpression ctx (BinaryOperation op x y) = do
   t1 <- generateExpression' ctx x
   push Eax
   t2 <- generateExpression' ctx y
@@ -95,3 +100,23 @@ generateExpression ctx e@(BinaryOperation op x y) = do
     binaryOperatorAsm GreaterEqual = cmp Eax Ebx >> setge Al >> return (Type Boolean False)
     binaryOperatorAsm Equality     = cmp Eax Ebx >> sete Al >> return (Type Boolean False)
     binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)
+
+generateExpression ctx (UnaryOperation Negate x) = do
+  t <- generateExpression' ctx x
+  mov Ebx Eax
+  mov Eax (I 0)
+  sub Eax Ebx
+  return (Type Int False)
+
+generateExpression ctx (UnaryOperation Not x) = do
+  t <- generateExpression' ctx x
+  mov Ebx Eax
+  mov Eax (I 1)
+  sub Eax Ebx
+  return (Type Boolean False)
+
+-- TODO: other expressions
+generateExpression _ _ = do
+  comment "TODO"
+  nop
+  return Void

@@ -10,6 +10,9 @@ module Codegen.X86
   , label
   , global
 
+  -- generic 0
+  , nop
+
   -- generic 1
   , idiv
   , jmp
@@ -148,6 +151,9 @@ global m = raw ("global " ++ mangle m)
 -- Generic instruction taking zero arguments.
 generic0 :: String -> Asm ()
 generic0 op = raw (op ++ ";")
+
+nop :: Asm ()
+nop = generic0 "nop"
 
 -- Generic instruction taking one argument.
 generic1 :: (Arg b) => String -> b -> Asm ()
