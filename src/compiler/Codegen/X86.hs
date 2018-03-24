@@ -4,6 +4,7 @@ module Codegen.X86
   , Reg(..)
   , Addr(..)
   , I(..)
+  , L(..)
   , indent
   , comment
   , label

@@ -44,8 +44,7 @@ generateExpression' ctx e = do
 generateExpression :: Context -> Expression -> Asm Type
 
 -- Add is a special binary operator because it is overloaded for strings.
-generateExpression ctx e@(BinaryOperation Add x y) = do
-  comment (show e)
+generateExpression ctx (BinaryOperation Add x y) = do
   t1 <- generateExpression' ctx x
   push Eax
   t2 <- generateExpression' ctx y
@@ -54,26 +53,45 @@ generateExpression ctx e@(BinaryOperation Add x y) = do
   add Eax Ebx
   return (Type Int False) -- TODO: strings
 
+-- And is special because short circuiting.
+generateExpression ctx (BinaryOperation And x y) = do
+  t1 <- generateExpression' ctx x
+  cmp Eax (I 1)
+  let l = "label1" -- TODO: unique label
+  jne (L l)
+  t2 <- generateExpression' ctx y
+  label l
+  return (Type Boolean False)
+
+-- Or is special because short circuiting.
+generateExpression ctx e@(BinaryOperation Or x y) = do
+  t1 <- generateExpression' ctx x
+  cmp Eax (I 1)
+  let l = "label1" -- TODO: unique label
+  je (L l)
+  t2 <- generateExpression' ctx y
+  label l
+  return (Type Boolean False)
+
+-- The rest of the operators are fairly generic.
 generateExpression ctx e@(BinaryOperation op x y) = do
-  comment (show e)
   t1 <- generateExpression' ctx x
   push Eax
   t2 <- generateExpression' ctx y
   mov Ebx Eax
   pop Eax
   binaryOperatorAsm op
-
-
-binaryOperatorAsm :: BinaryOperator -> Asm Type
-binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
-binaryOperatorAsm Modulus      = idiv Ebx >> mov Edx Eax >> return (Type Int False)
-binaryOperatorAsm Divide       = idiv Ebx >> return (Type Int False)
-binaryOperatorAsm Subtract     = sub Eax Ebx >> return (Type Int False)
-binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
-binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
-binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> return (Type Boolean False)
-binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> return (Type Boolean False)
-binaryOperatorAsm LessEqual    = cmp Eax Ebx >> setle Al >> return (Type Boolean False)
-binaryOperatorAsm GreaterEqual = cmp Eax Ebx >> setge Al >> return (Type Boolean False)
-binaryOperatorAsm Equality     = cmp Eax Ebx >> sete Al >> return (Type Boolean False)
-binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)
+  where
+    binaryOperatorAsm :: BinaryOperator -> Asm Type
+    binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
+    binaryOperatorAsm Modulus      = idiv Ebx >> mov Edx Eax >> return (Type Int False)
+    binaryOperatorAsm Divide       = idiv Ebx >> return (Type Int False)
+    binaryOperatorAsm Subtract     = sub Eax Ebx >> return (Type Int False)
+    binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
+    binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
+    binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> return (Type Boolean False)
+    binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> return (Type Boolean False)
+    binaryOperatorAsm LessEqual    = cmp Eax Ebx >> setle Al >> return (Type Boolean False)
+    binaryOperatorAsm GreaterEqual = cmp Eax Ebx >> setge Al >> return (Type Boolean False)
+    binaryOperatorAsm Equality     = cmp Eax Ebx >> sete Al >> return (Type Boolean False)
+    binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)
