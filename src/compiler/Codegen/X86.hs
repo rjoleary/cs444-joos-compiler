@@ -35,6 +35,7 @@ instance Monoid (Asm a) where
 instance Functor Asm where
 
 instance Applicative Asm where
+  pure x = Asm []
 
 instance Monad Asm where
   (Asm x) >> (Asm y) = Asm (x ++ y)
