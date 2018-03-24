@@ -119,6 +119,9 @@ test.a3 : compiler
 test.a4 : compiler
 	@TESTNUM=4 TESTSET=test/marmoset/a4 ./testrunner.sh all
 
+test.a5 : compiler
+	@./testrunner-codegen.sh
+
 test.all : compiler
 	@OUT="A1 $$(make test.a1 | tee /dev/stderr | grep Passed)\n"; \
 	OUT="$${OUT}A2 $$(make test.a2 | tee /dev/stderr | grep Passed)\n"; \
