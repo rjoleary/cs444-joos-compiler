@@ -193,6 +193,9 @@ methodSignature x = name ++ "(" ++ commaDelimit parameterTypes ++ ")"
 typeSignature :: Type -> String
 typeSignature x = show x
 
+isFieldStatic :: Variable -> Bool
+isFieldStatic x = Static `elem` variableModifiers x
+
 isMethodFinal :: Method -> Bool
 isMethodFinal x = Final `elem` methodModifiers x
 

@@ -5,6 +5,7 @@ module Codegen.CodeGenType
   ) where
 
 import JoosCompiler.Ast
+import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Visitor.Analysis
 import Codegen.X86
@@ -20,15 +21,23 @@ instance Analysis CodeGenType (Asm ()) where
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
     label t
     -- TODO: instance of information
-    comment (show (length (classFields t)) ++ " fields")
+    comment (show (length staticFields) ++ " static fields")
     mapM_ (\(field, offset) -> do
       comment (variableName field)
       -- TODO: use actual canonicalized label
       label (mangle t ++ "$static" ++ show offset)
       dd (I 0)
-      ) (zip (classFields t) [0,4..]) -- TODO: only static fields
+      ) (zip staticFields [0..])
     -- TODO: vtable
     label ("Init$" ++ mangle t)
+    indent $ mapM_ (\(field, offset) -> do
+      comment (variableName field)
+      generateExpression Context (variableValue field)
+      -- TODO: use actual canonicalized label
+      mov Ebx (L (mangle t ++ "$static" ++ show offset))
+      mov (Addr Ebx) Eax
+      ) (zip staticFields [0..])
+    where staticFields = filter isFieldStatic $ classFields t
 
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=True}) = Right $ do
     label t
@@ -37,7 +46,7 @@ instance Analysis CodeGenType (Asm ()) where
   -- Everything else propagates.
   analyze ctx x = propagateAnalyze ctx x
 
-data Context
+data Context = Context
 
 -- This gets placed between each recursive call to generateExpression to indent
 -- the block and add extra debug information.
@@ -78,7 +87,7 @@ generateExpression ctx (BinaryOperation Or x y) = do
   label l
   return (Type Boolean False)
 
--- The rest of the operators are fairly generic.
+-- The rest of the binary operators are fairly generic.
 generateExpression ctx (BinaryOperation op x y) = do
   t1 <- generateExpression' ctx x
   push Eax

@@ -253,7 +253,7 @@ setz   = generic1 "setz"
 
 -- Generic instruction taking two arguments.
 generic2 :: (Arg a, Arg b) => String -> a -> b -> Asm ()
-generic2 op x y = raw ("  " ++ op ++ " " ++ showArg x ++ ", " ++ showArg y ++ ";")
+generic2 op x y = raw (op ++ " " ++ showArg x ++ ", " ++ showArg y ++ ";")
 
 add  :: (Arg a, Arg b) => a -> b -> Asm ()
 sub  :: (Arg a, Arg b) => a -> b -> Asm ()
