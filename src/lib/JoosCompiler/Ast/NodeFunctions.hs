@@ -200,19 +200,20 @@ mapStatementExpression f old@LoopStatement{loopPredicate = p} =
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
 mapStatementExpression f old@IfStatement{ifPredicate = p} =
-  old{ifPredicate = mapExpression f p
-     , nextStatement = next}
+  old{ ifPredicate = mapExpression f p
+     , nextStatement = next
+     }
   where
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
-mapStatementExpression f old@ReturnStatement{returnExpression = Just e} =
-  old{returnExpression = Just $ mapExpression f e
-     , nextStatement = next}
+mapStatementExpression f old@ReturnStatement{ returnExpression = Just e } =
+  old{ returnExpression = Just $ mapExpression f e
+     , nextStatement = next }
   where
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
 mapStatementExpression f old =
-  old{nextStatement = next}
+  old{ nextStatement = next }
   where
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
