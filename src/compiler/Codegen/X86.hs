@@ -6,6 +6,7 @@ module Codegen.X86
   , I(..)
   , L(..)
   , indent
+  , raw
   , comment
   , label
   , global

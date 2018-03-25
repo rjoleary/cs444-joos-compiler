@@ -4,6 +4,7 @@ module Codegen.CodeGenType
   ( codeGenType
   ) where
 
+import Data.Char
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.NodeTypes
@@ -123,6 +124,24 @@ generateExpression ctx (UnaryOperation Not x) = do
   mov Eax (I 1)
   sub Eax Ebx
   return (Type Boolean False)
+
+generateExpression ctx (LiteralExpression (IntegerLiteral x)) = do
+  mov Eax (I $ fromInteger x) -- TODO: double check extremities
+  return (Type Int False)
+
+generateExpression ctx (LiteralExpression (BooleanLiteral x)) = do
+  mov Eax (I (if x == True then 1 else 0))
+  return (Type Boolean False)
+
+generateExpression ctx (LiteralExpression (CharacterLiteral x)) = do
+  if isAlphaNum x
+    then raw ("mov eax " ++ show x ++ ";") -- Pretty print
+    else mov Eax (I $ fromInteger $ toInteger $ ord x)
+  return (Type Char False)
+
+generateExpression ctx (LiteralExpression NullLiteral) = do
+  mov Eax (I 0)
+  return Null
 
 -- TODO: other expressions
 generateExpression _ _ = do
