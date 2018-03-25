@@ -145,7 +145,7 @@ instance Show UnaryOperator where
   show Negate = "-"
   show Not    = "!"
 
----------- Mapping over statements ----------
+---------- Mapping over statements/expressions ----------
 
 mapStatement :: (Statement -> Statement) -> Statement -> Statement
 mapStatement _ TerminalStatement = TerminalStatement
@@ -216,10 +216,10 @@ mapStatementExpression f old =
   where
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
----------- Other Functions ----------
-
 mapExpression :: (Expression -> Expression) -> Expression -> Expression
 mapExpression _ = id
+
+---------- Other Functions ----------
 
 importName :: ImportDeclaration -> Name
 importName ImportDeclaration{onDemand=False, importPackageName=p, importTypeName=t} =
