@@ -76,26 +76,27 @@ import Prelude hiding (and, or)
 import Data.Int
 import Codegen.Mangling
 
-data Asm a = Asm [String]
+data Asm a = Asm [String] a
 data Reg = Eax | Ebx | Ecx | Edx | Esp | Ebp | Esi | Edi | Eip | Al | Bl | Cl | Dl
 data Addr = Addr Reg | Offset Reg Int32
 data I = I Int32
 data L a = L a
 
-instance Monoid (Asm a) where
-  mempty = Asm []
-  mappend (Asm x) (Asm y) = Asm (x ++ y)
+instance Monoid a => Monoid (Asm a) where
+  mempty = pure mempty
+  mappend (Asm x _) (Asm y z) = Asm (x ++ y) z
 
 instance Functor Asm where
 
 instance Applicative Asm where
-  pure x = Asm []
+  pure x = Asm [] x
 
 instance Monad Asm where
-  (Asm x) >> (Asm y) = Asm (x ++ y)
+  (Asm x _) >> (Asm y z) = Asm (x ++ y) z
+  a@(Asm x y) >>= f = a >> f y
 
 instance Show (Asm a) where
-  show (Asm x) = unlines x
+  show (Asm x _) = unlines x
 
 instance Show Reg where
   show Eax = "eax"
@@ -107,6 +108,10 @@ instance Show Reg where
   show Esi = "esi"
   show Edi = "edi"
   show Eip = "eip"
+  show Al  = "al"
+  show Bl  = "bl"
+  show Cl  = "cl"
+  show Dl  = "dl"
 
 instance Show Addr where
   show (Addr x)     = "[" ++ show x ++ "]"
@@ -133,15 +138,15 @@ instance (Mangleable a) => Arg (L a) where
 
 -- Indent a block of assembly.
 indent :: Asm a -> Asm a
-indent (Asm xs) = Asm $ map ("  "++) xs
+indent (Asm xs y) = Asm (map ("  "++) xs) y
 
 -- Instructions
 
 raw :: String -> Asm ()
-raw x = Asm [x]
+raw x = Asm [x] ()
 
 comment :: String -> Asm ()
-comment x = Asm ["; " ++ x]
+comment x = raw ("; " ++ x)
 
 label :: (Mangleable a) => a -> Asm ()
 label m = raw (mangle m ++ ":")
@@ -266,7 +271,7 @@ cmp  :: (Arg a, Arg b) => a -> b -> Asm ()
 
 add  = generic2 "add"
 sub  = generic2 "sub"
-imul = generic2 "mul"
+imul = generic2 "imul"
 or   = generic2 "or"
 and  = generic2 "and"
 mov  = generic2 "mov"

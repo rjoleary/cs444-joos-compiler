@@ -33,7 +33,7 @@ instance Analysis CodeGenType (Asm ()) where
     label ("Init$" ++ mangle t)
     indent $ mapM_ (\(field, offset) -> do
       comment (variableName field)
-      generateExpression Context (variableValue field)
+      generateExpression' Context (variableValue field)
       -- TODO: use actual canonicalized label
       mov Ebx (L (mangle t ++ "$static" ++ show offset))
       mov (Addr Ebx) Eax
@@ -52,9 +52,9 @@ data Context = Context
 -- This gets placed between each recursive call to generateExpression to indent
 -- the block and add extra debug information.
 generateExpression' :: Context -> Expression -> Asm Type
-generateExpression' ctx e = do
+generateExpression' ctx e = indent $ do
   comment (show e)
-  indent (generateExpression ctx e)
+  generateExpression ctx e
 
 generateExpression :: Context -> Expression -> Asm Type
 
@@ -142,6 +142,10 @@ generateExpression ctx (LiteralExpression (CharacterLiteral x)) = do
 generateExpression ctx (LiteralExpression NullLiteral) = do
   mov Eax (I 0)
   return Null
+
+generateExpression ctx (CastExpression t e) = do
+  generateExpression' ctx e -- TODO: is instanceof
+  return t
 
 -- TODO: other expressions
 generateExpression _ _ = do
