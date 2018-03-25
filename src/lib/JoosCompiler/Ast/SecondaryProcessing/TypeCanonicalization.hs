@@ -134,6 +134,7 @@ canonicalizeVar
            , variableModifiers = m
            , variableName = n
            , variableValue = v
+           , variableCanonicalName = newTypeName ++ [n]
            }
   where
     newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}

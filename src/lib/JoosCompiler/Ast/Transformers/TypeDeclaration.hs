@@ -22,6 +22,7 @@ typeDeclarationTransformer transformedChildren t@(Node label _) =
   , classFields = vars
   , methods = _methods
   , constructors = _constructors
+  , typeCanonicalName = error "typeCanonicalName used before initialization"
   }
   where
     _isInterface = (kInterfaceDeclaration == tokenName label)

@@ -21,6 +21,7 @@ abstractMethodTransformer transformedChildren t@(Node label _) =
   , methodName = _name
   , methodParameters = _formalParams
   , methodStatement = TerminalStatement
+  , methodCanonicalName = [_name] -- TODO(Ahmed) make error (the two below as well)
   }
   where
     _type = getAbstractMethodType t
@@ -37,6 +38,7 @@ constructorTransformer transformedChildren t@(Node label [modifiers, declaration
   , methodName = []
   , methodParameters = _formalParams
   , methodStatement = _statements
+  , methodCanonicalName = []
   }
   where
     _modifiers = astModifiers $ getMethodModifiers transformedChildren
@@ -52,6 +54,7 @@ methodTransformer transformedChildren t@(Node label [header, body]) =
   , methodName = _name
   , methodParameters = _formalParams
   , methodStatement = _statements
+  , methodCanonicalName = [_name]
   }
   where
     _type = getMethodType header
@@ -71,6 +74,7 @@ getFormalParams ts = map convertToLocal formalParamNodes
       , variableModifiers = []
       , variableName = _name
       , variableValue = LiteralExpression $ StringLiteral "TODO"
+      , variableCanonicalName = error "variableCanonicalName invalid for locals"
       }
       where
         typeNode = (subForest paramNode) !! 0

@@ -11,13 +11,14 @@ import           JoosCompiler.TokenTypeConstants
 import           JoosCompiler.Treeify
 
 localVariableTransformer :: Transformer
-localVariableTransformer transformedChildren t@(Node _ [myType,identifier,_,expression]) =
+localVariableTransformer _ t@(Node _ [myType,identifier,_,expression]) =
   AstLocalVariable $
   Variable
   { variableType = _type
   , variableModifiers = [] -- Local variables have no modifiers
   , variableName = name
   , variableValue = _value
+  , variableCanonicalName = error "variableCanonicalName not valid for locals"
   }
   where
     _type = typeTransformer myType

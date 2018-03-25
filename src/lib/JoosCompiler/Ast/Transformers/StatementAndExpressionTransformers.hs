@@ -135,6 +135,7 @@ localVariableDeclarationTransformer = match . asRule
           , variableModifiers = []
           , variableName      = tokenString $ lhs n
           , variableValue     = expressionTransformer x
+          , variableCanonicalName = error "variableCanonicalName not valid for locals"
           }
         , nextStatement = TerminalStatement }
 

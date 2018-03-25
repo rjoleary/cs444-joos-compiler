@@ -218,7 +218,15 @@ mapStatementExpression f old =
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
 mapExpression :: (Expression -> Expression) -> Expression -> Expression
-mapExpression _ = id
+mapExpression = id
+-- mapExpression f (MethodInvocation e1 s le2) =
+--   MethodInvocation (f e1) s (map f le2)
+-- mapExpression f (BinaryOperation o e1 e2) =
+--   BinaryOperation o (f e1) (f e2)
+-- mapExpression f (UnaryOperation o e) =
+--   UnaryOperation o (f e)
+-- mapExpression f e@LiteralExpression{} = f e
+-- mapExpression f This = f This
 
 ---------- Other Functions ----------
 

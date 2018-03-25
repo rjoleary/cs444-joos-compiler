@@ -16,6 +16,8 @@ fieldTransformer transformedChildren t@(Node _ (modifiers:myType:varDeclarator:_
   , variableModifiers = _fieldModifiers
   , variableName = name
   , variableValue = _value
+  -- TODO(Ahmed) error "variableCanonicalName not ready (Field)"
+  , variableCanonicalName = [name]
   }
   where
     _type = typeTransformer myType
