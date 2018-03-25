@@ -145,8 +145,81 @@ instance Show UnaryOperator where
   show Negate = "-"
   show Not    = "!"
 
+---------- Mapping over statements ----------
+
+mapStatement :: (Statement -> Statement) -> Statement -> Statement
+mapStatement _ TerminalStatement = TerminalStatement
+
+mapStatement f x@(BlockStatement s _) =
+  applyNextMapStatement f x{ statementBlock = mapStatement f s }
+
+mapStatement f x@(LoopStatement _ s _) =
+  applyNextMapStatement f x{ loopStatement = mapStatement f s }
+
+mapStatement f x@(IfStatement _ t e _) =
+  applyNextMapStatement f x{ ifThenStatement = newThen
+                           , ifElseStatement = newElse
+                           }
+  where
+    newThen = mapStatement f t
+    newElse = mapStatement f e
+
+-- ExpressionStatement
+-- ReturnExpression
+-- LocalStatement
+-- EmptyStatement
+-- TerminalStatement
+mapStatement f x = applyNextMapStatement f x
+
+applyNextMapStatement :: (Statement -> Statement) -> Statement -> Statement
+applyNextMapStatement _ TerminalStatement = TerminalStatement
+applyNextMapStatement f s
+  | newStatement /= TerminalStatement =
+    newStatement{ nextStatement = newNext }
+  | otherwise = newStatement
+  where
+    newStatement = f s
+    newNext = mapStatement f $ nextStatement newStatement
+
+mapStatementExpression :: (Expression -> Expression) -> Statement -> Statement
+
+mapStatementExpression _ TerminalStatement = TerminalStatement
+
+mapStatementExpression f old@ExpressionStatement{statementExpression = e} =
+  old{ statementExpression = mapExpression f e
+     , nextStatement = next
+     }
+  where
+    next = mapStatement (mapStatementExpression f) $ nextStatement old
+
+mapStatementExpression f old@LoopStatement{loopPredicate = p} =
+  old{ loopPredicate = mapExpression f p
+     , nextStatement = next
+     }
+  where
+    next = mapStatement (mapStatementExpression f) $ nextStatement old
+
+mapStatementExpression f old@IfStatement{ifPredicate = p} =
+  old{ifPredicate = mapExpression f p
+     , nextStatement = next}
+  where
+    next = mapStatement (mapStatementExpression f) $ nextStatement old
+
+mapStatementExpression f old@ReturnStatement{returnExpression = Just e} =
+  old{returnExpression = Just $ mapExpression f e
+     , nextStatement = next}
+  where
+    next = mapStatement (mapStatementExpression f) $ nextStatement old
+
+mapStatementExpression f old =
+  old{nextStatement = next}
+  where
+    next = mapStatement (mapStatementExpression f) $ nextStatement old
 
 ---------- Other Functions ----------
+
+mapExpression :: (Expression -> Expression) -> Expression -> Expression
+mapExpression _ = id
 
 importName :: ImportDeclaration -> Name
 importName ImportDeclaration{onDemand=False, importPackageName=p, importTypeName=t} =
