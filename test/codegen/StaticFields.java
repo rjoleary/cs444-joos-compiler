@@ -18,5 +18,6 @@ public class StaticFields {
     public static boolean o = true & false;
     public static boolean p = false | true;
     public static boolean q = true && false;
-    public static boolean r = true | true;
+    public static boolean r = true || true;
+    public static boolean s = (true || true) && false || true && false;
 }

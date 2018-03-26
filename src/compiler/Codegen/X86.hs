@@ -6,6 +6,7 @@ module Codegen.X86
   , I(..)
   , L(..)
   , indent
+  , uniqueLabel
   , raw
   , comment
   , label
@@ -76,7 +77,11 @@ import Prelude hiding (and, or)
 import Data.Int
 import Codegen.Mangling
 
-data Asm a = Asm [String] a
+data Asm a = Asm
+  { code       :: [String]
+  , usedLabels :: Integer
+  , contents   :: (Asm a -> a)
+  }
 data Reg = Eax | Ebx | Ecx | Edx | Esp | Ebp | Esi | Edi | Eip | Al | Bl | Cl | Dl
 data Addr = Addr Reg | Offset Reg Int32
 data I = I Int32
@@ -84,19 +89,24 @@ data L a = L a
 
 instance Monoid a => Monoid (Asm a) where
   mempty = pure mempty
-  mappend (Asm x _) (Asm y z) = Asm (x ++ y) z
+  mappend x y = x >> y
 
 instance Functor Asm where
 
 instance Applicative Asm where
-  pure x = Asm [] x
+  pure x = Asm { code = [], usedLabels = 0, contents = const x }
 
 instance Monad Asm where
-  (Asm x _) >> (Asm y z) = Asm (x ++ y) z
-  a@(Asm x y) >>= f = a >> f y
+  x >> y = Asm
+    { code       = code x ++ code y
+    , usedLabels = usedLabels x + usedLabels y
+    , contents   = contents y
+    }
+  x >>= f = x >> y
+    where y = f (contents x x)
 
 instance Show (Asm a) where
-  show (Asm x _) = unlines x
+  show Asm{code=x} = unlines x
 
 instance Show Reg where
   show Eax = "eax"
@@ -138,12 +148,20 @@ instance (Mangleable a) => Arg (L a) where
 
 -- Indent a block of assembly.
 indent :: Asm a -> Asm a
-indent (Asm xs y) = Asm (map ("  "++) xs) y
+indent x@Asm{} = x{ code = map ("  "++) (code x) }
+
+-- Returns a unique label.
+uniqueLabel :: Asm String
+uniqueLabel = Asm
+  { code = []
+  , usedLabels = 1
+  , contents = \x -> "Label" ++ show (usedLabels x)
+  }
 
 -- Instructions
 
 raw :: String -> Asm ()
-raw x = Asm [x] ()
+raw x = mempty{ code = [x] }
 
 comment :: String -> Asm ()
 comment x = raw ("; " ++ x)

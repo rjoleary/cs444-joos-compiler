@@ -72,7 +72,7 @@ generateExpression ctx (BinaryOperation Add x y) = do
 generateExpression ctx (BinaryOperation And x y) = do
   t1 <- generateExpression' ctx x
   cmp Eax (I 1)
-  let l = "label1" -- TODO: unique label
+  l <- uniqueLabel
   jne (L l)
   t2 <- generateExpression' ctx y
   label l
@@ -82,7 +82,7 @@ generateExpression ctx (BinaryOperation And x y) = do
 generateExpression ctx (BinaryOperation Or x y) = do
   t1 <- generateExpression' ctx x
   cmp Eax (I 1)
-  let l = "label2" -- TODO: unique label
+  l <- uniqueLabel
   je (L l)
   t2 <- generateExpression' ctx y
   label l
