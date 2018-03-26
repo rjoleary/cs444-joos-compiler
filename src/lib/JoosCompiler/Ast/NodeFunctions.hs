@@ -181,8 +181,9 @@ applyNextMapStatement f s
     newStatement = f s
     newNext = mapStatement f $ nextStatement newStatement
 
+-- Goes through statements and if it finds an expressions, recursively
+-- applies f to it
 mapStatementExpression :: (Expression -> Expression) -> Statement -> Statement
-
 mapStatementExpression _ TerminalStatement = TerminalStatement
 
 mapStatementExpression f old@ExpressionStatement{statementExpression = e} =
@@ -218,15 +219,37 @@ mapStatementExpression f old =
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
 mapExpression :: (Expression -> Expression) -> Expression -> Expression
-mapExpression = id
--- mapExpression f (MethodInvocation e1 s le2) =
---   MethodInvocation (f e1) s (map f le2)
--- mapExpression f (BinaryOperation o e1 e2) =
---   BinaryOperation o (f e1) (f e2)
--- mapExpression f (UnaryOperation o e) =
---   UnaryOperation o (f e)
--- mapExpression f e@LiteralExpression{} = f e
--- mapExpression f This = f This
+mapExpression f (MethodInvocation e1 s le2) =
+  f $ MethodInvocation newE1 s newLe2
+  where
+    newE1 = mapExpression f e1
+    newLe2 = map (mapExpression f) le2
+
+mapExpression f (BinaryOperation o e1 e2) =
+  f $ BinaryOperation o newE1 newE2
+  where
+    newE1 = mapExpression f e1
+    newE2 = mapExpression f e2
+
+mapExpression f (UnaryOperation o e) = UnaryOperation o (mapExpression f e)
+mapExpression f (FieldAccess e s)          = f $ FieldAccess (mapExpression f e) s
+mapExpression f (NewExpression n le)       = f $ NewExpression n $ map (mapExpression f) le
+mapExpression f (NewArrayExpression t e)   = f $ NewArrayExpression t $ mapExpression f e
+mapExpression f (CastExpression t e)       = f $ CastExpression t $ mapExpression f e
+mapExpression f (InstanceOfExpression e t) = f $ InstanceOfExpression (mapExpression f e) t
+mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
+  where
+    newE1 = mapExpression f e1
+    newE2 = mapExpression f e2
+
+-- All of those expressions have no sub-expressions. We could combine into one,
+-- but explicitly stating helps expose bugs more quickly
+mapExpression f old@ClassDereference{}  = f old
+mapExpression f old@FieldDereference{}  = f old
+mapExpression f old@LocalDereference{}  = f old
+mapExpression f old@ExpressionName{}    = f old
+mapExpression f old@LiteralExpression{} = f old
+mapExpression f This = f This
 
 ---------- Other Functions ----------
 
