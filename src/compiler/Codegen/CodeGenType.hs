@@ -26,11 +26,12 @@ instance Analysis CodeGenType (Asm ()) where
     label t
     space
 
-    -- instanceof information
-    comment "instanceof information"
-    let supers = map (fromJust . resolveTypeInProgram wp) (super t : interfaces t)
-    mapM_ extern (filter (\x -> typeCanonicalName x /= ["java", "lang", "Object"]) supers)
-    mapM_ (dd . L . mangle) supers
+    -- instanceof table
+    -- This excludes objects because (x instanceof Object) is true at compile time.
+    let instanceOfTable = filter (\x -> typeCanonicalName x /= ["java", "lang", "Object"]) $ map (fromJust . resolveTypeInProgram wp) (super t : interfaces t)
+    comment ("instanceof table of size " ++ show (length instanceOfTable + 1))
+    mapM_ (\l -> (extern l) >>  (dd . L . mangle $ l)) instanceOfTable
+    dd (I 0)
     space
 
     -- Uninitialized static fields
@@ -210,6 +211,7 @@ generateExpression ctx (LiteralExpression NullLiteral) = do
 
 generateExpression ctx (CastExpression t e) = do
   generateExpression' ctx e -- TODO: is instanceof
+  -- TODO: (x instanceof Object) is true at compile time
   return t
 
 -- TODO: other expressions
