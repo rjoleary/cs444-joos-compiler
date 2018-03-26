@@ -49,6 +49,44 @@ instance Analysis CodeGenType (Asm ()) where
 
 data Context = Context
 
+
+---------- Statements ----------
+
+generateStatement' :: Context -> Statement -> Asm ()
+generateStatement' ctx x = indent $ do
+  comment (show x)
+  generateStatement ctx x
+
+generateStatement :: Context -> Statement -> Asm ()
+
+generateStatement ctx x@IfStatement{} = do
+  endLabel <- uniqueLabel
+  elseLabel <- uniqueLabel
+  t1 <- generateExpression' ctx (ifPredicate x)
+  cmp Eax (I 0)
+  je (L elseLabel)
+  generateStatement' ctx (ifThenStatement x)
+  jmp (L endLabel)
+  label elseLabel
+  generateStatement' ctx (ifElseStatement x)
+  label endLabel
+  generateStatement' ctx (nextStatement x)
+
+generateStatement ctx x@LoopStatement{} = do
+  startLabel <- uniqueLabel
+  endLabel <- uniqueLabel
+  label startLabel
+  t1 <- generateExpression' ctx (loopPredicate x)
+  cmp Eax (I 0)
+  je (L endLabel)
+  generateStatement' ctx (loopStatement x)
+  jmp (L startLabel)
+  label endLabel
+  generateStatement' ctx (nextStatement x)
+
+
+---------- Expressions ----------
+
 -- This gets placed between each recursive call to generateExpression to indent
 -- the block and add extra debug information.
 generateExpression' :: Context -> Expression -> Asm Type
