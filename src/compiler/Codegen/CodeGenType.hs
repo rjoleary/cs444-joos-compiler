@@ -42,7 +42,7 @@ instance Analysis CodeGenType (Asm ()) where
 
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=True}) = Right $ do
     label t
-    dd (I 0x87654321)
+    dd (I 0x7654321)
 
   -- Everything else propagates.
   analyze ctx x = propagateAnalyze ctx x
