@@ -25,8 +25,7 @@ instance Analysis CodeGenType (Asm ()) where
     comment (show (length staticFields) ++ " static fields")
     mapM_ (\(field, offset) -> do
       comment (variableName field)
-      -- TODO: use actual canonicalized label
-      label (mangle t ++ "$static" ++ show offset)
+      label field
       dd (I 0)
       ) (zip staticFields [0..])
     -- TODO: vtable
@@ -34,8 +33,7 @@ instance Analysis CodeGenType (Asm ()) where
     indent $ mapM_ (\(field, offset) -> do
       comment (variableName field)
       generateExpression' Context (variableValue field)
-      -- TODO: use actual canonicalized label
-      mov Ebx (L (mangle t ++ "$static" ++ show offset))
+      mov Ebx (L (mangle field))
       mov (Addr Ebx) Eax
       ) (zip staticFields [0..])
     where staticFields = filter isFieldStatic $ classFields t

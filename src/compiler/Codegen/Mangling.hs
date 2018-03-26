@@ -20,10 +20,8 @@ class Mangleable a where
 
 -- Field$p$q$A$fa
 instance Mangleable Variable where
-  mangle field = mangledCanonical
-    where
-      canonicalized = variableCanonicalName field -- [p, q, A, fa]
-      mangledCanonical = intercalate "$" ("Field" : canonicalized)
+  mangle field = modifier ++ "Field$" ++ intercalate "$" (variableCanonicalName field)
+    where modifier = if isFieldStatic field then "Static" else ""
 
 -- Method$p$q$A$ma#int#java.lang.String#
 instance Mangleable Method where
