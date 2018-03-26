@@ -122,14 +122,14 @@ data Expression
   | UnaryOperation UnaryOperator Expression
   | LiteralExpression Literal
   | This
-  | FieldAccess Expression String
   | ExpressionName Name
   | NewExpression Name [Expression]
   | NewArrayExpression Type Expression -- TODO: confusion on primitive types
   | CastExpression Type Expression
   | InstanceOfExpression Expression Type
   | ArrayExpression Expression Expression
-  | FieldDereference Expression Field
+  | DynamicFieldAccess Expression String
+  | StaticFieldAccess Expression Field
   | ClassDereference TypeDeclaration
   | LocalDereference Local
   deriving (Eq)

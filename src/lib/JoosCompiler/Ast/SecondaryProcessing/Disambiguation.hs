@@ -60,12 +60,12 @@ disambiguateStatement program unit statement = newStatement
           | otherwise =
             unitType |>
             classFields |>
-            find (variableName .> (== n))
+            find (\v -> (variableName v == n && isFieldStatic v))
         maybeUnitType = typeDecl unit
         unitType = fromMaybe (error "unitType was nothing") maybeUnitType
         new
           | maybeField == Nothing = old
-          | otherwise = FieldDereference (ClassDereference unitType) field
+          | otherwise = StaticFieldAccess (ClassDereference unitType) field
     f e = e
 
 disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode

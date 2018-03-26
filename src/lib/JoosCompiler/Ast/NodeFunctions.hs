@@ -93,7 +93,7 @@ instance Show Expression where
   show (UnaryOperation op e)          = "(" ++ show op ++ show e ++ ")"
   show (LiteralExpression v)          = "(" ++ show v ++ ")"
   show This                           = "(this)"
-  show (FieldAccess e s)              = "(" ++ show e ++ "." ++ s ++ ")"
+  show (DynamicFieldAccess e s)       = "(" ++ show e ++ "." ++ s ++ ")"
   show (ExpressionName n)             = "(" ++ showName n ++ ")"
   show (NewExpression name args)      = "(new " ++ showName name ++ "(" ++ intercalate "," (map show args) ++ "))"
   show (NewArrayExpression t e)       = "(new " ++ typeSignature t ++ "[" ++ show e ++ "])"
@@ -231,8 +231,8 @@ mapExpression f (BinaryOperation o e1 e2) =
     newE1 = mapExpression f e1
     newE2 = mapExpression f e2
 
-mapExpression f (UnaryOperation o e) = UnaryOperation o (mapExpression f e)
-mapExpression f (FieldAccess e s)          = f $ FieldAccess (mapExpression f e) s
+mapExpression f (UnaryOperation o e)       = UnaryOperation o (mapExpression f e)
+mapExpression f (DynamicFieldAccess e s)   = f $ DynamicFieldAccess (mapExpression f e) s
 mapExpression f (NewExpression n le)       = f $ NewExpression n $ map (mapExpression f) le
 mapExpression f (NewArrayExpression t e)   = f $ NewArrayExpression t $ mapExpression f e
 mapExpression f (CastExpression t e)       = f $ CastExpression t $ mapExpression f e
@@ -245,7 +245,7 @@ mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
 -- All of those expressions have no sub-expressions. We could combine into one,
 -- but explicitly stating helps expose bugs more quickly
 mapExpression f old@ClassDereference{}  = f old
-mapExpression f old@FieldDereference{}  = f old
+mapExpression f old@StaticFieldAccess{} = f old
 mapExpression f old@LocalDereference{}  = f old
 mapExpression f old@ExpressionName{}    = f old
 mapExpression f old@LiteralExpression{} = f old

@@ -115,7 +115,7 @@ instance Analysis TypeAnalysis Type where
       else Left ("Array size must be numeric type " ++ show e)
 
   -- JLS 15.11: Field Access Expressions
-  analyze ctx (AstExpression e@(FieldAccess primary name)) = do
+  analyze ctx (AstExpression e@(DynamicFieldAccess primary name)) = do
     classType <- analyze' ctx primary
     if not $ isName classType -- TODO: arrays have a length field
       then Left ("Can only access fields of reference types " ++ show e)
@@ -236,7 +236,7 @@ instance Analysis TypeAnalysis Type where
   analyze ctx (AstExpression (ExpressionName name)) =
     if (isJust maybeLocalType)
     then (return $ fromJust maybeLocalType)
-    else analyze' ctx (FieldAccess This (last name))
+    else analyze' ctx (DynamicFieldAccess This (last name))
     -- TODO: global env
     where maybeLocalType = Map.lookup (last name) (ctxLocalEnv ctx) -- TODO: last is wrong
 

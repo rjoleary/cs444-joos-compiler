@@ -50,7 +50,7 @@ instance (Analysis c b, Monoid b) => Analysis (PropagateAnalysis c) b where
     Right mempty
   analyze (PropagateAnalysis ctx) (AstExpression This) =
     Right mempty
-  analyze (PropagateAnalysis ctx) (AstExpression (FieldAccess e _)) =
+  analyze (PropagateAnalysis ctx) (AstExpression (DynamicFieldAccess e _)) =
     concatEithers $ fmap (analyze' ctx) [e]
   analyze (PropagateAnalysis ctx) (AstExpression (ExpressionName name)) =
     Right mempty
