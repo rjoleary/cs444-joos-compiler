@@ -1,7 +1,7 @@
 # Can be Jlr1 or Jlalr1
 GRAMMAR  := Jlalr1
 
-GHC_WARNINGS := -w -Wmissing-fields
+GHC_WARNINGS := -w -Wmissing-fields -Woverflowed-literals -Werror
 
 GHC = stack build --only-dependencies && stack ghc -- -outputdir ${HS_BUILD} -O2 ${GHC_WARNINGS} -i${HS_INCLUDE}
 
