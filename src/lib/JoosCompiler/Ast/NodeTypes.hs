@@ -129,9 +129,9 @@ data Expression
   | CastExpression Type Expression
   | InstanceOfExpression Expression Type
   | ArrayExpression Expression Expression
-  | ClassDereference String  -- typeCanonicalName
-  | FieldDereference String  -- fieldCanonicalName
-  | LocalDereference Integer -- Local offset
+  | FieldDereference Expression Field
+  | ClassDereference TypeDeclaration
+  | LocalDereference Local
   deriving (Eq)
 
 data Type

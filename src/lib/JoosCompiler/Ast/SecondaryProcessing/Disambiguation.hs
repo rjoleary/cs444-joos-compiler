@@ -1,8 +1,10 @@
 module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
   (disambiguate) where
 
+import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           Flow
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
@@ -34,22 +36,37 @@ disambiguateUnit program t@(Node (AstCompilationUnit oldUnit) children)
     oldTypeDecl = fromMaybe (error "oldTypeDecl was Nothing") maybeOldTypeDecl
     newTypeDecl = oldTypeDecl {methods = newMethods}
     newUnit = oldUnit {typeDecl = Just newTypeDecl}
-    newMethods = map (disambiguateMethod program) $ methods oldTypeDecl
-    newChildren = map (disambiguateTree program) children
+    newMethods = map (disambiguateMethod program oldUnit) $ methods oldTypeDecl
+    newChildren = map (disambiguateTree program oldUnit) children
 disambiguateUnit _ _ = error "Wrong node type in disambiguateUnit"
 
-disambiguateMethod :: WholeProgram -> Method -> Method
-disambiguateMethod program method =
+disambiguateMethod :: WholeProgram -> CompilationUnit -> Method -> Method
+disambiguateMethod program unit method =
   method { methodStatement = newStatement }
   where
     oldStatement = methodStatement method
-    newStatement = disambiguateStatement program oldStatement
+    newStatement = disambiguateStatement program unit oldStatement
 
-disambiguateStatement :: WholeProgram -> Statement -> Statement
-disambiguateStatement program statement = newStatement
+disambiguateStatement :: WholeProgram -> CompilationUnit -> Statement -> Statement
+disambiguateStatement program unit statement = newStatement
   where
     newStatement = mapStatementExpression f statement
-    f = id
+    f :: Expression -> Expression
+    f old@(ExpressionName (n:ns)) = new
+      where
+        field = fromMaybe (error $ intercalate " " ["Field", n, "Not found"]) maybeField
+        maybeField
+          | maybeUnitType == Nothing = Nothing
+          | otherwise =
+            unitType |>
+            classFields |>
+            find (variableName .> (== n))
+        maybeUnitType = typeDecl unit
+        unitType = fromMaybe (error "unitType was nothing") maybeUnitType
+        new
+          | maybeField == Nothing = old
+          | otherwise = FieldDereference (ClassDereference unitType) field
+    f e = e
 
-disambiguateTree :: WholeProgram -> AstNode -> AstNode
-disambiguateTree _ = id
+disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode
+disambiguateTree _ _ = id
