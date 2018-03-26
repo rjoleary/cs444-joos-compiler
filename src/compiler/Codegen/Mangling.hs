@@ -41,7 +41,6 @@ instance Mangleable TypeDeclaration where
   mangle t = mangledCanonical
     where
       canonicalized = typeCanonicalName t
-   --   canonicalized = typeCanonicalName s
       mangledCanonical = intercalate "$" ("Class" : canonicalized)
 
 instance Mangleable String where

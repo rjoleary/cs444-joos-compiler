@@ -9,8 +9,10 @@ module Codegen.X86
   , uniqueLabel
   , raw
   , comment
+  , space
   , label
   , global
+  , extern
 
   -- generic 0
   , nop
@@ -166,11 +168,17 @@ raw x = mempty{ code = [x] }
 comment :: String -> Asm ()
 comment x = raw ("; " ++ x)
 
+space :: Asm ()
+space = raw ""
+
 label :: (Mangleable a) => a -> Asm ()
 label m = raw (mangle m ++ ":")
 
 global :: (Mangleable a) => a -> Asm ()
 global m = raw ("global " ++ mangle m)
+
+extern :: (Mangleable a) => a -> Asm ()
+extern m = raw ("extern " ++ mangle m)
 
 -- Generic instruction taking zero arguments.
 generic0 :: String -> Asm ()

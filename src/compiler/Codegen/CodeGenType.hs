@@ -5,42 +5,71 @@ module Codegen.CodeGenType
   ) where
 
 import Data.Char
+import Data.Maybe
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.NodeTypes
+import JoosCompiler.Ast.Utils
 import JoosCompiler.Ast.Visitor.Analysis
 import Codegen.X86
 import Codegen.Mangling
 import qualified Codegen.X86 as X86
 
-codeGenType :: TypeDeclaration -> Either String (Asm ())
-codeGenType = analyze' CodeGenType
+codeGenType :: WholeProgram -> TypeDeclaration -> Either String (Asm ())
+codeGenType wp t = analyze' CodeGenType{ wp = wp } t
 
-data CodeGenType = CodeGenType
+data CodeGenType = CodeGenType{ wp :: WholeProgram }
 
 instance Analysis CodeGenType (Asm ()) where
-  analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
+  analyze CodeGenType{wp=wp} (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
+    global t
     label t
-    -- TODO: instance of information
+    space
+
+    -- instanceof information
+    comment "instanceof information"
+    let supers = map (fromJust . resolveTypeInProgram wp) (super t : interfaces t)
+    mapM_ extern (filter (\x -> typeCanonicalName x /= ["java", "lang", "Object"]) supers)
+    mapM_ (dd . L . mangle) supers
+    space
+
+    -- Uninitialized static fields
     comment (show (length staticFields) ++ " static fields")
-    mapM_ (\(field, offset) -> do
+    mapM_ (\field -> do
       comment (variableName field)
       label field
       dd (I 0)
-      ) (zip staticFields [0..])
-    -- TODO: vtable
+      ) staticFields
+    space
+
+    -- Vtable
+    comment "TODO: vtable"
+    space
+
+    -- Init function
+    comment "Init function"
     label ("Init$" ++ mangle t)
-    indent $ mapM_ (\(field, offset) -> do
+    indent $ mapM_ (\field -> do
       comment (variableName field)
       generateExpression' Context (variableValue field)
       mov Ebx (L (mangle field))
       mov (Addr Ebx) Eax
-      ) (zip staticFields [0..])
+      ) staticFields
+    space
+
+    -- Constructors
+    comment "TODO: constructors"
+    space
+
+    -- Methods
+    comment "TODO: methods"
+    space
+
     where staticFields = filter isFieldStatic $ classFields t
 
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=True}) = Right $ do
     label t
-    dd (I 0x7654321)
+    dd (I 0x7654321) -- TODO
 
   -- Everything else propagates.
   analyze ctx x = propagateAnalyze ctx x

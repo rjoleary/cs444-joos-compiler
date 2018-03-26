@@ -75,7 +75,7 @@ main = do
         Right asm -> writeFile "output/main.s" (show asm)
         Left err  -> exitError err
 
-      mapM_ (\t -> case (codeGenType t) of
+      mapM_ (\t -> case (codeGenType program t) of
           Right asm -> writeFile (asmFileName t) (show asm)
           Left err  -> exitError err)
         (map (astClass . rootLabel) $ findChildren isTypeDeclaration ast)
