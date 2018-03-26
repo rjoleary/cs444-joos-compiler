@@ -88,7 +88,7 @@ instance Show Statement where
   show TerminalStatement{} = "TerminalStatement"
 
 instance Show Expression where
-  show (MethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
+  show (DynamicMethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
   show (BinaryOperation op e1 e2)     = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
   show (UnaryOperation op e)          = "(" ++ show op ++ show e ++ ")"
   show (LiteralExpression v)          = "(" ++ show v ++ ")"
@@ -219,8 +219,8 @@ mapStatementExpression f old =
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
 mapExpression :: (Expression -> Expression) -> Expression -> Expression
-mapExpression f (MethodInvocation e1 s le2) =
-  f $ MethodInvocation newE1 s newLe2
+mapExpression f (DynamicMethodInvocation e1 s le2) =
+  f $ DynamicMethodInvocation newE1 s newLe2
   where
     newE1 = mapExpression f e1
     newLe2 = map (mapExpression f) le2
@@ -244,7 +244,6 @@ mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
 
 -- All of those expressions have no sub-expressions. We could combine into one,
 -- but explicitly stating helps expose bugs more quickly
-mapExpression f old@ClassDereference{}  = f old
 mapExpression f old@StaticFieldAccess{} = f old
 mapExpression f old@LocalDereference{}  = f old
 mapExpression f old@ExpressionName{}    = f old

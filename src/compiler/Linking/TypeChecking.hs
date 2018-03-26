@@ -123,7 +123,7 @@ instance Analysis TypeAnalysis Type where
       -- TODO: the above assumes the primary is of this type
 
   -- JLS 15.12: Method Invocation Expressions
-  analyze ctx (AstExpression e@(MethodInvocation expr name argExprs)) = do
+  analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
     exprType <- analyze' ctx expr
     when (not $ isReference exprType)
       (Left $ "Method may only be invoked on reference types " ++ show e)

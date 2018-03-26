@@ -117,8 +117,7 @@ data Scope = Scope
   } deriving (Eq)
 
 data Expression
-  = MethodInvocation Expression String [Expression]
-  | BinaryOperation BinaryOperator Expression Expression
+  = BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression
   | LiteralExpression Literal
   | This
@@ -128,9 +127,10 @@ data Expression
   | CastExpression Type Expression
   | InstanceOfExpression Expression Type
   | ArrayExpression Expression Expression
+  | DynamicMethodInvocation Expression String [Expression]
   | DynamicFieldAccess Expression String
-  | StaticFieldAccess Expression Field
-  | ClassDereference TypeDeclaration
+  | StaticMethodInvocation Name String [Expression] -- TODO(Ahmed): convert to this
+  | StaticFieldAccess Name Field
   | LocalDereference Local
   deriving (Eq)
 

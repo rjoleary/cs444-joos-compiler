@@ -65,7 +65,7 @@ disambiguateStatement program unit statement = newStatement
         unitType = fromMaybe (error "unitType was nothing") maybeUnitType
         new
           | maybeField == Nothing = old
-          | otherwise = StaticFieldAccess (ClassDereference unitType) field
+          | otherwise = StaticFieldAccess (typeCanonicalName unitType) field
     f e = e
 
 disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode

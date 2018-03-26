@@ -408,17 +408,17 @@ methodInvocationTransformer :: TaggedParseTree -> Expression
 methodInvocationTransformer = match . asRule
   where
     match [("MethodInvocation", _), ("Name", n), ("(", _), (")", _)] =
-      MethodInvocation expression (last name) []
+      DynamicMethodInvocation expression (last name) []
       where name = nameTransformer n
             expression = if null (init name) then This else ExpressionName (init name)
     match [("MethodInvocation", _), ("Name", n), ("(", _), ("ArgumentList", xs), (")", _)] =
-      MethodInvocation expression (last name) (argumentListTransformer xs)
+      DynamicMethodInvocation expression (last name) (argumentListTransformer xs)
       where name = nameTransformer n
             expression = if null (init name) then This else ExpressionName (init name)
     match [("MethodInvocation", _), ("Primary", e), (".", _), ("Identifier", n), ("(", _), (")", _)] =
-      MethodInvocation (primaryTransformer e) (tokenString $ lhs n) []
+      DynamicMethodInvocation (primaryTransformer e) (tokenString $ lhs n) []
     match [("MethodInvocation", _), ("Primary", e), (".", _), ("Identifier", n), ("(", _), ("ArgumentList", xs), (")", _)] =
-      MethodInvocation (primaryTransformer e) (tokenString $ lhs n) (argumentListTransformer xs)
+      DynamicMethodInvocation (primaryTransformer e) (tokenString $ lhs n) (argumentListTransformer xs)
 
 arrayAccessTransformer :: TaggedParseTree -> Expression
 arrayAccessTransformer = match . asRule

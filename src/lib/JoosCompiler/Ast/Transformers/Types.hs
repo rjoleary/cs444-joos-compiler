@@ -38,7 +38,7 @@ children (AstWholeProgram (WholeProgram _ cus))    = (map AstCompilationUnit cus
 children (AstCompilationUnit x) = (map AstImport $ imports x) ++
                                   (map AstTypeDeclaration $ maybeToList $ typeDecl x)
 children (AstConstructor x)     = error "AstConstructor not in final AST"
-children (AstExpression (MethodInvocation x _ xs))  = AstExpression x : map AstExpression xs
+children (AstExpression (DynamicMethodInvocation x _ xs))  = AstExpression x : map AstExpression xs
 children (AstExpression (BinaryOperation _ x y))    = map AstExpression [x, y]
 children (AstExpression (UnaryOperation _ x))       = [AstExpression x]
 children (AstExpression (LiteralExpression _))      = []

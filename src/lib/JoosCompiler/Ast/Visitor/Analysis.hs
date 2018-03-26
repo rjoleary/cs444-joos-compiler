@@ -40,7 +40,7 @@ instance (Analysis c b, Monoid b) => Analysis (PropagateAnalysis c) b where
       fmap (analyze' ctx) (maybeToList (typeDecl x))
 
   -- TODO: remove the outer node
-  analyze (PropagateAnalysis ctx) (AstExpression (MethodInvocation x _ xs)) =
+  analyze (PropagateAnalysis ctx) (AstExpression (DynamicMethodInvocation x _ xs)) =
     concatEithers $ fmap (analyze' ctx) (x:xs)
   analyze (PropagateAnalysis ctx) (AstExpression (BinaryOperation _ x y)) =
     concatEithers $ fmap (analyze' ctx) [x, y]
