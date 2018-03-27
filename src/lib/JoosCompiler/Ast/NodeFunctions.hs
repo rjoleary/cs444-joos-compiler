@@ -164,12 +164,10 @@ mapStatement f x@(IfStatement _ t e _) =
     newThen = mapStatement f t
     newElse = mapStatement f e
 
--- ExpressionStatement
--- ReturnExpression
--- LocalStatement
--- EmptyStatement
--- TerminalStatement
-mapStatement f x = applyNextMapStatement f x
+mapStatement f x@ExpressionStatement{} = applyNextMapStatement f x
+mapStatement f x@ReturnStatement{} = applyNextMapStatement f x
+mapStatement f x@LocalStatement{} = applyNextMapStatement f x
+mapStatement f x@EmptyStatement{} = applyNextMapStatement f x
 
 applyNextMapStatement :: (Statement -> Statement) -> Statement -> Statement
 applyNextMapStatement _ TerminalStatement = TerminalStatement
@@ -226,6 +224,9 @@ mapExpression f (DynamicMethodInvocation e1 s le2) =
   where
     newE1 = mapExpression f e1
     newLe2 = map (mapExpression f) le2
+
+mapExpression f (StaticMethodInvocation c n le) =
+  f $ StaticMethodInvocation c n $ map (mapExpression f) le
 
 mapExpression f (BinaryOperation o e1 e2) =
   f $ BinaryOperation o newE1 newE2

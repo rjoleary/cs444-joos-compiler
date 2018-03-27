@@ -129,7 +129,8 @@ data Expression
   | ArrayExpression Expression Expression
   | DynamicMethodInvocation Expression String [Expression]
   | DynamicFieldAccess Expression String
-  | StaticMethodInvocation Name String [Expression] -- TODO(Ahmed): convert to this
+  -- TODO(Ahmed): convert to this constructor if method is static
+  | StaticMethodInvocation Name String [Expression]
   | StaticFieldAccess Name Field
   | LocalDereference Local
   deriving (Eq)
