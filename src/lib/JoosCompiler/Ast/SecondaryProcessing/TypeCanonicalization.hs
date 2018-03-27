@@ -123,22 +123,17 @@ canonicalizeVar :: WholeProgram -> CompilationUnit -> Variable -> Variable
 canonicalizeVar
   program
   unit
-  Variable { variableType = Type { innerType = NamedType {unNamedType = oldTypeName}
-                                 , isArray = _isArray
-                                 }
-           , variableModifiers = m
-           , variableName = n
-           , variableValue = v
+  old@Variable{ variableType = oldType@Type{ innerType = NamedType{ unNamedType = oldTypeName }}
+              , variableName = n
            } =
-  Variable { variableType = newType
-           , variableModifiers = m
-           , variableName = n
-           , variableValue = v
-           , variableCanonicalName = newTypeName ++ [n]
-           }
+  old { variableType = newType
+      , variableCanonicalName = canonicalPrefix ++ [n]
+      }
   where
-    newType = Type {innerType = (NamedType newTypeName), isArray = _isArray}
+    newType = oldType{ innerType = (NamedType newTypeName) }
     newTypeName = canonicalize program unit oldTypeName
+    unitType = fromMaybe (error "unitType was Nothing") $ typeDecl unit
+    canonicalPrefix = cuPackage unit ++ [typeName unitType]
 -- Not NamedType
 canonicalizeVar _ _ var = var
 
@@ -170,3 +165,4 @@ canonicalizeTypeDecl
     newInterfaces = map (canonicalize program unit) oldInterfaces
     newFields = map (canonicalizeVar program unit) fields
     _typeCanonicalName = pName ++ [name]
+canonicalizeTypeDecl _ EmptyFile{} _ = error "Tried to canonicalize type in empty file"
