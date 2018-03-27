@@ -127,15 +127,14 @@ canonicalizeVar
               , variableName = n
            } =
   old { variableType = newType
-      , variableCanonicalName = canonicalPrefix ++ [n]
+      , variableCanonicalName = canonicalizeVariableName unit n
       }
   where
     newType = oldType{ innerType = (NamedType newTypeName) }
     newTypeName = canonicalize program unit oldTypeName
-    unitType = fromMaybe (error "unitType was Nothing") $ typeDecl unit
-    canonicalPrefix = cuPackage unit ++ [typeName unitType]
 -- Not NamedType
-canonicalizeVar _ _ var = var
+canonicalizeVar _ unit old@Variable{ variableName = name } =
+  old { variableCanonicalName = canonicalizeVariableName unit name }
 
 canonicalizeTypeDecl :: WholeProgram -> CompilationUnit -> TypeDeclaration -> TypeDeclaration
 canonicalizeTypeDecl
@@ -166,3 +165,9 @@ canonicalizeTypeDecl
     newFields = map (canonicalizeVar program unit) fields
     _typeCanonicalName = pName ++ [name]
 canonicalizeTypeDecl _ EmptyFile{} _ = error "Tried to canonicalize type in empty file"
+
+canonicalizeVariableName :: CompilationUnit -> String -> Name
+canonicalizeVariableName unit n = canonicalPrefix ++ [n]
+  where
+    unitType = fromMaybe (error "unitType was Nothing") $ typeDecl unit
+    canonicalPrefix = cuPackage unit ++ [typeName unitType]
