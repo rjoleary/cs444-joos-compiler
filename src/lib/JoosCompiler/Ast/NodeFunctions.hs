@@ -218,6 +218,8 @@ mapStatementExpression f old =
   where
     next = mapStatement (mapStatementExpression f) $ nextStatement old
 
+-- All the mapExpression functions apply f to the children first so f
+-- can discard the result if it wants to
 mapExpression :: (Expression -> Expression) -> Expression -> Expression
 mapExpression f (DynamicMethodInvocation e1 s le2) =
   f $ DynamicMethodInvocation newE1 s newLe2
