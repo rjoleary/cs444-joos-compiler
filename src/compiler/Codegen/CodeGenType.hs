@@ -16,12 +16,12 @@ import Codegen.Mangling
 import qualified Codegen.X86 as X86
 
 codeGenType :: WholeProgram -> TypeDeclaration -> Either String (Asm ())
-codeGenType wp t = analyze' CodeGenType{ wp = wp } t
+codeGenType wp t = analyze' CodeGenCtx{ wp = wp } t
 
-data CodeGenType = CodeGenType{ wp :: WholeProgram }
+data CodeGenCtx = CodeGenCtx{ wp :: WholeProgram }
 
-instance Analysis CodeGenType (Asm ()) where
-  analyze CodeGenType{wp=wp} (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
+instance Analysis CodeGenCtx (Asm ()) where
+  analyze ctx@CodeGenCtx{wp=wp} (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
     global t
     label t
     space
@@ -50,9 +50,10 @@ instance Analysis CodeGenType (Asm ()) where
     -- Init function
     comment "Init function"
     label ("Init$" ++ mangle t)
+    -- Initialized in the order defined
     indent $ mapM_ (\field -> do
       comment (variableName field)
-      generateExpression' Context (variableValue field)
+      generateExpression' ctx (variableValue field)
       mov Ebx (L (mangle field))
       mov (Addr Ebx) Eax
       ) staticFields
@@ -63,8 +64,8 @@ instance Analysis CodeGenType (Asm ()) where
     space
 
     -- Methods
-    comment "TODO: methods"
-    space
+    comment "Methods"
+    mapM_ (\m -> generateMethod' ctx m >> space) (methods t)
 
     where staticFields = filter isFieldStatic $ classFields t
 
@@ -75,17 +76,29 @@ instance Analysis CodeGenType (Asm ()) where
   -- Everything else propagates.
   analyze ctx x = propagateAnalyze ctx x
 
-data Context = Context
+
+---------- Method ----------
+
+generateMethod' :: CodeGenCtx -> Method -> Asm ()
+generateMethod' ctx x = indent $ do
+  comment (show x)
+  generateMethod ctx x
+
+generateMethod :: CodeGenCtx -> Method -> Asm ()
+generateMethod ctx m = do
+  label m
+  -- TODO: arguments
+  generateStatement ctx (methodStatement m)
 
 
 ---------- Statements ----------
 
-generateStatement' :: Context -> Statement -> Asm ()
+generateStatement' :: CodeGenCtx -> Statement -> Asm ()
 generateStatement' ctx x = indent $ do
   comment (show x)
   generateStatement ctx x
 
-generateStatement :: Context -> Statement -> Asm ()
+generateStatement :: CodeGenCtx -> Statement -> Asm ()
 
 generateStatement ctx x@IfStatement{} = do
   endLabel <- uniqueLabel
@@ -112,17 +125,19 @@ generateStatement ctx x@LoopStatement{} = do
   label endLabel
   generateStatement' ctx (nextStatement x)
 
+generateStatement _ _ = nop -- TODO
+
 
 ---------- Expressions ----------
 
 -- This gets placed between each recursive call to generateExpression to indent
 -- the block and add extra debug information.
-generateExpression' :: Context -> Expression -> Asm Type
+generateExpression' :: CodeGenCtx -> Expression -> Asm Type
 generateExpression' ctx e = indent $ do
   comment (show e)
   generateExpression ctx e
 
-generateExpression :: Context -> Expression -> Asm Type
+generateExpression :: CodeGenCtx -> Expression -> Asm Type
 
 -- Add is a special binary operator because it is overloaded for strings.
 generateExpression ctx (BinaryOperation Add x y) = do
