@@ -44,7 +44,7 @@ executable joos-compiler-exe
   hs-source-dirs:
                  src/lib
                , src/compiler
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -w -Wmissing-fields -Woverflowed-literals -Werror
   build-depends:
       base >=4.7 && <5
     , joos-compiler
