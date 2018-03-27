@@ -32,7 +32,13 @@ runtests() {
             local files=$testname
         fi
 
-        $COMPILER $files > "$testname.stdout" 2> "$testname.stderr" &
+        ( $COMPILER $files > "$testname.stdout"  2> "$testname.stderr"; ret=$?
+          if [ $ret -eq 124 ] ;
+          then
+              echo timed out >> "$testname.stderr"
+          fi
+          exit $ret
+        ) &
         PROCESSES="$PROCESSES $testname $!"
     done
 
