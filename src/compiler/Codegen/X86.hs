@@ -16,6 +16,7 @@ module Codegen.X86
 
   -- generic 0
   , nop
+  , ret
 
   -- generic 1
   , idiv
@@ -186,6 +187,9 @@ generic0 op = raw (op ++ ";")
 
 nop :: Asm ()
 nop = generic0 "nop"
+
+ret :: Asm ()
+ret = generic0 "ret"
 
 -- Generic instruction taking one argument.
 generic1 :: (Arg b) => String -> b -> Asm ()

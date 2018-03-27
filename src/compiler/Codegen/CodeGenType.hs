@@ -100,32 +100,66 @@ generateStatement' ctx x = indent $ do
 
 generateStatement :: CodeGenCtx -> Statement -> Asm ()
 
+generateStatement ctx x@BlockStatement{} = do
+  comment "block"
+  generateStatement' ctx (statementBlock x)
+  comment "next statement"
+  generateStatement' ctx (nextStatement x)
+
+generateStatement ctx x@ExpressionStatement{} = do
+  comment "expression"
+  generateExpression' ctx (statementExpression x)
+  comment "next statement"
+  generateStatement' ctx (nextStatement x)
+
 generateStatement ctx x@IfStatement{} = do
   endLabel <- uniqueLabel
   elseLabel <- uniqueLabel
   t1 <- generateExpression' ctx (ifPredicate x)
   cmp Eax (I 0)
   je (L elseLabel)
+  comment "then"
   generateStatement' ctx (ifThenStatement x)
   jmp (L endLabel)
+  comment "else"
   label elseLabel
   generateStatement' ctx (ifElseStatement x)
   label endLabel
+  comment "next statement"
+  generateStatement' ctx (nextStatement x)
+
+generateStatement ctx x@ReturnStatement{} = do
+  ret
+  -- No next statement
+
+generateStatement ctx x@LocalStatement{} = do
+  comment "Local statement TODO"
+  nop
+  comment "next statement"
   generateStatement' ctx (nextStatement x)
 
 generateStatement ctx x@LoopStatement{} = do
   startLabel <- uniqueLabel
   endLabel <- uniqueLabel
   label startLabel
+  comment "loop condition"
   t1 <- generateExpression' ctx (loopPredicate x)
   cmp Eax (I 0)
   je (L endLabel)
+  comment "loop body"
   generateStatement' ctx (loopStatement x)
   jmp (L startLabel)
   label endLabel
+  comment "next statement"
   generateStatement' ctx (nextStatement x)
 
-generateStatement _ _ = nop -- TODO
+generateStatement ctx x@EmptyStatement{} = do
+  -- No code
+  return ()
+
+generateStatement ctx x@TerminalStatement{} = do
+  -- No code
+  return ()
 
 
 ---------- Expressions ----------
@@ -169,6 +203,13 @@ generateExpression ctx (BinaryOperation Or x y) = do
   label l
   return (Type Boolean False)
 
+-- Assign is very special.
+generateExpression ctx (BinaryOperation Assign x y) = do
+  -- TODO
+  t2 <- generateExpression' ctx y
+  t1 <- generateExpression' ctx x
+  return t1
+
 -- The rest of the binary operators are fairly generic.
 generateExpression ctx (BinaryOperation op x y) = do
   t1 <- generateExpression' ctx x
@@ -180,17 +221,17 @@ generateExpression ctx (BinaryOperation op x y) = do
   where
     binaryOperatorAsm :: BinaryOperator -> Asm Type
     binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
-    binaryOperatorAsm Modulus      = idiv Ebx >> mov Edx Eax >> return (Type Int False)
     binaryOperatorAsm Divide       = idiv Ebx >> return (Type Int False)
+    binaryOperatorAsm Modulus      = idiv Ebx >> mov Edx Eax >> return (Type Int False)
     binaryOperatorAsm Subtract     = sub Eax Ebx >> return (Type Int False)
-    binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
-    binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
     binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> return (Type Boolean False)
     binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> return (Type Boolean False)
     binaryOperatorAsm LessEqual    = cmp Eax Ebx >> setle Al >> return (Type Boolean False)
     binaryOperatorAsm GreaterEqual = cmp Eax Ebx >> setge Al >> return (Type Boolean False)
     binaryOperatorAsm Equality     = cmp Eax Ebx >> sete Al >> return (Type Boolean False)
     binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)
+    binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
+    binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
 
 generateExpression ctx (UnaryOperation Negate x) = do
   t <- generateExpression' ctx x
@@ -232,5 +273,5 @@ generateExpression ctx (CastExpression t e) = do
 -- TODO: other expressions
 generateExpression _ _ = do
   comment "TODO"
-  nop
+  mov Eax (I 123)
   return Void
