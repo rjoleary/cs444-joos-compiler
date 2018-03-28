@@ -3,21 +3,31 @@ module Codegen.CodeGenMain
   ) where
 
 import Data.Int
+import Data.Maybe
 import JoosCompiler.Ast
+import JoosCompiler.Ast.NodeFunctions
+import JoosCompiler.Ast.NodeTypes
 import Codegen.Mangling
 import Codegen.X86
 
 -- Generates asm for the main file which is the entrypoint and initializes
 -- static variables.
-codeGenMain :: AstNode -> Either String (Asm ())
-codeGenMain ast = Right $ do
+codeGenMain :: WholeProgram -> Either String (Asm ())
+codeGenMain wp = Right $ do
   comment "This is the entrypoint"
   global "_start"
   label "_start"
+  call (let
+    -- These are given based on the a5 spec, so empty lists are not expected.
+    firstClass = fromJust $ typeDecl $ head (programCus wp)
+    isTestMethod x = methodName x == "test" && Static `elem` (methodModifiers x)
+    testMethod = head . filter isTestMethod $ methods firstClass
+    in L $ mangle $ testMethod)
   exitSyscall
 
+-- Exit with the value stored in eax.
 exitSyscall :: Asm ()
 exitSyscall = do
+  mov Ebx Eax
   mov Eax (I 1)
-  mov Ebx (I 123)
   int (I 0x80)

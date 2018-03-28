@@ -71,7 +71,7 @@ main = do
 
     when (testNum > 4) $ do
       -- Code generation
-      case (codeGenMain ast) of
+      case (codeGenMain program) of
         Right asm -> writeFile "output/main.s" (show asm)
         Left err  -> exitError err
 

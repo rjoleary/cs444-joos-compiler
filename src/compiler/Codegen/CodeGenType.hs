@@ -86,6 +86,7 @@ generateMethod' ctx x = indent $ do
 
 generateMethod :: CodeGenCtx -> Method -> Asm ()
 generateMethod ctx m = do
+  global m
   label m
   -- TODO: arguments
   generateStatement ctx (methodStatement m)
@@ -128,7 +129,14 @@ generateStatement ctx x@IfStatement{} = do
   comment "next statement"
   generateStatement' ctx (nextStatement x)
 
-generateStatement ctx x@ReturnStatement{} = do
+generateStatement ctx ReturnStatement{returnExpression=Just x} = do
+  comment "return"
+  generateExpression' ctx x
+  ret
+  -- No next statement
+
+generateStatement ctx ReturnStatement{returnExpression=Nothing} = do
+  comment "return void"
   ret
   -- No next statement
 

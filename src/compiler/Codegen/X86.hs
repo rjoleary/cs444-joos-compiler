@@ -21,6 +21,7 @@ module Codegen.X86
   -- generic 1
   , idiv
   , jmp
+  , call
   , push
   , pop
   , int
@@ -198,6 +199,7 @@ generic1 op x = raw (op ++ " " ++ showArg x ++ ";")
 
 idiv   :: Arg a => a -> Asm ()
 jmp    :: Arg a => a -> Asm ()
+call   :: Arg a => a -> Asm ()
 push   :: Arg a => a -> Asm ()
 pop    :: Arg a => a -> Asm ()
 int    :: Arg a => a -> Asm ()
@@ -244,6 +246,7 @@ setz   :: Arg a => a -> Asm ()
 
 idiv   = generic1 "idiv"
 jmp    = generic1 "jmp"
+call   = generic1 "call"
 push   = generic1 "push"
 pop    = generic1 "pop"
 int    = generic1 "int"
