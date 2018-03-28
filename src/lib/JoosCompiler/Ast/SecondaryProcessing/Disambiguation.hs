@@ -4,7 +4,6 @@ module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
-import           Debug.Trace(trace)
 import           Flow
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.NodeTypes
@@ -72,7 +71,7 @@ disambiguateExpression program unit vars e@(ExpressionName [n])
   | isJust dynamicFieldMaybe = DynamicFieldAccess This dynamicField
   | otherwise = error $ "Could not disambiguate expression: " ++  show e
   where
-    localMaybe = Map.lookup n $ trace (show vars) vars
+    localMaybe = Map.lookup n vars
     local      = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
 
     staticField = getStaticFieldInUnit unit n
@@ -88,7 +87,7 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | isJust resolvedClass            = e
   | otherwise                       = error $ "Could not disambiguate expression: " ++ showName (n:ns)
   where
-    localMaybe = Map.lookup n $ trace (show vars) vars
+    localMaybe = Map.lookup n vars
     (resolvedClass, restOfName) = resolveAsClass program unit name
 
 disambiguateExpression _ _ _ e = e
