@@ -98,6 +98,8 @@ instance Analysis CodeGenCtx (Asm ()) where
 
 ---------- Method ----------
 
+-- This gets placed between each recursive call to generateMethod to indent
+-- the block and add extra debug information.
 generateMethod' :: CodeGenCtx -> Method -> Asm ()
 generateMethod' ctx x = indent $ do
   comment (show x)
@@ -113,6 +115,8 @@ generateMethod ctx m = do
 
 ---------- Statements ----------
 
+-- This gets placed between each recursive call to generateStatement to indent
+-- the block and add extra debug information.
 generateStatement' :: CodeGenCtx -> Statement -> Asm ()
 generateStatement' ctx x = indent $ do
   comment (show x)
@@ -246,9 +250,12 @@ generateExpression ctx (BinaryOperation Or x y) = do
 
 -- Assign is very special.
 generateExpression ctx (BinaryOperation Assign x y) = do
-  -- TODO
-  t2 <- generateExpression' ctx y
-  t1 <- generateExpression' ctx x
+  t1 <- generateLValue' ctx y
+  push Eax
+  t2 <- generateExpression' ctx x
+  pop Ebx
+  -- TODO: casting
+  mov (Addr Ebx) Eax
   return t1
 
 -- The rest of the binary operators are fairly generic.
@@ -313,6 +320,29 @@ generateExpression ctx (CastExpression t e) = do
 
 -- TODO: other expressions
 generateExpression _ _ = do
+  comment "TODO"
+  mov Eax (I 123)
+  return Void
+
+
+---------- LValues ----------
+
+-- This gets placed between each recursive call to generateLValue to indent
+-- the block and add extra debug information.
+generateLValue' :: CodeGenCtx -> Expression -> Asm Type
+generateLValue' ctx e = indent $ do
+  comment (show e)
+  generateExpression ctx e
+
+generateLValue :: CodeGenCtx -> Expression -> Asm Type
+
+generateLValue ctx (LocalAccess l) = do
+  mov Eax Ebp
+  mov Eax (I $ -4 * (fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxFrame ctx)))
+  return $ fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxLocals ctx)
+
+-- TODO: other lvalues
+generateLValue _ _ = do
   comment "TODO"
   mov Eax (I 123)
   return Void
