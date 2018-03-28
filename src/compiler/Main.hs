@@ -19,6 +19,7 @@ import           StaticAnalysis.Reachability
 import           StaticAnalysis.Reachability3
 import           Codegen.CodeGenMain
 import           Codegen.CodeGenType
+import           Codegen.Mangling
 import           System.Environment
 import           Data.Maybe
 
@@ -80,9 +81,9 @@ main = do
           Left err  -> exitError err)
         (map (astClass . rootLabel) $ findChildren isTypeDeclaration ast)
 
--- TODO: qualify filename
+-- Create a filename for the assembly of the given type.
 asmFileName :: TypeDeclaration -> String
-asmFileName t = "output/" ++ typeName t ++ ".s"
+asmFileName t = "output/" ++ mangle t ++ ".s"
 
 checkUnitTypes :: WholeProgram -> AstNode -> Either String ()
 checkUnitTypes program unitNode@(Node (AstCompilationUnit unit) _) =
