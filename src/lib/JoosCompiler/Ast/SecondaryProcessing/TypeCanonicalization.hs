@@ -91,7 +91,7 @@ canonicalize program unit name
       singleTypeImports |>
       map (importPackageName .>
            (resolvePackageInProgram program) .>
-           (fromMaybe (error "Imported single-type package not found")))
+           (fromMaybe (error $ "Imported single-type package not found: " ++ showName name)))
 
     singleTypePackageContainingType = find (typeIsInPackage name) singleTypePackages
 

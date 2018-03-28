@@ -4,6 +4,7 @@ module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           Debug.Trace(trace)
 import           Flow
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.NodeTypes
@@ -53,21 +54,34 @@ disambiguateStatement program unit statement = newStatement
   where
     newStatement = mapStatementVarsExpression f Map.empty statement
     f :: VariableMap -> Expression -> Expression
-    f vars old@(ExpressionName (n:ns)) = new
-      where
-        field = fromMaybe (error $ intercalate " " ["Field", n, "Not found"]) maybeField
-        maybeField
-          | maybeUnitType == Nothing = Nothing
-          | otherwise =
-            unitType |>
-            classFields |>
-            find (\v -> (variableName v == n && isFieldStatic v))
-        maybeUnitType = typeDecl unit
-        unitType = fromMaybe (error "unitType was nothing") maybeUnitType
-        new
-          | maybeField == Nothing = old
-          | otherwise = StaticFieldAccess (typeCanonicalName unitType) field
-    f _ e = e
+    f vars old = disambiguateExpression program unit vars old
+
+disambiguateExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
+disambiguateExpression program unit vars e@(ExpressionName [n])
+  | isJust localMaybe = LocalAccess local
+  | isJust staticFieldMaybe = StaticFieldAccess staticField
+  | isJust dynamicFieldMaybe = DynamicFieldAccess This dynamicField
+  | otherwise = error $ "Could not disambiguate expression: " ++  show e
+  where
+    localMaybe = Map.lookup n $ trace (show vars) vars
+    local      = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
+    staticField = fromMaybe (error $ intercalate " " ["Field", n, "Not found"]) staticFieldMaybe
+    staticFieldMaybe
+      | maybeUnitType == Nothing = Nothing
+      | otherwise =
+        unitType |>
+        classFields |>
+        find (\v -> (variableName v == n && isFieldStatic v))
+    dynamicField = fromMaybe (error $ intercalate " " ["Field", n, "Not found"]) dynamicFieldMaybe
+    dynamicFieldMaybe
+      | isNothing maybeUnitType = Nothing
+      | otherwise =
+        unitType |>
+        classFields |>
+        find (\v -> (variableName v == n && not (isFieldStatic v)))
+    maybeUnitType = typeDecl unit
+    unitType = fromMaybe (error "unitType was nothing") maybeUnitType
+disambiguateExpression _ _ _ e = e
 
 disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode
 disambiguateTree _ _ = id

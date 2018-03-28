@@ -402,7 +402,7 @@ fieldAccessTransformer :: TaggedParseTree -> Expression
 fieldAccessTransformer = match . asRule
   where
     match [("FieldAccess", _), ("Primary", x), (".", _), ("Identifier", y)] =
-      DynamicFieldAccess (primaryTransformer x) (tokenString $ lhs y)
+      AmbiguousFieldAccess (primaryTransformer x) (tokenString $ lhs y)
 
 methodInvocationTransformer :: TaggedParseTree -> Expression
 methodInvocationTransformer = match . asRule

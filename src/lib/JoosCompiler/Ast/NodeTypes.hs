@@ -129,12 +129,13 @@ data Expression
   | CastExpression Type Expression
   | InstanceOfExpression Expression Type
   | ArrayExpression Expression Expression
+  | AmbiguousFieldAccess Expression String
   | DynamicMethodInvocation Expression String [Expression]
-  | DynamicFieldAccess Expression String
+  | DynamicFieldAccess Expression Field
   -- TODO(Ahmed): convert to this constructor if method is static
   | StaticMethodInvocation Name String [Expression]
-  | StaticFieldAccess Name Field
-  | LocalDereference Local
+  | StaticFieldAccess Field
+  | LocalAccess Local
   deriving (Eq)
 
 data Type

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
+
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Linking.TypeChecking
   ( checkTypes
@@ -114,7 +116,7 @@ instance Analysis TypeAnalysis Type where
       else Left ("Array size must be numeric type " ++ show e)
 
   -- JLS 15.11: Field Access Expressions
-  analyze ctx (AstExpression e@(DynamicFieldAccess primary name)) = do
+  analyze ctx (AstExpression e@(AmbiguousFieldAccess primary name)) = do
     classType <- analyze' ctx primary
     if isArray classType && name == "length"
       then return (Type Int False) -- TODO: add new AST node
@@ -125,6 +127,17 @@ instance Analysis TypeAnalysis Type where
           in fromMaybe (Left "Cannot find field") $ fmap Right $ lookup name fields
         else Left ("Can only access fields of reference types " ++ show e)
       -- TODO: the above assumes the primary is of this type
+
+  -- JLS 15.11: Field Access Expressions
+  analyze ctx (AstExpression (DynamicFieldAccess _ var)) =
+    Right $ variableType var
+
+  -- JLS 15.11: Field Access Expressions
+  analyze ctx (AstExpression (StaticFieldAccess var)) =
+    Right $ variableType var
+
+  analyze ctx (AstExpression (LocalAccess var)) =
+    Right $ variableType var
 
   -- JLS 15.12: Method Invocation Expressions
   analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
@@ -240,17 +253,26 @@ instance Analysis TypeAnalysis Type where
   analyze ctx (AstExpression (ExpressionName name)) =
     if (isJust maybeLocalType)
     then (return $ fromJust maybeLocalType)
-    else analyze' ctx (DynamicFieldAccess This (last name))
+    else analyze' ctx (AmbiguousFieldAccess This (last name))
     -- TODO: global env
     where maybeLocalType = Map.lookup (last name) (ctxLocalEnv ctx) -- TODO: last is wrong
+
+  analyze _ (AstExpression (BinaryOperation _ _ _)) = error "TODO"
+
+  analyze _ t = error $ " Invalid analysis type: " ++ show t
+
 
 ---------- Helper Functions ----------
 
 toScalar :: Type -> Type
 toScalar (Type x _) = Type x False
+toScalar Null = Null
+toScalar Void = Void
 
 toArray :: Type -> Type
 toArray (Type x _) = Type x True
+toArray Null = Null
+toArray Void = Void
 
 isName :: Type -> Bool
 isName (Type (NamedType _) False) = True
@@ -258,6 +280,7 @@ isName _                          = False
 
 getTypeName :: Type -> Name
 getTypeName (Type (NamedType n) False) = n
+getTypeName _ = error "getTypeName called on wrong Type (not NamedType)"
 
 isNumeric :: Type -> Bool
 isNumeric (Type Char False)  = True

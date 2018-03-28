@@ -43,6 +43,7 @@ children (AstExpression (BinaryOperation _ x y))    = map AstExpression [x, y]
 children (AstExpression (UnaryOperation _ x))       = [AstExpression x]
 children (AstExpression (LiteralExpression _))      = []
 children (AstExpression This)                       = []
+children (AstExpression (AmbiguousFieldAccess e _)) = [AstExpression e]
 children (AstExpression (DynamicFieldAccess e _))   = [AstExpression e]
 children (AstExpression (ExpressionName _))         = []
 children (AstExpression (NewExpression name args))  = map AstExpression args
