@@ -84,7 +84,7 @@ import Codegen.Mangling
 data AsmState = AsmState { code :: [String], counter :: Integer }
 data Asm a = Asm (AsmState -> (AsmState, a))
 data Reg = Eax | Ebx | Ecx | Edx | Esp | Ebp | Esi | Edi | Eip | Al | Bl | Cl | Dl
-data Addr = Addr Reg | Offset Reg Int32
+data Addr = Addr Reg | AddrOffset Reg Int32
 data I = I Int32
 data L a = L a
 
@@ -120,8 +120,8 @@ instance Show Reg where
   show Dl  = "dl"
 
 instance Show Addr where
-  show (Addr x)     = "[" ++ show x ++ "]"
-  show (Offset x y) = "[" ++ show x ++ (if y >= 0 then "+" else "") ++ show y ++ "]"
+  show (Addr x)         = "[" ++ show x ++ "]"
+  show (AddrOffset x y) = "[" ++ show x ++ (if y >= 0 then "+" else "") ++ show y ++ "]"
 
 instance Show I where
   show (I x) = show x
