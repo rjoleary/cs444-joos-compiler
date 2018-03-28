@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
@@ -114,3 +115,6 @@ instance (Analysis c b, Monoid b) => Analysis (PropagateAnalysis c) b where
 
   analyze (PropagateAnalysis ctx) (AstType x) =
     Right mempty
+
+  -- Remaining are empty, TODO: or are they?
+  analyze _ _ = Right mempty
