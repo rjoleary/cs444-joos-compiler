@@ -80,11 +80,8 @@ import Prelude hiding (and, or)
 import Data.Int
 import Codegen.Mangling
 
-data Asm a = Asm
-  { code       :: [String]
-  , usedLabels :: Integer
-  , contents   :: (Asm a -> a)
-  }
+data AsmState = AsmState { code :: [String], counter :: Integer }
+data Asm a = Asm (AsmState -> (AsmState, a))
 data Reg = Eax | Ebx | Ecx | Edx | Esp | Ebp | Esi | Edi | Eip | Al | Bl | Cl | Dl
 data Addr = Addr Reg | Offset Reg Int32
 data I = I Int32
@@ -97,19 +94,14 @@ instance Monoid a => Monoid (Asm a) where
 instance Functor Asm where
 
 instance Applicative Asm where
-  pure x = Asm { code = [], usedLabels = 0, contents = const x }
+  pure x = Asm $ \y -> (y, x)
 
 instance Monad Asm where
-  x >> y = Asm
-    { code       = code x ++ code y
-    , usedLabels = usedLabels x + usedLabels y
-    , contents   = contents y
-    }
-  x >>= f = x >> y
-    where y = f (contents x x)
+  return x = pure x
+  Asm f >>= g = Asm $ \x -> let (y, z) = f x; Asm h = g z in h y
 
 instance Show (Asm a) where
-  show Asm{code=x} = unlines x
+  show (Asm f) = unlines . code . fst $ f AsmState{ code = [], counter = 0 }
 
 instance Show Reg where
   show Eax = "eax"
@@ -151,20 +143,29 @@ instance (Mangleable a) => Arg (L a) where
 
 -- Indent a block of assembly.
 indent :: Asm a -> Asm a
-indent x@Asm{} = x{ code = map ("  "++) (code x) }
+indent (Asm f) = Asm $ \x ->
+  let (y, z) = f AsmState{code=[], counter=counter x} in (indentCode x y, z)
+  where
+    indentCode :: AsmState -> AsmState -> AsmState
+    indentCode x y = y{ code = code x ++ map ("  "++) (code y) }
 
 -- Returns a unique label.
 uniqueLabel :: Asm String
-uniqueLabel = Asm
-  { code = []
-  , usedLabels = 1
-  , contents = \x -> "Label" ++ show (usedLabels x)
-  }
+uniqueLabel = do
+  counter <- getCounter
+  setCounter (counter + 1)
+  return ("label" ++ show counter)
+
+getCounter :: Asm Integer
+getCounter = Asm $ \x -> (x, counter x)
+
+setCounter :: Integer -> Asm ()
+setCounter x = Asm $ \y -> (y{ counter = x }, ())
 
 -- Instructions
 
 raw :: String -> Asm ()
-raw x = mempty{ code = [x] }
+raw x = Asm $ \y -> (y{ code = code y ++ [x] }, ())
 
 comment :: String -> Asm ()
 comment x = raw ("; " ++ x)
