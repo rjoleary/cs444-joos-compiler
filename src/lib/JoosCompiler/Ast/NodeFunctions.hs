@@ -4,6 +4,7 @@ import JoosCompiler.Ast.NodeTypes
 
 import Data.List
 import Data.Maybe
+import qualified Data.Map.Strict as Map
 
 ---------- Show ----------
 
@@ -147,74 +148,81 @@ instance Show UnaryOperator where
 
 ---------- Mapping over statements/expressions ----------
 
-mapStatement :: (Statement -> Statement) -> Statement -> Statement
-mapStatement _ TerminalStatement = TerminalStatement
+type VariableMap = Map.Map String Local
 
-mapStatement f x@(BlockStatement s _) =
-  applyNextMapStatement f x{ statementBlock = mapStatement f s }
+mapStatementVars :: (VariableMap -> Statement -> Statement) -> VariableMap -> Statement ->  Statement
 
-mapStatement f x@(LoopStatement _ s _) =
-  applyNextMapStatement f x{ loopStatement = mapStatement f s }
+mapStatementVars _ _ TerminalStatement = TerminalStatement
 
-mapStatement f x@(IfStatement _ t e _) =
-  applyNextMapStatement f x{ ifThenStatement = newThen
-                           , ifElseStatement = newElse
-                           }
+mapStatementVars f vars x@LocalStatement{localVariable = v} =
+  applyNextMapStatement f newVars x
   where
-    newThen = mapStatement f t
-    newElse = mapStatement f e
+    newVars = Map.insert (variableName v) v vars
 
-mapStatement f x@ExpressionStatement{} = applyNextMapStatement f x
-mapStatement f x@ReturnStatement{} = applyNextMapStatement f x
-mapStatement f x@LocalStatement{} = applyNextMapStatement f x
-mapStatement f x@EmptyStatement{} = applyNextMapStatement f x
+mapStatementVars f vars x@(BlockStatement s _) =
+  applyNextMapStatement f vars x{ statementBlock = mapStatementVars f vars s }
 
-applyNextMapStatement :: (Statement -> Statement) -> Statement -> Statement
-applyNextMapStatement _ TerminalStatement = TerminalStatement
-applyNextMapStatement f s
+mapStatementVars f vars x@(LoopStatement _ s _) =
+  applyNextMapStatement f vars x{ loopStatement = mapStatementVars f vars s }
+
+mapStatementVars f vars x@(IfStatement _ t e _) =
+  applyNextMapStatement f vars x{ ifThenStatement = newThen
+                                , ifElseStatement = newElse
+                                }
+  where
+    newThen = mapStatementVars f vars t
+    newElse = mapStatementVars f vars e
+
+mapStatementVars f vars x@ExpressionStatement{} = applyNextMapStatement f vars x
+mapStatementVars f vars x@ReturnStatement{} = applyNextMapStatement f vars x
+mapStatementVars f vars x@EmptyStatement{} = applyNextMapStatement f vars x
+
+applyNextMapStatement :: (VariableMap -> Statement -> Statement) -> VariableMap -> Statement -> Statement
+applyNextMapStatement _ _ TerminalStatement = TerminalStatement
+applyNextMapStatement f vars s
   | newStatement /= TerminalStatement =
     newStatement{ nextStatement = newNext }
   | otherwise = newStatement
   where
-    newStatement = f s
-    newNext = mapStatement f $ nextStatement newStatement
+    newStatement = f vars s
+    newNext = mapStatementVars f vars $ nextStatement newStatement
 
 -- Goes through statements and if it finds an expressions, recursively
 -- applies f to it
-mapStatementExpression :: (Expression -> Expression) -> Statement -> Statement
-mapStatementExpression _ TerminalStatement = TerminalStatement
+mapStatementVarsExpression :: (VariableMap -> Expression -> Expression) -> VariableMap -> Statement -> Statement
+mapStatementVarsExpression _ _ TerminalStatement = TerminalStatement
 
-mapStatementExpression f old@ExpressionStatement{statementExpression = e} =
-  old{ statementExpression = mapExpression f e
+mapStatementVarsExpression f vars old@ExpressionStatement{statementExpression = e} =
+  old{ statementExpression = mapExpression (f vars) e
      , nextStatement = next
      }
   where
-    next = mapStatement (mapStatementExpression f) $ nextStatement old
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
-mapStatementExpression f old@LoopStatement{loopPredicate = p} =
-  old{ loopPredicate = mapExpression f p
+mapStatementVarsExpression f vars old@LoopStatement{loopPredicate = p} =
+  old{ loopPredicate = mapExpression (f vars) p
      , nextStatement = next
      }
   where
-    next = mapStatement (mapStatementExpression f) $ nextStatement old
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
-mapStatementExpression f old@IfStatement{ifPredicate = p} =
-  old{ ifPredicate = mapExpression f p
+mapStatementVarsExpression f vars old@IfStatement{ifPredicate = p} =
+  old{ ifPredicate = mapExpression (f vars) p
      , nextStatement = next
      }
   where
-    next = mapStatement (mapStatementExpression f) $ nextStatement old
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
-mapStatementExpression f old@ReturnStatement{ returnExpression = Just e } =
-  old{ returnExpression = Just $ mapExpression f e
+mapStatementVarsExpression f vars old@ReturnStatement{ returnExpression = Just e } =
+  old{ returnExpression = Just $ mapExpression (f vars) e
      , nextStatement = next }
   where
-    next = mapStatement (mapStatementExpression f) $ nextStatement old
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
-mapStatementExpression f old =
+mapStatementVarsExpression f vars old =
   old{ nextStatement = next }
   where
-    next = mapStatement (mapStatementExpression f) $ nextStatement old
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
 -- All the mapExpression functions apply f to the children first so f
 -- can discard the result if it wants to

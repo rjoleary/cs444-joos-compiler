@@ -83,6 +83,8 @@ data Block = Block
   { blockScope :: Scope
   } deriving (Eq)
 
+newtype StatementKind a = Statement a
+
 data Statement
   = BlockStatement
     { statementBlock :: Statement

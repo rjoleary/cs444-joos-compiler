@@ -8,6 +8,7 @@ import           Flow
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
+import qualified Data.Map.Strict as Map
 
 {- TODO
     - traverse tree until we see expression name
@@ -50,9 +51,9 @@ disambiguateMethod program unit method =
 disambiguateStatement :: WholeProgram -> CompilationUnit -> Statement -> Statement
 disambiguateStatement program unit statement = newStatement
   where
-    newStatement = mapStatementExpression f statement
-    f :: Expression -> Expression
-    f old@(ExpressionName (n:ns)) = new
+    newStatement = mapStatementVarsExpression f Map.empty statement
+    f :: VariableMap -> Expression -> Expression
+    f vars old@(ExpressionName (n:ns)) = new
       where
         field = fromMaybe (error $ intercalate " " ["Field", n, "Not found"]) maybeField
         maybeField
@@ -66,7 +67,7 @@ disambiguateStatement program unit statement = newStatement
         new
           | maybeField == Nothing = old
           | otherwise = StaticFieldAccess (typeCanonicalName unitType) field
-    f e = e
+    f _ e = e
 
 disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode
 disambiguateTree _ _ = id
