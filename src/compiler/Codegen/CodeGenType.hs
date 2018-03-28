@@ -1,4 +1,4 @@
---{-# OPTIONS_GHC -Wincomplete-patterns #-}
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Codegen.CodeGenType
@@ -281,7 +281,7 @@ generateExpression ctx (BinaryOperation op x y) = do
     binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)
     binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
     binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
-    binaryOperatoeAsm x            = error ("Codegen does not support binary operator '" ++ show x ++ "'")
+    binaryOperatorAsm x            = error ("Codegen does not support binary operator '" ++ show x ++ "'")
 
 generateExpression ctx (UnaryOperation Negate x) = do
   t <- generateExpression' ctx x
