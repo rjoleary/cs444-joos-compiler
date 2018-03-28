@@ -1,10 +1,11 @@
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
+
 module JoosCompiler.Ast.NodeFunctions where
 
 import JoosCompiler.Ast.NodeTypes
 
 import Data.List
 import Data.Maybe
-import Debug.Trace(trace)
 import qualified Data.Map.Strict as Map
 
 ---------- Show ----------
@@ -91,12 +92,15 @@ instance Show Statement where
 
 instance Show Expression where
   show (DynamicMethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
+  show (StaticMethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
   show (BinaryOperation op e1 e2)     = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
   show (UnaryOperation op e)          = "(" ++ show op ++ show e ++ ")"
   show (LiteralExpression v)          = "(" ++ show v ++ ")"
   show This                           = "(this)"
   show (AmbiguousFieldAccess e s)       = "(" ++ show e ++ "." ++ s ++ ")"
-  show (DynamicFieldAccess e v)       = "(" ++ show e ++ "." ++ (variableName v) ++ ")"
+  show (DynamicFieldAccess e n)       = "(" ++ show e ++ "." ++ show n ++ ")"
+  show (StaticFieldAccess n)       = "(" ++ show n ++ ")"
+  show (LocalAccess n)       = "(" ++ show n ++ ")"
   show (ExpressionName n)             = "(" ++ showName n ++ ")"
   show (NewExpression name args)      = "(new " ++ showName name ++ "(" ++ intercalate "," (map show args) ++ "))"
   show (NewArrayExpression t e)       = "(new " ++ typeSignature t ++ "[" ++ show e ++ "])"
@@ -254,6 +258,7 @@ mapExpression f (BinaryOperation o e1 e2) =
     newE2 = mapExpression f e2
 
 mapExpression f (UnaryOperation o e)       = UnaryOperation o (mapExpression f e)
+mapExpression f (AmbiguousFieldAccess e s) = AmbiguousFieldAccess (mapExpression f e) s
 mapExpression f (DynamicFieldAccess e s)   = f $ DynamicFieldAccess (mapExpression f e) s
 mapExpression f (NewExpression n le)       = f $ NewExpression n $ map (mapExpression f) le
 mapExpression f (NewArrayExpression t e)   = f $ NewArrayExpression t $ mapExpression f e
@@ -291,10 +296,12 @@ literalType NullLiteral{}      = Null
 
 -- Returns the default value for fields if they are left uninitialized.
 unitializedLiteral :: Type -> Literal
-unitializedLitearl (Type (NamedType _) _) = NullLiteral
+unitializedLiteral (Type (NamedType _) _) = NullLiteral
 unitializedLiteral (Type _ True)          = NullLiteral
 unitializedLiteral (Type Boolean _)       = BooleanLiteral False
 unitializedLiteral (Type _ _)             = IntegerLiteral 0
+unitializedLiteral Void = error "Void is not a literal"
+unitializedLiteral Null          = NullLiteral
 
 extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"

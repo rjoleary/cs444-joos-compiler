@@ -66,9 +66,9 @@ disambiguateStatement program unit statement = newStatement
 
 disambiguateExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
 disambiguateExpression program unit vars e@(ExpressionName [n])
-  | isJust localMaybe = LocalAccess local
-  | isJust staticFieldMaybe = StaticFieldAccess staticField
-  | isJust dynamicFieldMaybe = DynamicFieldAccess This dynamicField
+  | isJust localMaybe = LocalAccess $ variableName local
+  | isJust staticFieldMaybe = StaticFieldAccess $ variableCanonicalName staticField
+  | isJust dynamicFieldMaybe = DynamicFieldAccess This $ variableCanonicalName dynamicField
   | otherwise = error $ "Could not disambiguate expression: " ++  show e
   where
     localMaybe = Map.lookup n vars

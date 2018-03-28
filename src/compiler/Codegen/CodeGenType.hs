@@ -347,14 +347,14 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
   imul Ebx (I 4)
   add Esp Ebx
   return (methodReturn $resolveMethod n)
-    where 
+    where
       g = length as-- l = length of as
       na = resolveMethod n
---  m = map (generateExpressionpush ctx a) as 
+--  m = map (generateExpressionpush ctx a) as
 
-generateExpression ctx (LocalAccess l) = do
-  mov Eax (AddrOffset Ebp (fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxFrame ctx)))
-  return $ fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxLocals ctx)
+generateExpression ctx (LocalAccess n) = do
+  mov Eax (AddrOffset Ebp (fromMaybe (error "Could not find local") $ Map.lookup n (ctxFrame ctx)))
+  return $ fromMaybe (error "Could not find local") $ Map.lookup n (ctxLocals ctx)
 
 -- TODO: other expressions
 generateExpression _ _ = do
@@ -380,10 +380,10 @@ generateLValue' ctx e = indent $ do
 
 generateLValue :: CodeGenCtx -> Expression -> Asm Type
 
-generateLValue ctx (LocalAccess l) = do
+generateLValue ctx (LocalAccess n) = do
   mov Eax Ebp
-  add Eax (I $ -4 * (fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxFrame ctx)))
-  return $ fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxLocals ctx)
+  add Eax (I $ -4 * (fromMaybe (error "Could not find local") $ Map.lookup n (ctxFrame ctx)))
+  return $ fromMaybe (error "Could not find local") $ Map.lookup n (ctxLocals ctx)
 
 -- TODO: other lvalues
 generateLValue _ _ = do

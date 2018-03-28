@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
-
 {-# LANGUAGE MultiParamTypeClasses #-}
+
 module Linking.TypeChecking
   ( checkTypes
   ) where
@@ -129,15 +129,15 @@ instance Analysis TypeAnalysis Type where
       -- TODO: the above assumes the primary is of this type
 
   -- JLS 15.11: Field Access Expressions
-  analyze ctx (AstExpression (DynamicFieldAccess _ var)) =
-    Right $ variableType var
+  analyze ctx (AstExpression (DynamicFieldAccess _ name)) =
+    Right $ Type Int False
 
   -- JLS 15.11: Field Access Expressions
-  analyze ctx (AstExpression (StaticFieldAccess var)) =
-    Right $ variableType var
+  analyze ctx (AstExpression (StaticFieldAccess name)) =
+    Right $ Type Int False
 
-  analyze ctx (AstExpression (LocalAccess var)) =
-    Right $ variableType var
+  analyze ctx (AstExpression (LocalAccess name)) =
+    Right $ Type Int False
 
   -- JLS 15.12: Method Invocation Expressions
   analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
