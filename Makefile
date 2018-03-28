@@ -121,7 +121,7 @@ test.a4 : compiler
 	@TESTNUM=4 TESTSET=test/marmoset/a4 ./testrunner-sequential.sh all
 
 test.a5 : compiler
-	@./testrunner-sequential-codegen.sh
+	@./testrunner-codegen.sh
 
 test.all : compiler
 	@OUT="A1 $$(make test.a1 | tee /dev/stderr | grep Passed)\n"; \

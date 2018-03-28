@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Codegen.CodeGenType
@@ -288,6 +289,7 @@ generateExpression ctx (BinaryOperation op x y) = do
     binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)
     binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
     binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
+    binaryOperatorAsm x            = error ("Codegen does not support binary operator '" ++ show x ++ "'")
 
 generateExpression ctx (UnaryOperation Negate x) = do
   t <- generateExpression' ctx x
@@ -350,8 +352,9 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
       na = resolveMethod n
 --  m = map (generateExpressionpush ctx a) as 
 
-
-
+generateExpression ctx (LocalAccess l) = do
+  mov Eax (AddrOffset Ebp (fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxFrame ctx)))
+  return $ fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxLocals ctx)
 
 -- TODO: other expressions
 generateExpression _ _ = do
@@ -379,7 +382,7 @@ generateLValue :: CodeGenCtx -> Expression -> Asm Type
 
 generateLValue ctx (LocalAccess l) = do
   mov Eax Ebp
-  mov Eax (I $ -4 * (fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxFrame ctx)))
+  add Eax (I $ -4 * (fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxFrame ctx)))
   return $ fromMaybe (error "Could not find local") $ Map.lookup (variableName l) (ctxLocals ctx)
 
 -- TODO: other lvalues
