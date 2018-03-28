@@ -154,15 +154,15 @@ canonicalizeTypeDecl
                   , constructors   = _constructors
                   } =
   TypeDeclaration { typeName = name
-                     , classModifiers = modifiers
-                     , isInterface    = _isInterface
-                     , super          = newSuper
-                     , interfaces     = newInterfaces
-                     , classFields    = newFields
-                     , methods        = newMethods
-                     , constructors   = _constructors
-                     , typeCanonicalName = _typeCanonicalName
-                     }
+                  , classModifiers = modifiers
+                  , isInterface    = _isInterface
+                  , super          = newSuper
+                  , interfaces     = newInterfaces
+                  , classFields    = newFields
+                  , methods        = newMethods
+                  , constructors   = _constructors
+                  , typeCanonicalName = _typeCanonicalName
+                  }
   where
     newSuper = canonicalize program unit oldSuper
     newInterfaces = map (canonicalize program unit) oldInterfaces
