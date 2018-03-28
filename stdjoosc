@@ -1,4 +1,4 @@
 #!/bin/bash
 
-STDLIB=$(find test/stdlib/5.0 -name *.java)
+STDLIB=$(find ${STDLIB-test/stdlib/5.0} -name *.java)
 ./joosc "$@" $STDLIB
