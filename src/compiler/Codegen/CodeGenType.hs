@@ -327,7 +327,7 @@ generateExpression ctx (CastExpression t e) = do
   return t
 
 generateExpression ctx (StaticMethodInvocation n s as) = do
- -- t <- mapM_ (generateExpressionPush ctx) as
+  t <- mapM_ (generateExpressionPush ctx) as
   mapM_ (\method -> do
     generateExpression' ctx method
     push Eax
@@ -348,7 +348,7 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
     where 
       g = length as-- l = length of as
       na = resolveMethod n
- -- m = map (generateExpressionpush ctx a) as 
+--  m = map (generateExpressionpush ctx a) as 
 
 
 
