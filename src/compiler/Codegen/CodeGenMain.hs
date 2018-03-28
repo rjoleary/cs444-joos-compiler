@@ -17,12 +17,24 @@ codeGenMain wp = Right $ do
   comment "This is the entrypoint"
   global "_start"
   label "_start"
-  call (let
+  space
+
+  comment "Initialize static fields"
+  mapM_ (\x -> extern (Init x) >> call (L . mangle . Init $ x)) (let
+    decl CompilationUnit{typeDecl=Just x} = [x]
+    decl _                                = []
+    types = foldl (++) [] . map decl . programCus $ wp
+    classes = filter (not . isInterface) types
+    in classes)
+  space
+
+  comment "Call the test method, then exit"
+  (let
     -- These are given based on the a5 spec, so empty lists are not expected.
     firstClass = fromJust $ typeDecl $ head (programCus wp)
     isTestMethod x = methodName x == "test" && Static `elem` (methodModifiers x)
     testMethod = head . filter isTestMethod $ methods firstClass
-    in L $ mangle $ testMethod)
+    in extern testMethod >> call (L . mangle $ testMethod))
   exitSyscall
 
 -- Exit with the value stored in eax.

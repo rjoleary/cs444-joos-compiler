@@ -49,7 +49,8 @@ instance Analysis CodeGenCtx (Asm ()) where
 
     -- Init function
     comment "Init function"
-    label ("Init$" ++ mangle t)
+    global (Init t)
+    label (Init t)
     -- Initialized in the order defined
     indent $ mapM_ (\field -> do
       comment (variableName field)

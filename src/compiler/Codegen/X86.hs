@@ -178,10 +178,10 @@ label :: (Mangleable a) => a -> Asm ()
 label m = raw (mangle m ++ ":")
 
 global :: (Mangleable a) => a -> Asm ()
-global m = raw ("global " ++ mangle m)
+global m = raw ("global " ++ mangle m ++ ";")
 
 extern :: (Mangleable a) => a -> Asm ()
-extern m = raw ("extern " ++ mangle m)
+extern m = raw ("extern " ++ mangle m ++ ";")
 
 -- Generic instruction taking zero arguments.
 generic0 :: String -> Asm ()

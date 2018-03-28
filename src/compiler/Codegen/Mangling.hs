@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Codegen.Mangling
   ( Mangleable(..)
+  , Init(..)
   ) where
 
 import Data.List
@@ -42,6 +43,12 @@ instance Mangleable TypeDeclaration where
     where
       canonicalized = typeCanonicalName t
       mangledCanonical = intercalate "$" ("Class" : canonicalized)
+
+data Init = Init TypeDeclaration
+
+-- Init$Class$p$q$A
+instance Mangleable Init where
+  mangle (Init t) = "Init$" ++ mangle t
 
 instance Mangleable String where
   mangle s = s

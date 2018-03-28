@@ -20,4 +20,8 @@ public class StaticFields {
     public static boolean q = true && false;
     public static boolean r = true || true;
     public static boolean s = (true || true) && false || true && false;
+
+    public static int test() {
+        return 123;
+    }
 }
