@@ -29,7 +29,6 @@ checkTypes program unit (Node x _) = analyze ctx x
 -- For local types only.
 type LocalEnvironment = Map.Map String Type
 
--- TODO: add global environment
 data TypeAnalysis = TypeAnalysis
   { ctxLocalEnv :: LocalEnvironment
   , ctxThis     :: Maybe Name
@@ -117,9 +116,14 @@ instance Analysis TypeAnalysis Type where
   -- JLS 15.11: Field Access Expressions
   analyze ctx (AstExpression e@(DynamicFieldAccess primary name)) = do
     classType <- analyze' ctx primary
-    if not $ isName classType -- TODO: arrays have a length field
-      then Left ("Can only access fields of reference types " ++ show e)
-      else fromMaybe (Left "Cannot find field") $ fmap Right $ lookup name [(variableName x, variableType x) | x <- classFields $ fromJust $ ctxThisType ctx]
+    if isArray classType && name == "length"
+      then return (Type Int False) -- TODO: add new AST node
+      else if isName classType
+        then let
+          classDecl = fromJust $ resolveTypeInProgram (ctxProgram ctx) (getTypeName classType)
+          fields = [(variableName x, variableType x) | x <- classFields $ classDecl]
+          in fromMaybe (Left "Cannot find field") $ fmap Right $ lookup name fields
+        else Left ("Can only access fields of reference types " ++ show e)
       -- TODO: the above assumes the primary is of this type
 
   -- JLS 15.12: Method Invocation Expressions
@@ -214,7 +218,7 @@ instance Analysis TypeAnalysis Type where
       expr1Type <- analyze' ctx expr1
       expr2Type <- analyze' ctx expr2
       if (isBoolean expr1Type && isBoolean expr2Type)
-        then return (Type Boolean False) -- TODO: more checks are required
+        then return (Type Boolean False)
         else Left ("Bad conditional types " ++ show e)
 
     -- JLS 15.26: Assignment Operators (=)
@@ -251,6 +255,9 @@ toArray (Type x _) = Type x True
 isName :: Type -> Bool
 isName (Type (NamedType _) False) = True
 isName _                          = False
+
+getTypeName :: Type -> Name
+getTypeName (Type (NamedType n) False) = n
 
 isNumeric :: Type -> Bool
 isNumeric (Type Char False)  = True
