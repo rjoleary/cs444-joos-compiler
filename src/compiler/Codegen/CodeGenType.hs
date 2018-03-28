@@ -320,10 +320,27 @@ generateExpression ctx (CastExpression t e) = do
   return t
 
 generateExpression ctx (StaticMethodInvocation n s as) = do
-  mov Eax (I t)
-  return (Void)
+ -- t <- mapM_ (generateExpressionPush ctx) as
+  mapM_ (\method -> do
+    generateExpression' ctx method
+    push Eax
+    ) as
+  push Ebx
+  push Edi
+  push Esi
+  extern na
+  mov Eax (L (mangle na))
+  call Eax
+  pop Esi
+  pop Edi
+  pop Ebx
+  mov Ebx (I $fromIntegral g)
+  imul Ebx (I 4)
+  add Esp Ebx
+  return (methodReturn $resolveMethod n)
     where 
-      t = length as-- l = length of as
+      g = length as-- l = length of as
+      na = resolveMethod n
  -- m = map (generateExpressionpush ctx a) as 
 
 
@@ -337,7 +354,8 @@ generateExpression _ _ = do
 
 
 
-generateExpressionPush :: CodeGenCtx -> Expression -> Asm ()
+generateExpressionPush :: CodeGenCtx -> Expression -> Asm Type
 generateExpressionPush ctx exp = do
   t <- generateExpression' ctx exp
   push Eax
+  return Null
