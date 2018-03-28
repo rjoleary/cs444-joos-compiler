@@ -257,7 +257,7 @@ generateExpression ctx (LiteralExpression (BooleanLiteral x)) = do
 
 generateExpression ctx (LiteralExpression (CharacterLiteral x)) = do
   if isAlphaNum x
-    then raw ("mov eax " ++ show x ++ ";") -- Pretty print
+    then raw ("mov eax, " ++ show x ++ ";") -- Pretty print characters
     else mov Eax (I $ fromInteger $ toInteger $ ord x)
   return (Type Char False)
 
