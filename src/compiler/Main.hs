@@ -6,6 +6,7 @@ import           Control.Monad
 import           Data.Either
 import           Data.List
 import           Data.Tree
+import           Flow
 import           JoosCompiler.Ast
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Exit
@@ -40,8 +41,11 @@ main = do
     -- AST generation
     filenames <- getArgs
     taggedTrees <- mapM taggedTreeFromFile filenames
-    let ast@(Node (AstWholeProgram program) unitNodes) = cstsToAst taggedTrees
+    let ast@(Node (AstWholeProgram program@WholeProgram{programCus = units}) unitNodes) = cstsToAst taggedTrees
     putStrLn $ drawTree (fmap show ast)
+
+    let typeDecls = map typeDecl units
+                    |> catMaybes
 
     -- Environment building & type linking
     let failedRules = checkRules (environmentBuildingRules ++ typeLinkingRules) ast
@@ -79,7 +83,7 @@ main = do
       mapM_ (\t -> case (codeGenType program t) of
           Right asm -> writeFile (asmFileName t) (show asm)
           Left err  -> exitError err)
-        (map (astClass . rootLabel) $ findChildren isTypeDeclaration ast)
+        typeDecls
 
 -- Create a filename for the assembly of the given type.
 asmFileName :: TypeDeclaration -> String

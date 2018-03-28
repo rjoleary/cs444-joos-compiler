@@ -25,22 +25,31 @@ import qualified Data.Map.Strict as Map
 -}
 
 disambiguate :: AstNode -> AstNode
-disambiguate (Node p@(AstWholeProgram program) units) =
-  Node p $ map (disambiguateUnit program) units
+disambiguate (Node p@(AstWholeProgram oldProgram) unitNodes) =
+  Node (AstWholeProgram newProgram) $ map (disambiguateUnitNode oldProgram) unitNodes
+  where
+    newProgram = oldProgram { programCus = newUnits }
+    newUnits = map (disambiguateUnit oldProgram) oldUnits
+    oldUnits = programCus oldProgram
 disambiguate _ = error "Invalid node type in disambiguate"
 
-disambiguateUnit :: WholeProgram -> AstNode -> AstNode
-disambiguateUnit program t@(Node (AstCompilationUnit oldUnit) children)
-  | maybeOldTypeDecl == Nothing = t
-  | otherwise = Node (AstCompilationUnit newUnit) newChildren
+disambiguateUnitNode :: WholeProgram -> AstNode -> AstNode
+disambiguateUnitNode program t@(Node (AstCompilationUnit oldUnit) children) =
+  Node (AstCompilationUnit newUnit) children
+  where
+    newUnit = disambiguateUnit program oldUnit
+disambiguateUnitNode _ _ = error "Wrong node type in disambiguateUnit"
+
+disambiguateUnit :: WholeProgram -> CompilationUnit -> CompilationUnit
+disambiguateUnit program oldUnit
+  | maybeOldTypeDecl == Nothing = oldUnit
+  | otherwise = newUnit
   where
     maybeOldTypeDecl = typeDecl oldUnit
     oldTypeDecl = fromMaybe (error "oldTypeDecl was Nothing") maybeOldTypeDecl
     newTypeDecl = oldTypeDecl {methods = newMethods}
     newUnit = oldUnit {typeDecl = Just newTypeDecl}
     newMethods = map (disambiguateMethod program oldUnit) $ methods oldTypeDecl
-    newChildren = map (disambiguateTree program oldUnit) children
-disambiguateUnit _ _ = error "Wrong node type in disambiguateUnit"
 
 disambiguateMethod :: WholeProgram -> CompilationUnit -> Method -> Method
 disambiguateMethod program unit method =
@@ -120,9 +129,6 @@ findFieldInUnit expectingStatic unit n
   where
     maybeUnitType = typeDecl unit
     unitType = fromMaybe (error "unitType was nothing") maybeUnitType
-
-disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode
-disambiguateTree _ _ = id
 
 resolveAsClass :: WholeProgram -> CompilationUnit -> Name -> (Maybe CompilationUnit, Name)
 resolveAsClass program unit name = (Nothing, name)
