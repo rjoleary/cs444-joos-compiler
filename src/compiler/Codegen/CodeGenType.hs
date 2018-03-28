@@ -89,9 +89,13 @@ generateMethod :: CodeGenCtx -> Method -> Asm ()
 generateMethod ctx m = do
   global m
   label m
+  push Ebp
+  mov Ebp Esp
   -- TODO: arguments
   generateStatement ctx (methodStatement m)
-
+  mov Esp Ebp
+  pop Ebp
+  ret
 
 ---------- Statements ----------
 
@@ -133,11 +137,15 @@ generateStatement ctx x@IfStatement{} = do
 generateStatement ctx ReturnStatement{returnExpression=Just x} = do
   comment "return"
   generateExpression' ctx x
+  mov Esp Ebp
+  pop Ebp
   ret
   -- No next statement
 
 generateStatement ctx ReturnStatement{returnExpression=Nothing} = do
   comment "return void"
+  mov Esp Ebp
+  pop Ebp
   ret
   -- No next statement
 
@@ -279,8 +287,25 @@ generateExpression ctx (CastExpression t e) = do
   -- TODO: (x instanceof Object) is true at compile time
   return t
 
+generateExpression ctx (StaticMethodInvocation n s as) = do
+  mov Eax (I t)
+  return (Void)
+    where 
+      t = length as-- l = length of as
+ -- m = map (generateExpressionpush ctx a) as 
+
+
+
+
 -- TODO: other expressions
 generateExpression _ _ = do
   comment "TODO"
   mov Eax (I 123)
   return Void
+
+
+
+generateExpressionPush :: CodeGenCtx -> Expression -> Asm ()
+generateExpressionPush ctx exp = do
+  t <- generateExpression' ctx exp
+  push Eax
