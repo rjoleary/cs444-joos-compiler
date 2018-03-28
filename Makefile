@@ -97,31 +97,31 @@ test.unit :
 	stack exec runghc -- -i"${HS_INCLUDE}" test/haskell/UnitTest.hs
 
 test.positive : compiler
-	@./testrunner.sh positive
+	@./testrunner-sequential.sh positive
 
 test.negative : compiler
-	@./testrunner.sh negative
+	@./testrunner-sequential.sh negative
 
 test.java : compiler
-	@COMPILER=javac ./testrunner.sh positive
+	@COMPILER=javac ./testrunner-sequential.sh positive
 
 test : compiler
-	@./testrunner.sh all
+	@./testrunner-sequential-sequenial.sh all
 
 test.a1 : compiler
-	@TESTNUM=1 TESTSET=test/marmoset/a1 ./testrunner.sh all
+	@TESTNUM=1 TESTSET=test/marmoset/a1 ./testrunner-sequential.sh all
 
 test.a2 : compiler
-	@TESTNUM=2 TESTSET=test/marmoset/a2 ./testrunner.sh all
+	@TESTNUM=2 TESTSET=test/marmoset/a2 ./testrunner-sequential.sh all
 
 test.a3 : compiler
-	@TESTNUM=3 TESTSET=test/marmoset/a3 ./testrunner.sh all
+	@TESTNUM=3 TESTSET=test/marmoset/a3 ./testrunner-sequential.sh all
 
 test.a4 : compiler
-	@TESTNUM=4 TESTSET=test/marmoset/a4 ./testrunner.sh all
+	@TESTNUM=4 TESTSET=test/marmoset/a4 ./testrunner-sequential.sh all
 
 test.a5 : compiler
-	@./testrunner-codegen.sh
+	@./testrunner-sequential-codegen.sh
 
 test.all : compiler
 	@OUT="A1 $$(make test.a1 | tee /dev/stderr | grep Passed)\n"; \

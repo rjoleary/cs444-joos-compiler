@@ -65,23 +65,64 @@ disambiguateExpression program unit vars e@(ExpressionName [n])
   where
     localMaybe = Map.lookup n $ trace (show vars) vars
     local      = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
-    staticField = fromMaybe (error $ intercalate " " ["Field", n, "Not found"]) staticFieldMaybe
-    staticFieldMaybe
-      | maybeUnitType == Nothing = Nothing
-      | otherwise =
-        unitType |>
-        classFields |>
-        find (\v -> (variableName v == n && isFieldStatic v))
-    dynamicField = fromMaybe (error $ intercalate " " ["Field", n, "Not found"]) dynamicFieldMaybe
-    dynamicFieldMaybe
-      | isNothing maybeUnitType = Nothing
-      | otherwise =
-        unitType |>
-        classFields |>
-        find (\v -> (variableName v == n && not (isFieldStatic v)))
+
+    staticField = getStaticFieldInUnit unit n
+    staticFieldMaybe = findStaticFieldInUnit unit n
+
+    dynamicField = getDynamicFieldInUnit unit n
+    dynamicFieldMaybe = findDynamicFieldInUnit unit n
+
+disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
+  | isJust localMaybe               = e
+  | staticFieldExistsInUnit unit n  = e
+  | dynamicFieldExistsInUnit unit n = e
+  | isJust resolvedClass            = e
+  | otherwise                       = error $ "Could not disambiguate expression: " ++ showName (n:ns)
+  where
+    localMaybe = Map.lookup n $ trace (show vars) vars
+    (resolvedClass, restOfName) = resolveAsClass program unit name
+
+disambiguateExpression _ _ _ e = e
+
+staticFieldExistsInUnit :: CompilationUnit -> String -> Bool
+staticFieldExistsInUnit = fieldExistsInUnit True
+
+dynamicFieldExistsInUnit :: CompilationUnit -> String -> Bool
+dynamicFieldExistsInUnit = fieldExistsInUnit False
+
+fieldExistsInUnit :: Bool -> CompilationUnit -> String -> Bool
+fieldExistsInUnit expectingStatic unit name =
+  isJust $ findFieldInUnit expectingStatic unit name
+
+getDynamicFieldInUnit :: CompilationUnit -> String -> Field
+getDynamicFieldInUnit = getFieldInUnit False
+
+getStaticFieldInUnit :: CompilationUnit -> String -> Field
+getStaticFieldInUnit = getFieldInUnit True
+
+getFieldInUnit :: Bool -> CompilationUnit -> String -> Field
+getFieldInUnit expectingStatic unit n =
+  fromMaybe (error "getFieldInUnit got Nothing") (findFieldInUnit expectingStatic unit n)
+
+findDynamicFieldInUnit :: CompilationUnit -> String -> Maybe Field
+findDynamicFieldInUnit  = findFieldInUnit False
+
+findStaticFieldInUnit :: CompilationUnit -> String -> Maybe Field
+findStaticFieldInUnit  = findFieldInUnit True
+
+findFieldInUnit :: Bool -> CompilationUnit -> String -> Maybe Field
+findFieldInUnit expectingStatic unit n
+  | isNothing maybeUnitType = Nothing
+  | otherwise =
+    unitType |>
+    classFields |>
+    find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
+  where
     maybeUnitType = typeDecl unit
     unitType = fromMaybe (error "unitType was nothing") maybeUnitType
-disambiguateExpression _ _ _ e = e
 
 disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode
 disambiguateTree _ _ = id
+
+resolveAsClass :: WholeProgram -> CompilationUnit -> Name -> (Maybe CompilationUnit, Name)
+resolveAsClass program unit name = (Nothing, name)
