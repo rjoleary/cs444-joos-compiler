@@ -119,6 +119,10 @@ makeOnDemandImportDeclaration name =
   , onDemand = True
   }
 
+canonicalizeMethod :: WholeProgram -> CompilationUnit -> Method -> Method
+canonicalizeMethod _ unit old@Method{methodName = n} =
+  old { methodCanonicalName = canonicalizeMethodName unit n }
+
 canonicalizeVar :: WholeProgram -> CompilationUnit -> Variable -> Variable
 canonicalizeVar
   program
@@ -155,7 +159,7 @@ canonicalizeTypeDecl
                      , super          = newSuper
                      , interfaces     = newInterfaces
                      , classFields    = newFields
-                     , methods        = _methods
+                     , methods        = newMethods
                      , constructors   = _constructors
                      , typeCanonicalName = _typeCanonicalName
                      }
@@ -163,8 +167,12 @@ canonicalizeTypeDecl
     newSuper = canonicalize program unit oldSuper
     newInterfaces = map (canonicalize program unit) oldInterfaces
     newFields = map (canonicalizeVar program unit) fields
+    newMethods = map (canonicalizeMethod program unit) _methods
     _typeCanonicalName = pName ++ [name]
 canonicalizeTypeDecl _ EmptyFile{} _ = error "Tried to canonicalize type in empty file"
+
+canonicalizeMethodName :: CompilationUnit -> String -> Name
+canonicalizeMethodName = canonicalizeVariableName
 
 canonicalizeVariableName :: CompilationUnit -> String -> Name
 canonicalizeVariableName unit n = canonicalPrefix ++ [n]
