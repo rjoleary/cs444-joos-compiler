@@ -4,6 +4,7 @@ import JoosCompiler.Ast.NodeTypes
 
 import Data.List
 import Data.Maybe
+import Debug.Trace(trace)
 import qualified Data.Map.Strict as Map
 
 ---------- Show ----------
@@ -94,7 +95,8 @@ instance Show Expression where
   show (UnaryOperation op e)          = "(" ++ show op ++ show e ++ ")"
   show (LiteralExpression v)          = "(" ++ show v ++ ")"
   show This                           = "(this)"
-  show (DynamicFieldAccess e s)       = "(" ++ show e ++ "." ++ s ++ ")"
+  show (AmbiguousFieldAccess e s)       = "(" ++ show e ++ "." ++ s ++ ")"
+  show (DynamicFieldAccess e v)       = "(" ++ show e ++ "." ++ (variableName v) ++ ")"
   show (ExpressionName n)             = "(" ++ showName n ++ ")"
   show (NewExpression name args)      = "(new " ++ showName name ++ "(" ++ intercalate "," (map show args) ++ "))"
   show (NewArrayExpression t e)       = "(new " ++ typeSignature t ++ "[" ++ show e ++ "])"
@@ -154,13 +156,15 @@ mapStatementVars :: (VariableMap -> Statement -> Statement) -> VariableMap -> St
 
 mapStatementVars _ _ TerminalStatement = TerminalStatement
 
+mapStatementVars f vars x@(BlockStatement s _) =
+  applyNextMapStatement f vars x{ statementBlock = newInnerBlock }
+  where
+    newInnerBlock = mapStatementVars f vars s
+
 mapStatementVars f vars x@LocalStatement{localVariable = v} =
   applyNextMapStatement f newVars x
   where
     newVars = Map.insert (variableName v) v vars
-
-mapStatementVars f vars x@(BlockStatement s _) =
-  applyNextMapStatement f vars x{ statementBlock = mapStatementVars f vars s }
 
 mapStatementVars f vars x@(LoopStatement _ s _) =
   applyNextMapStatement f vars x{ loopStatement = mapStatementVars f vars s }
@@ -182,7 +186,7 @@ applyNextMapStatement _ _ TerminalStatement = TerminalStatement
 applyNextMapStatement f vars s
   | newStatement /= TerminalStatement =
     newStatement{ nextStatement = newNext }
-  | otherwise = newStatement
+  | otherwise = error "Tried to replace non-terminal statement with terminal statement"
   where
     newStatement = f vars s
     newNext = mapStatementVars f vars $ nextStatement newStatement
@@ -218,6 +222,13 @@ mapStatementVarsExpression f vars old@ReturnStatement{ returnExpression = Just e
      , nextStatement = next }
   where
     next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+
+mapStatementVarsExpression f vars old@LocalStatement{localVariable = v} =
+  old{ nextStatement = next }
+  where
+    next = mapStatementVars (mapStatementVarsExpression f) newVars $ nextStatement old
+    newVars = Map.insert (variableName v) v vars
+
 
 mapStatementVarsExpression f vars old =
   old{ nextStatement = next }
@@ -256,7 +267,7 @@ mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
 -- All of those expressions have no sub-expressions. We could combine into one,
 -- but explicitly stating helps expose bugs more quickly
 mapExpression f old@StaticFieldAccess{} = f old
-mapExpression f old@LocalDereference{}  = f old
+mapExpression f old@LocalAccess{}  = f old
 mapExpression f old@ExpressionName{}    = f old
 mapExpression f old@LiteralExpression{} = f old
 mapExpression f This = f This

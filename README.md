@@ -112,10 +112,23 @@ import Data.Tree
 import JoosCompiler.Ast.Utils
 import JoosCompiler.TokenTypeConstants
 
-let filenames = [ "./test/positive/big_package/Main.java"
-                 , "./test/positive/big_package/Thing2.java"
-                 , "./test/positive/big_package/Thing.java"
-                 ]
+let filenames = [ "test/marmoset/a3/negative/Je_6_NonStaticAccessToStatic_Method.java"
+                , "test/stdlib/5.0/java/lang/Boolean.java"
+                , "test/stdlib/5.0/java/lang/Byte.java"
+                , "test/stdlib/5.0/java/lang/Character.java"
+                , "test/stdlib/5.0/java/lang/Class.java"
+                , "test/stdlib/5.0/java/lang/Cloneable.java"
+                , "test/stdlib/5.0/java/lang/Integer.java"
+                , "test/stdlib/5.0/java/lang/Number.java"
+                , "test/stdlib/5.0/java/lang/Object.java"
+                , "test/stdlib/5.0/java/lang/Short.java"
+                , "test/stdlib/5.0/java/lang/String.java"
+                , "test/stdlib/5.0/java/lang/System.java"
+                , "test/stdlib/5.0/java/io/OutputStream.java"
+                , "test/stdlib/5.0/java/io/PrintStream.java"
+                , "test/stdlib/5.0/java/io/Serializable.java"
+                , "test/stdlib/5.0/java/util/Arrays.java"
+                ]
 
 taggedTrees <- mapM taggedTreeFromFile filenames
 
