@@ -5,6 +5,7 @@ module Codegen.CodeGenType
   ) where
 
 import Data.Char
+import Data.Int
 import Data.Maybe
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeFunctions
@@ -14,14 +15,31 @@ import JoosCompiler.Ast.Visitor.Analysis
 import Codegen.X86
 import Codegen.Mangling
 import qualified Codegen.X86 as X86
+import qualified Data.Map.Strict as Map
 
 codeGenType :: WholeProgram -> TypeDeclaration -> Either String (Asm ())
-codeGenType wp t = analyze' CodeGenCtx{ wp = wp } t
+codeGenType wp t = analyze' ctx t
+  where ctx = CodeGenCtx {
+      ctxProgram     = wp
+    , ctxLocals      = Map.empty
+    , ctxFrame       = Map.empty
+    , ctxFrameOffset = 0
+    }
 
-data CodeGenCtx = CodeGenCtx{ wp :: WholeProgram }
+-- For local types only.
+type LocalEnvironment = Map.Map String Type
+type LocalFrame = Map.Map String Int32
+
+data CodeGenCtx = CodeGenCtx
+  { ctxProgram     :: WholeProgram
+  , ctxLocals      :: LocalEnvironment
+  , ctxFrame       :: LocalFrame
+  , ctxFrameOffset :: Int32
+  }
 
 instance Analysis CodeGenCtx (Asm ()) where
-  analyze ctx@CodeGenCtx{wp=wp} (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
+  analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
+    let wp = ctxProgram ctx
     global t
     label t
     space
@@ -34,6 +52,10 @@ instance Analysis CodeGenCtx (Asm ()) where
     dd (I 0)
     space
 
+    -- Vtable
+    comment "TODO: vtable"
+    space
+
     -- Uninitialized static fields
     comment (show (length staticFields) ++ " static fields")
     mapM_ (\field -> do
@@ -41,10 +63,6 @@ instance Analysis CodeGenCtx (Asm ()) where
       label field
       dd (I 0)
       ) staticFields
-    space
-
-    -- Vtable
-    comment "TODO: vtable"
     space
 
     -- Init function
@@ -142,10 +160,24 @@ generateStatement ctx ReturnStatement{returnExpression=Nothing} = do
   -- No next statement
 
 generateStatement ctx x@LocalStatement{} = do
-  comment "Local statement TODO"
-  nop
+  let var = localVariable x
+  let varName = variableName var
+  comment "Local declaration"
+  t <- generateExpression' ctx (variableValue var)
+
+  comment ("push " ++ varName ++ " to stack")
+  push Eax
+
+  let newCtx = ctx {
+    ctxLocals      = Map.insert varName t (ctxLocals ctx),
+    ctxFrame       = Map.insert varName (ctxFrameOffset ctx + 4) (ctxFrame ctx),
+    ctxFrameOffset = ctxFrameOffset ctx + 4 }
+
   comment "next statement"
-  generateStatement' ctx (nextStatement x)
+  generateStatement' newCtx (nextStatement x)
+
+  comment ("remove " ++ varName ++ " from stack")
+  sub Ebp (I 4)
 
 generateStatement ctx x@LoopStatement{} = do
   startLabel <- uniqueLabel
