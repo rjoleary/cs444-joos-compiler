@@ -14,8 +14,11 @@ import JoosCompiler.Error
 -- Analysis takes the entire tree and outputs a single value.
 class Analysis a b where
   analyze :: a -> AstWrapper -> Either String b
-  analyze' :: (AstWrappable c) => a -> c -> Either String b
-  analyze' ctx x = analyze ctx (wrap x)
+  analyze' :: (AstWrappable c, Show c) => a -> c -> Either String b
+  analyze' ctx x = traceError $ analyze ctx (wrap x)
+    where
+      traceError (Left err) = Left (err ++ "\nin " ++ show x)
+      traceError x = x
 
 -- This analysis will call all child nodes and perform the given analysis.
 -- Return values are concatenated as a monoid.
@@ -39,7 +42,6 @@ instance (Analysis c b, Monoid b) => Analysis (PropagateAnalysis c) b where
       fmap (analyze' ctx) (imports x) ++
       fmap (analyze' ctx) (maybeToList (typeDecl x))
 
-  -- TODO: remove the outer node
   analyze (PropagateAnalysis ctx) (AstExpression (DynamicMethodInvocation x _ xs)) =
     concatEithers $ fmap (analyze' ctx) (x:xs)
   analyze (PropagateAnalysis ctx) (AstExpression (BinaryOperation _ x y)) =
