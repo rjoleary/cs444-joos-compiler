@@ -2,6 +2,8 @@ module JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
   ( canonicalizeProgram
   ) where
 
+-- The most important function in this file is canonicalize
+
 import           Flow
 import           Data.List
 import           Data.Maybe
@@ -47,11 +49,32 @@ canonicalizeUnit program (Node (AstCompilationUnit oldUnit) _children) =
       where
         newLocal = canonicalizeVar program oldUnit local
 
+    f (Node (AstExpression e) _children) =
+      Node (AstExpression $ mapExpression (canonicalizeExpression program oldUnit) e) $
+      map f _children
+
     f (Node n _children) = Node n $ map f _children
 canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
 
--- TODO(Ahmed) This probably handles the default package wrong
---             Possibly on-demand too. No collision handling right now
+-- TODO(Ahmed)
+-- - canonicalize local declarations
+-- - figure out if casting is valid if name shadowed by local/field
+canonicalizeExpression :: WholeProgram -> CompilationUnit -> Expression -> Expression
+canonicalizeExpression
+  program
+  unit
+  (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
+  newExpression
+  where
+    newExpression = CastExpression newType e
+    newType = oldType { innerType = NamedType $ canonicalize program unit name }
+canonicalizeExpression _ _ e = e
+-- We could also canonicalize ExpressionNames here.
+-- But we don’t. Because we need to make sure the name
+-- isn’t also a field, so we have to do this after
+-- disambigation
+
+-- THIS IS THE MEAT
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
   -- If type is already canonical

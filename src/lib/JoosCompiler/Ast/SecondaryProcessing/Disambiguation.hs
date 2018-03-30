@@ -4,10 +4,12 @@ module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           Debug.Trace(trace)
 import           Flow
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
+import           JoosCompiler.Ast.Utils
 import qualified Data.Map.Strict as Map
 
 {- TODO
@@ -55,12 +57,14 @@ disambiguateMethod program unit method =
   method { methodStatement = newStatement }
   where
     oldStatement = methodStatement method
-    newStatement = disambiguateStatement program unit oldStatement
+    newStatement = disambiguateStatement program unit method oldStatement
 
-disambiguateStatement :: WholeProgram -> CompilationUnit -> Statement -> Statement
-disambiguateStatement program unit statement = newStatement
+disambiguateStatement :: WholeProgram -> CompilationUnit -> Method -> Statement -> Statement
+disambiguateStatement program unit method statement = newStatement
   where
-    newStatement = mapStatementVarsExpression f Map.empty statement
+    formalParameters = methodParameters method
+    formalParametersMap = Map.fromList $ map (\v -> (variableName v, v)) formalParameters
+    newStatement = mapStatementVarsExpression f formalParametersMap statement
     f :: VariableMap -> Expression -> Expression
     f vars old = disambiguateExpression program unit vars old
 
@@ -129,5 +133,9 @@ findFieldInUnit expectingStatic unit n
     maybeUnitType = typeDecl unit
     unitType = fromMaybe (error "unitType was nothing") maybeUnitType
 
-resolveAsClass :: WholeProgram -> CompilationUnit -> Name -> (Maybe CompilationUnit, Name)
-resolveAsClass program unit name = (Nothing, name)
+-- newName is the part of the name left after resolving as class
+resolveAsClass :: WholeProgram -> CompilationUnit -> Name -> (Maybe TypeDeclaration, Name)
+resolveAsClass program unit name = (resolvedClass, newName)
+  where
+    resolvedClass = resolveTypeInProgram program name
+    newName = name
