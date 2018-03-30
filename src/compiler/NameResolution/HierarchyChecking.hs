@@ -32,7 +32,7 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
       (and . map (isInterface . dumbResolve) . implements)
 
     ruleFor types "An interface must not be repeated in an implements or extends clause"
-      (allUnique . map (typeName . dumbResolve) . implements)
+      (allUnique . map (typeCanonicalName . dumbResolve) . implements)
 
     ruleFor classes "A class must not extend a final class"
       (not . isClassFinal . dumbResolve . super)
@@ -80,7 +80,7 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
 
   where
     ruleFor types err f = asEither $ filter (not . f) $ types
-      where asEither (x:_) = Left ("Error with type " ++ typeName x ++ ", \"" ++ err ++ "\"")
+      where asEither (x:_) = Left ("Error with type " ++ showName (typeCanonicalName x) ++ ", \"" ++ err ++ "\"")
             asEither []    = Right ()
 
     False `implies` False = True
