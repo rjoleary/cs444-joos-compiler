@@ -197,7 +197,7 @@ generateStatement ctx x@LocalStatement{} = do
   generateStatement' newCtx (nextStatement x)
 
   comment ("remove " ++ varName ++ " from stack")
-  sub Ebp (I 4)
+  add Ebp (I 4)
 
 generateStatement ctx x@LoopStatement{} = do
   startLabel <- uniqueLabel
@@ -266,9 +266,9 @@ generateExpression ctx (BinaryOperation Or x y) = do
 
 -- Assign is very special.
 generateExpression ctx (BinaryOperation Assign x y) = do
-  t1 <- generateLValue' ctx y
+  t1 <- generateLValue' ctx x
   push Eax
-  t2 <- generateExpression' ctx x
+  t2 <- generateExpression' ctx y
   pop Ebx
   -- TODO: casting
   mov (Addr Ebx) Eax
@@ -389,7 +389,7 @@ generateLValue :: CodeGenCtx -> Expression -> Asm Type
 
 generateLValue ctx (LocalAccess n) = do
   mov Eax Ebp
-  add Eax (I $ -4 * (fromMaybe (error "Could not find local") $ Map.lookup n (ctxFrame ctx)))
+  add Eax (I $ (fromMaybe (error "Could not find local") $ Map.lookup n (ctxFrame ctx)))
   return $ fromMaybe (error "Could not find local") $ Map.lookup n (ctxLocals ctx)
 
 -- TODO: other lvalues
