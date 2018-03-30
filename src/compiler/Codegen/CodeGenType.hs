@@ -112,8 +112,15 @@ generateMethod ctx m = do
   label m
   push Ebp
   mov Ebp Esp
-  -- TODO: arguments
-  generateStatement ctx (methodStatement m)
+
+  -- The caller already pushed these arguments onto the stack.
+  let newCtx = ctx {
+    ctxLocals      = Map.fromList [(variableName param, variableType param) | param <- methodParameters m],
+    -- The first argument is 16 to skip 4 registers: ebx, ebi, esn, ebp
+    ctxFrame       = Map.fromList (zip (map variableName $ methodParameters m) [16,20..]),
+    ctxFrameOffset = 0 }
+
+  generateStatement newCtx (methodStatement m)
   mov Esp Ebp
   pop Ebp
   ret
@@ -183,8 +190,8 @@ generateStatement ctx x@LocalStatement{} = do
 
   let newCtx = ctx {
     ctxLocals      = Map.insert varName t (ctxLocals ctx),
-    ctxFrame       = Map.insert varName (ctxFrameOffset ctx + 4) (ctxFrame ctx),
-    ctxFrameOffset = ctxFrameOffset ctx + 4 }
+    ctxFrame       = Map.insert varName (ctxFrameOffset ctx - 4) (ctxFrame ctx),
+    ctxFrameOffset = ctxFrameOffset ctx - 4 }
 
   comment "next statement"
   generateStatement' newCtx (nextStatement x)

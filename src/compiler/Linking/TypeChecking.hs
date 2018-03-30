@@ -55,6 +55,10 @@ instance Analysis TypeAnalysis () where
     -- `this` is inaccessible in field declarations.
     propagateAnalyze ctx{ ctxThis = Nothing } a
 
+  analyze ctx (AstMethod m@Method{}) = do
+    let newEnv = Map.fromList [(variableName param, variableType param) | param <- methodParameters m]
+    analyze' ctx{ ctxLocalEnv = newEnv } (methodStatement m)
+
   analyze ctx (AstStatement s@ExpressionStatement{nextStatement=n}) = do
     -- The type annotation is required here because the return is ignored.
     exprType <- analyze' ctx (statementExpression s) :: Either String Type
