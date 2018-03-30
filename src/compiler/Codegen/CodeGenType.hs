@@ -383,7 +383,7 @@ generateExpressionPush ctx exp = do
 generateLValue' :: CodeGenCtx -> Expression -> Asm Type
 generateLValue' ctx e = indent $ do
   comment (show e)
-  generateExpression ctx e
+  generateLValue ctx e
 
 generateLValue :: CodeGenCtx -> Expression -> Asm Type
 
