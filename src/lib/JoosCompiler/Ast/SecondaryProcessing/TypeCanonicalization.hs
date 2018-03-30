@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
+{-# OPTIONS_GHC -Woverlapping-patterns #-}
 module JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
   ( canonicalizeProgram
   ) where
@@ -12,6 +14,7 @@ import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Ast.Utils
+import qualified Data.Map.Strict as Map
 
 javaLang :: ImportDeclaration
 javaLang = makeOnDemandImportDeclaration ["java", "lang"]
@@ -49,30 +52,8 @@ canonicalizeUnit program (Node (AstCompilationUnit oldUnit) _children) =
       where
         newLocal = canonicalizeVar program oldUnit local
 
-    f (Node (AstExpression e) _children) =
-      Node (AstExpression $ mapExpression (canonicalizeExpression program oldUnit) e) $
-      map f _children
-
     f (Node n _children) = Node n $ map f _children
 canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
-
--- TODO(Ahmed)
--- - canonicalize local declarations
--- - figure out if casting is valid if name shadowed by local/field
-canonicalizeExpression :: WholeProgram -> CompilationUnit -> Expression -> Expression
-canonicalizeExpression
-  program
-  unit
-  (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
-  newExpression
-  where
-    newExpression = CastExpression newType e
-    newType = oldType { innerType = NamedType $ canonicalize program unit name }
-canonicalizeExpression _ _ e = e
--- We could also canonicalize ExpressionNames here.
--- But we don’t. Because we need to make sure the name
--- isn’t also a field, so we have to do this after
--- disambigation
 
 -- THIS IS THE MEAT
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
@@ -142,9 +123,71 @@ makeOnDemandImportDeclaration name =
   , onDemand = True
   }
 
+canonicalizeStatement :: WholeProgram -> CompilationUnit -> VariableMap -> Statement -> Statement
+canonicalizeStatement program unit formalParameters statement =
+  mapStatementVarsExpression f formalParameters statement
+  where
+    f :: VariableMap -> Expression -> Expression
+    f vars (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
+      CastExpression newType e
+      where
+        newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+    f vars old@(CastExpression oldType e) = old
+
+    f vars (NewArrayExpression oldType@Type{ innerType = (NamedType name) } e) =
+      NewArrayExpression newType e
+      where
+        newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+    f vars old@(NewArrayExpression oldType e) = old
+
+    f vars (InstanceOfExpression e oldType@Type{ innerType = (NamedType name) }) =
+      InstanceOfExpression e newType
+      where
+        newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+    f vars old@(InstanceOfExpression e oldType) = old
+
+    f vars (ExpressionName name) =
+      ExpressionName $ canonicalizeNameInExpression program unit vars name
+
+    f vars (NewExpression name e) =
+      NewExpression (canonicalizeNameInExpression program unit vars name) e
+
+    -- Do not need canonicalization
+    -- Explicitly list expression types to expose bugs
+    f _ old@BinaryOperation{} = old
+    f _ old@UnaryOperation{} = old
+    f _ old@LiteralExpression{} = old
+    f _ old@This{} = old
+    f _ old@ArrayExpression{} = old
+    f _ old@AmbiguousFieldAccess{} = old
+    -- Those are only available after disambiguation
+    f _ old@DynamicMethodInvocation{} = old
+    f _ old@DynamicFieldAccess{} = old
+    f _ old@ArrayLengthAccess{} = old
+    f _ old@StaticMethodInvocation{} = old
+    f _ old@StaticFieldAccess{} = old
+    f _ old@LocalAccess{} = old
+
+canonicalizeNameInExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Name -> Name
+canonicalizeNameInExpression program unit vars (n:ns)
+  | isJust $ Map.lookup n vars = n:ns
+  -- TODO(Ahmed): super, interface
+  | n `elem` fieldNames = n:ns
+  | otherwise = canonicalize program unit (n:ns)
+  where
+    fieldNames = map variableName $ classFields unitType
+    unitType = fromMaybe (error "Expected unitType to exist") $ typeDecl unit
+canonicalizeNameInExpression program unit vars [] = error "Invalid Name in Expression"
+
 canonicalizeMethod :: WholeProgram -> CompilationUnit -> Method -> Method
-canonicalizeMethod _ unit old@Method{methodName = n} =
-  old { methodCanonicalName = canonicalizeMethodName unit n }
+canonicalizeMethod program unit old@Method{methodName = n} =
+  old { methodCanonicalName = canonicalizeMethodName unit n
+      , methodStatement     = newStatement
+      }
+  where
+    statement = methodStatement old
+    formalParameters = Map.fromList $ map (\v -> (variableName v, v)) $ methodParameters old
+    newStatement = canonicalizeStatement program unit formalParameters statement
 
 canonicalizeVar :: WholeProgram -> CompilationUnit -> Variable -> Variable
 canonicalizeVar

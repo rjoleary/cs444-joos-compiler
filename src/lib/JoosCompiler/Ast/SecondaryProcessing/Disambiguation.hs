@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
 module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
   (disambiguate) where
 
