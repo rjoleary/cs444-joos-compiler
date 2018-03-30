@@ -73,7 +73,7 @@ disambiguateExpression program unit vars e@(ExpressionName [n])
   | isJust localMaybe = LocalAccess $ variableName local
   | isJust staticFieldMaybe = StaticFieldAccess $ variableCanonicalName staticField
   | isJust dynamicFieldMaybe = DynamicFieldAccess This $ variableCanonicalName dynamicField
-  | otherwise = error $ "Could not disambiguate expression: " ++  show e
+  | otherwise = e --  error $ "Could not disambiguate expression: " ++  show e
   where
     localMaybe = Map.lookup n vars
     local      = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
@@ -89,7 +89,7 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | staticFieldExistsInUnit unit n  = e
   | dynamicFieldExistsInUnit unit n = e
   | isJust resolvedClass            = e
-  | otherwise                       = error $ "Could not disambiguate expression: " ++ showName (n:ns)
+  | otherwise                       = e -- error $ "Could not disambiguate expression: " ++ showName (n:ns)
   where
     localMaybe = Map.lookup n vars
     (resolvedClass, restOfName) = resolveAsClass program unit name
