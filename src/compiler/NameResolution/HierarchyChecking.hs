@@ -98,9 +98,9 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
     typeHierarchy :: TypeDeclaration -> TypeHierarchy
     typeHierarchy x = typeHierarchy' x
       where
-        typeHierarchy' TypeDeclaration{typeName="Object"} = createNode []
-        typeHierarchy' TypeDeclaration{isInterface=True}  = createNode $ implements x
-        typeHierarchy' TypeDeclaration{}                  = createNode $ super x:implements x
+        typeHierarchy' TypeDeclaration{typeCanonicalName=["java", "lang", "Object"]} = createNode []
+        typeHierarchy' TypeDeclaration{isInterface=True}                             = createNode $ implements x
+        typeHierarchy' TypeDeclaration{}                                             = createNode $ super x:implements x
         createNode xs = Node x $ map (typeHierarchy . dumbResolve) xs
 
     -- TODO: make smart
