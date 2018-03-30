@@ -10,6 +10,7 @@ import           Flow
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           Debug.DumbTrace(trace)
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.Transformers.Types
@@ -59,7 +60,7 @@ canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
   -- If type is already canonical
-  | (resolveTypeInProgram program name /= Nothing) = name
+  | resolveTrace (showName name ++ " already Canonical") (resolveTypeInProgram program name /= Nothing) = name
 
   -- SingleTypeImport. We don't need to worry about collisions because they're
   -- checked elsewhere (src/compiler/NameResolution)
@@ -68,7 +69,7 @@ canonicalize program unit name
     packageName (fromJust singleTypePackageContainingType) ++ name
 
   | (onDemandPackageContainingType /= Nothing) =
-    packageName (fromMaybe (error "This should never happen. Expected package to exist")
+    resolveTrace "On demand result:" $ packageName (fromMaybe (error "This should never happen. Expected package to exist")
                  onDemandPackageContainingType) ++ name
 
   | otherwise = error $ "Could not canonicalize: " ++ showName name
@@ -97,9 +98,12 @@ canonicalize program unit name
            (resolvePackageInProgram program) .>
            (fromMaybe (error $ "Imported single-type package not found: " ++ showName name)))
 
-    singleTypePackageContainingType = find (typeIsInPackage name) singleTypePackages
+    singleTypePackageContainingType = resolveTrace (showName name ++ " single") $ find (typeIsInPackage name) singleTypePackages
 
-    onDemandPackageContainingType = find (typeIsInPackage name) onDemandPackages
+    onDemandPackageContainingType = resolveTrace (showName name ++  " on-demand") $ find (typeIsInPackage name) onDemandPackages
+
+resolveTrace :: Show a => String -> a -> a
+resolveTrace s x = trace (intercalate ": " [s, show x]) x
 
 typeIsInPackage :: Name -> Package -> Bool
 typeIsInPackage [n] Package {packageCompilationUnits = units}

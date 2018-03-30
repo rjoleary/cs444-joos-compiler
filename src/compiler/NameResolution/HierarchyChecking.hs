@@ -7,7 +7,7 @@ import Data.List
 import Data.List.Unique
 import Data.Maybe
 import Data.Tree
-import Debug.Trace(trace)
+import Debug.DumbTrace(trace)
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
@@ -27,21 +27,21 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
       (null . drop (length types) . levels . typeHierarchy)
 
     ruleFor classes "A class must not extend an interface"
-      (not . isInterface . dumbResolve . super)
+      (not . isInterface . smartResolve . super)
 
     ruleFor classes "A class must not implement a class"
-      (and . map (isInterface . dumbResolve) . implements)
+      (and . map (isInterface . smartResolve) . implements)
 
 
     ruleFor types "An interface must not be repeated in an implements or extends clause"
-      (\t -> let names = map (typeCanonicalName . dumbResolve) $ implements t in
+      (\t -> let names = implements t in
           (allUnique $ trace (show $ map showName names) names))
 
     ruleFor classes "A class must not extend a final class"
-      (not . isClassFinal . dumbResolve . super)
+      (not . isClassFinal . smartResolve . super)
 
     ruleFor interfaces "An interface must not extend a class"
-      (and . map (isInterface . dumbResolve) . implements)
+      (and . map (isInterface . smartResolve) . implements)
 
     ruleFor types "A class or interface must not declare two methods with the same signature"
       (allUnique . map methodSignature . methods)
@@ -104,13 +104,11 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
         typeHierarchy' TypeDeclaration{typeCanonicalName=["java", "lang", "Object"]} = createNode []
         typeHierarchy' TypeDeclaration{isInterface=True}                             = createNode $ implements x
         typeHierarchy' TypeDeclaration{}                                             = createNode $ super x:implements x
-        createNode xs = Node x $ map (typeHierarchy . dumbResolve) xs
+        createNode xs = Node x $ map (typeHierarchy . smartResolve) xs
 
-    -- TODO: make smart
-    dumbResolve :: Name -> TypeDeclaration
-    -- TODO: make Object the default super
-    dumbResolve []   = dumbResolve ["java", "lang", "Object"]
-    dumbResolve name = fromMaybe
+    smartResolve :: Name -> TypeDeclaration
+    smartResolve []   = smartResolve ["java", "lang", "Object"]
+    smartResolve name = fromMaybe
                        (error $ "Could not resolve type: " ++ showName name) $
                        resolveTypeInProgram program name
 
