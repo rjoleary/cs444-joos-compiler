@@ -1,6 +1,12 @@
 #!/bin/bash
 
-# TODO: check for whitespace
+# Check for whitespace
+for FILE; do
+    if [[ $FILE = *[[:space:]]* ]]; then
+        echo "Error: filename contains whitespace"
+        exit 42
+    fi
+done
 
 # Check extensions.
 for FILE; do

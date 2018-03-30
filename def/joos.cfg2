@@ -209,8 +209,7 @@ VariableDeclarator      Identifier = Expression
 #
 # Similarly, there is a reduce-reduce conflict on the rules ClassModifiers and
 # InterfaceModifiers. The following must be checked by the weeder:
-# * Class support: public, abstract, static and final
-#   TODO: Does joos really have static classes?
+# * Class support: public, abstract and final
 # * Interace support: public and abstract
 
 Modifiers              Modifier
@@ -256,7 +255,7 @@ MethodBody              ;
 
 
 ########## 8.8: Constructor Declaration
-# TODO: The weeder must check that Identifier is the name of the class.
+# The weeder must check that Identifier is the name of the class.
 
 ConstructorDeclaration  Modifiers ConstructorDeclarator ConstructorBody
 
@@ -500,7 +499,7 @@ UnaryExpressionNotPlusMinus     CastExpression
 
 
 ########## 15.16: Cast Expressions
-# TODO: In the weeder check that Expression is a single Name.
+# The weeder must check that Expression is a single Name.
 
 CastExpression          ( PrimitiveType ) UnaryExpression
 CastExpression          ( PrimitiveType [ ] ) UnaryExpression
