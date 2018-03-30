@@ -7,6 +7,7 @@ import Data.List
 import Data.List.Unique
 import Data.Maybe
 import Data.Tree
+import Debug.Trace(trace)
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.NodeFunctions
@@ -31,8 +32,10 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
     ruleFor classes "A class must not implement a class"
       (and . map (isInterface . dumbResolve) . implements)
 
+
     ruleFor types "An interface must not be repeated in an implements or extends clause"
-      (allUnique . map (typeCanonicalName . dumbResolve) . implements)
+      (\t -> let names = map (typeCanonicalName . dumbResolve) $ implements t in
+          (allUnique $ trace (show $ map showName names) names))
 
     ruleFor classes "A class must not extend a final class"
       (not . isClassFinal . dumbResolve . super)
@@ -114,4 +117,4 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
     classes = filter (not . isInterface) $ types
     concreteClasses = filter (not . (Abstract `elem`) . classModifiers) classes
     interfaces = filter isInterface $ types
-    types = map (astClass . rootLabel) $ findChildren isTypeDeclaration ast
+    types = getTypeDeclarationsFromProgram program

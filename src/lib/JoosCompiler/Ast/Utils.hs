@@ -105,3 +105,9 @@ resolveMethod _ = Method _type [] "method" [] TerminalStatement []
 
 canonicalizeUnitName :: CompilationUnit -> Name
 canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]
+
+getTypeDeclarationsFromProgram :: WholeProgram -> [TypeDeclaration]
+getTypeDeclarationsFromProgram program = typeDecls
+  where
+    units = programCus program
+    typeDecls = catMaybes $ map typeDecl units
