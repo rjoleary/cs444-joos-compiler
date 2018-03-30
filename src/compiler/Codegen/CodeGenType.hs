@@ -197,7 +197,7 @@ generateStatement ctx x@LocalStatement{} = do
   generateStatement' newCtx (nextStatement x)
 
   comment ("remove " ++ varName ++ " from stack")
-  add Ebp (I 4)
+  add Esp (I 4)
 
 generateStatement ctx x@LoopStatement{} = do
   startLabel <- uniqueLabel
