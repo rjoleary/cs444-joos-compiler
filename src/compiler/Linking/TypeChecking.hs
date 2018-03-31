@@ -26,7 +26,11 @@ import JoosCompiler.TreeUtils
 checkTypes :: WholeProgram -> CompilationUnit -> AstNode -> Either String ()
 checkTypes program unit (Node x _) = analyze ctx x
   where
-    ctx = TypeAnalysis Map.empty Nothing Nothing program unit
+    ctx = TypeAnalysis {
+      ctxLocalEnv = Map.empty,
+      ctxThis     = Nothing,
+      ctxProgram  = program,
+      ctxUnit     = unit }
 
 -- For local types only.
 type LocalEnvironment = Map.Map String Type
@@ -34,7 +38,6 @@ type LocalEnvironment = Map.Map String Type
 data TypeAnalysis = TypeAnalysis
   { ctxLocalEnv :: LocalEnvironment
   , ctxThis     :: Maybe Name
-  , ctxThisType :: Maybe TypeDeclaration
   , ctxProgram  :: WholeProgram
   , ctxUnit     :: CompilationUnit -- TODO: this last field is temporary
   }
@@ -46,7 +49,7 @@ instance Analysis TypeAnalysis () where
     return ()
 
   analyze ctx a@(AstTypeDeclaration x) =
-    propagateAnalyze ctx{ ctxThis = Just [typeName x], ctxThisType = Just x } a
+    propagateAnalyze ctx{ ctxThis = Just [typeName x] } a
 
   analyze ctx a@(AstField v) = do
     exprType <- analyze' ctx (variableValue v)
@@ -119,7 +122,7 @@ instance Analysis TypeAnalysis Type where
       then return (toArray t)
       else Left ("Array size must be numeric type " ++ show e)
 
-  -- JLS 15.11: Field Access Expressions
+  -- JLS 15.11: Field Access Expressions (AmbiguousFieldAccess)
   analyze ctx (AstExpression e@(AmbiguousFieldAccess primary name)) = do
     -- TODO: this should not be necessary
     classType <- analyze' ctx primary
@@ -133,7 +136,7 @@ instance Analysis TypeAnalysis Type where
         else Left ("Can only access fields of reference types " ++ show e)
       -- TODO: the above assumes the primary is of this type
 
-  -- JLS 15.11: Field Access Expressions
+  -- JLS 15.11: Field Access Expressions (DynamicFieldAccess)
   analyze ctx (AstExpression (DynamicFieldAccess _ name)) =
     Right $ Type Int False -- TODO
 
@@ -141,6 +144,7 @@ instance Analysis TypeAnalysis Type where
   analyze ctx (AstExpression (StaticFieldAccess name)) =
     Right $ Type Int False -- TODO
 
+  -- JLS 15.11:
   analyze ctx (AstExpression (LocalAccess name)) =
     case maybeLocalType of
       Nothing -> Left ("Could not find local type '" ++ name ++ "'")
