@@ -36,7 +36,7 @@ instance Mangleable Method where
       prepare = [firstPart, secondPart]
       mangledCanonical = replaceBrackets $ (intercalate "#" prepare) ++ "#"
       -- The assembler does not like [] brackets in labels.
-      replaceBrackets ('[':']':xs) = "#Array" ++ replaceBrackets xs
+      replaceBrackets ('[':']':xs) = "###Array" ++ replaceBrackets xs
       replaceBrackets (x:xs)       = x:replaceBrackets xs
       replaceBrackets []           = []
 
