@@ -341,7 +341,8 @@ generateExpression ctx This = do
   return Void -- TODO
 
 generateExpression ctx ExpressionName{} = do
-  error "ExpressionName should never be present into CodeGen"
+  comment "TODO ExpressionName"
+  --error "ExpressionName should never be present into CodeGen"
   return Void
 
 generateExpression ctx (NewExpression e n) = do
@@ -396,7 +397,7 @@ generateExpression ctx (ArrayExpression expr exprIdx) = do
   return Void
 
 generateExpression ctx (AmbiguousFieldAccess _ _) = do
-  error "ExpressionName should never be present into CodeGen"
+  error "AmbiguousFieldAccess should never be present into CodeGen"
   return Void
 
 generateExpression ctx (DynamicMethodInvocation _ _ _) = do
