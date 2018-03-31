@@ -67,7 +67,7 @@ POSITIVE_TESTS=$(echo $TESTSET/positive/*)
 NEGATIVE_TESTS=$(echo $TESTSET/negative/*)
 
 echo 'Building stdlib...'
-runtests 0 42 'test/positive/Empty.java'
+runtests 0 42 'test/positive/BuildStdLib.java'
 export SKIP_STDLIB=1
 echo 'Running tests...'
 

@@ -33,7 +33,9 @@ codeGenMain wp = Right $ do
   comment "Call the test method, then exit"
   (let
     -- These are given based on the a5 spec, so empty lists are not expected.
-    firstClass = fromJust $ typeDecl $ head (programCus wp)
+    head (x:_) = x
+    head _     = error "Expected first class to be the test class"
+    firstClass = head $ maybeToList $ typeDecl $ head (programCus wp)
     isTestMethod x = methodName x == "test" && Static `elem` (methodModifiers x)
     testMethod = head . filter isTestMethod $ methods firstClass
     in extern testMethod >> call (L . mangle $ testMethod))

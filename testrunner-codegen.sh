@@ -66,7 +66,7 @@ find 'test' -name '*.stderr' -delete
 CODEGEN_TESTS=$(echo $TESTSET/*)
 
 echo 'Building stdlib...'
-runtests 123 42 'test/positive/Empty.java'
+runtests 123 42 'test/positive/BuildStdLib.java'
 export SKIP_STDLIB=1
 echo 'Running tests...'
 
