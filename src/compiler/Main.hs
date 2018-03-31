@@ -51,6 +51,7 @@ main = do
     let failedRules = checkRules (environmentBuildingRules ++ typeLinkingRules) ast
     when (length failedRules > 0) $ exitError $ "Failed to pass those rules:\n" ++ intercalate "\n" failedRules
 
+    {-
     -- Hierarchy checking
     let hierarchy = checkHierarchy ast
     case hierarchy of
@@ -73,6 +74,7 @@ main = do
       case (checkReachability ast) of
         Right _ -> return ()
         Left err -> exitError err
+    -}
 
     when (testNum > 4) $ do
       -- Code generation
