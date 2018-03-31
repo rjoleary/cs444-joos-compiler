@@ -118,6 +118,11 @@ resolveMethodInProgram expectingStatic program typeName mName = resolvedMethods
 canonicalizeUnitName :: CompilationUnit -> Name
 canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]
 
+-- Returns the first candidate which matches.
+findOverload :: String -> [Type] -> [Method] -> Maybe Method
+findOverload name args candidates = listToMaybe $ filter (\x -> methodSignature x == needle) candidates
+  where needle = methodSignature2 name args
+
 getTypeDeclarationsFromProgram :: WholeProgram -> [TypeDeclaration]
 getTypeDeclarationsFromProgram program = typeDecls
   where

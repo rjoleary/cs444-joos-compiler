@@ -325,12 +325,15 @@ isClassFinal x = Final `elem` classModifiers x
 
 -- Create a method signature from the method name and parameter types. The
 -- return type is omitted.
--- TODO: types must be canonical beforehand
 methodSignature :: Method -> String
-methodSignature x = name ++ "(" ++ commaDelimit parameterTypes ++ ")"
+methodSignature x = methodSignature2 (methodName x) (map variableType $ methodParameters x)
+
+-- Create a method signature from the method name and parameter types. The
+-- return type is omitted.
+methodSignature2 :: String -> [Type] -> String
+methodSignature2 name params = name ++ "(" ++ commaDelimit parameterTypes ++ ")"
   where
-    name = methodName x
-    parameterTypes = map (show . variableType) (methodParameters x)
+    parameterTypes = map show params
 
 -- Creates a type signature from the type name.
 typeSignature :: Type -> String

@@ -215,14 +215,16 @@ instance Analysis TypeAnalysis Type where
     where maybeLocalType = Map.lookup (last name) (ctxLocalEnv ctx)
 
   -- JLS 15.9: Class Instance Creation Expressions
-  analyze ctx (AstExpression e@(NewExpression name arguments))
-    = if foundConstructor
-      then Right (Type (NamedType name) False) -- TODO: qualify
-      else Left ("Could not find a matching constructor " ++ show e)
-    where foundConstructor = and $ map (isRight . analyze'') arguments
-          analyze'' x = analyze' ctx x :: Either String Type
-  -- TODO: the previous just checks if the arguments are not error types.
-  -- TODO: we also need to lookup the constructor and overload
+  analyze ctx (AstExpression e@(NewExpression name argumentExprs)) = do
+    classDecl <- case resolveTypeInProgram (ctxProgram ctx) name of
+      Just t  -> Right t
+      Nothing -> Left ("Could not resolve " ++ show name ++ " in program")
+    argumentTypes <- foldEither $ map (analyze' ctx) argumentExprs
+    let constructor = findOverload (typeName classDecl) argumentTypes (constructors classDecl)
+    case constructor of
+      Just m  -> Right (methodReturn m)
+      Nothing -> Left ("Could not find a matching constructor for " ++
+        show name ++ " with arguments " ++ show argumentTypes)
 
   -- JLS 15.10: Array Creation Expressions
   analyze ctx (AstExpression e@(NewArrayExpression t sizeExpr)) = do
