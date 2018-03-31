@@ -419,32 +419,12 @@ generateExpression ctx (InstanceOfExpression e t) = do
   mov Eax (I 123)
   return Void
 
+
+--generateExpression ctx (ArrayExpression expr exprIdx) = do
 generateExpression ctx (ArrayExpression expr exprIdx) = do
-  t <- generateExpression' ctx expr
-  push Eax
-  p <- generateExpression' ctx exprIdx
-  mov Ebx Eax
-  pop Eax
-  extern "nullcheck"
-  call (L "nullcheck")
-  cmp Ebx (I 0)
-  extern "__exception"
-  jl (L "__exception")
-  push Eax
-  add Eax (I 4)
-  cmp (Addr Eax) Ebx
-  extern "__exception"
-  jle (L "__exception")
-  pop Eax
-  add Ebx (I 2)
-  shl Ebx (I 2)
-  add Eax Ebx
+  t <- generateLValue' ctx (ArrayExpression expr exprIdx)
+  mov Eax (Addr Eax)
   return t
-
-
-  -- comment "TODO ArrayExpression"
-  -- mov Eax (I 123)
-  -- return Void
 
 generateExpression ctx (AmbiguousFieldAccess _ _) = do
   error "AmbiguousFieldAccess should never be present into CodeGen"
@@ -492,7 +472,29 @@ generateLValue ctx (LocalAccess n) = do
   return $ fromMaybe (error "Could not find local") $ Map.lookup n (ctxLocals ctx)
 
 -- TODO: other lvalues
+generateLValue ctx (ArrayExpression expr exprIdx) = do
+  t <- generateExpression' ctx expr
+  push Eax
+  p <- generateExpression' ctx exprIdx
+  mov Ebx Eax
+  pop Eax
+  extern "nullcheck"
+  call (L "nullcheck")
+  cmp Ebx (I 0)
+  extern "__exception"
+  jl (L "__exception")
+  push Eax
+  add Eax (I 4)
+  cmp (Addr Eax) Ebx
+  extern "__exception"
+  jle (L "__exception")
+  pop Eax
+  add Ebx (I 2)
+  shl Ebx (I 2)
+  add Eax Ebx
+  return t
+
 generateLValue _ _ = do
-  comment "TODO"
+-- comment "TODO"
   mov Eax (I 123)
   return Void
