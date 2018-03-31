@@ -56,17 +56,18 @@ exitSyscall = do
 memclearFunction :: Asm ()
 memclearFunction = do
   comment "eax is the first address."
-  comment "ebx is the size in bytes."
+  comment "ebx is the size in dwords."
   comment "Both registers are modified."
   global "memclear"
   label "memclear"
   indent $ do
+    shl Ebx (I 2)
     add Ebx Eax
     label "memclear_loop"
     cmp Eax Ebx
     je (L "memclear_return")
-    movByte (Addr Eax) (I 0)
-    add Eax (I 1)
+    movDword (Addr Eax) (I 0)
+    add Eax (I 4)
     jmp (L "memclear")
     label "memclear_return"
     ret

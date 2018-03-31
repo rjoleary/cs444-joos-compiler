@@ -77,6 +77,8 @@ module Codegen.X86
   , movWord
   , movDword
   , cmp
+  , shr
+  , shl
 
   ) where
 
@@ -308,6 +310,8 @@ movByte  :: (Arg a, Arg b) => a -> b -> Asm ()
 movWord  :: (Arg a, Arg b) => a -> b -> Asm ()
 movDword :: (Arg a, Arg b) => a -> b -> Asm ()
 cmp      :: (Arg a, Arg b) => a -> b -> Asm ()
+shr      :: (Arg a, Arg b) => a -> b -> Asm ()
+shl      :: (Arg a, Arg b) => a -> b -> Asm ()
 
 add      = generic2 "add"
 sub      = generic2 "sub"
@@ -319,3 +323,5 @@ movByte  = generic2 "mov byte"
 movWord  = generic2 "mov word"
 movDword = generic2 "mov dword"
 cmp      = generic2 "cmp"
+shr      = generic2 "shr"
+shl      = generic2 "shl"
