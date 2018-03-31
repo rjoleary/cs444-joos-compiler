@@ -351,9 +351,34 @@ generateExpression ctx (NewExpression e n) = do
   return Void -- TODO
 
 generateExpression ctx (NewArrayExpression t e) = do
-  comment "TODO NewArrayExpression"
-  mov Eax (I 123)
-  return Void -- TODO
+  t <- generateExpression' ctx e
+  add Eax (I 1)
+  mov Ebx Eax
+  add Eax (I 2)
+  extern "__malloc"
+  call (L "__malloc")
+  mov (Addr Eax) (L addr)
+  push Eax
+  add Eax (I 4)
+  mov (Addr Eax) Ebx
+  pop Eax
+  push Eax
+  extern "memclear"
+  call (L "memclear")
+  pop Eax
+  return t
+  where
+    addr = case it of
+      (NamedType name) -> "Vtable$" ++ obj
+      _                -> "0"
+      where
+        it = innerType t
+        maybeTd = resolveTypeInProgram (ctxProgram ctx) (unNamedType it)
+        td = fromMaybe (error "Could not resolve type") maybeTd
+        obj = mangle td
+--  comment "TODO NewArrayExpression"  
+--  mov Eax (I 123)
+--  return Void -- TODO
 
 generateExpression ctx (CastExpression t e) = do
   generateExpression' ctx e -- TODO: is instanceof
