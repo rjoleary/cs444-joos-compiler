@@ -74,7 +74,7 @@ disambiguateStatement program unit method statement = newStatement
   where
     formalParameters = methodParameters method
     formalParametersMap = Map.fromList $ map (\v -> (variableName v, v)) formalParameters
-    newStatement = mapStatementVarsExpression f formalParametersMap statement
+    newStatement = mapStatementVars (mapStatementVarsExpression f) formalParametersMap statement
     f :: VariableMap -> Expression -> Expression
     f vars old = disambiguateExpression program unit vars old
 

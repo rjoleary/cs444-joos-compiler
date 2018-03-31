@@ -6,6 +6,7 @@ import JoosCompiler.Ast.NodeTypes
 
 import Data.List
 import Data.Maybe
+import Debug.DumbTrace(trace)
 import qualified Data.Map.Strict as Map
 
 ---------- Show ----------
@@ -91,23 +92,23 @@ instance Show Statement where
   show TerminalStatement{} = "TerminalStatement"
 
 instance Show Expression where
-  show (DynamicMethodInvocation e name args) = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
-  show (StaticMethodInvocation e name args)  = "(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
-  show (BinaryOperation op e1 e2)            = "(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
-  show (UnaryOperation op e)                 = "(" ++ show op ++ show e ++ ")"
-  show (LiteralExpression v)                 = "(" ++ show v ++ ")"
+  show (DynamicMethodInvocation e name args) = "DynamicMethodInvocation(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
+  show (StaticMethodInvocation e name args)  = "StaticMethodInvocation(" ++ show e ++ "." ++ name ++ "(" ++ intercalate "," (map show args) ++ "))"
+  show (BinaryOperation op e1 e2)            = "BinaryOperation(" ++ show e1 ++ " " ++ show op ++ " " ++ show e2 ++ ")"
+  show (UnaryOperation op e)                 = "UnaryOperation(" ++ show op ++ show e ++ ")"
+  show (LiteralExpression v)                 = "LiteralExpression(" ++ show v ++ ")"
   show This                                  = "(this)"
-  show (AmbiguousFieldAccess e s)            = "(" ++ show e ++ "." ++ s ++ ")"
-  show (DynamicFieldAccess e n)              = "(" ++ show e ++ "." ++ showName n ++ ")"
-  show (StaticFieldAccess n)                 = "(" ++ showName n ++ ")"
-  show (ArrayLengthAccess e)                 = "(" ++ show e ++ ".length)"
-  show (LocalAccess n)                       = "(" ++ n ++ ")"
-  show (ExpressionName n)                    = "(" ++ showName n ++ ")"
+  show (AmbiguousFieldAccess e s)            = "AmbiguousFieldAccess(" ++ show e ++ "." ++ s ++ ")"
+  show (DynamicFieldAccess e n)              = "DynamicFieldAccess(" ++ show e ++ "." ++ showName n ++ ")"
+  show (StaticFieldAccess n)                 = "StaticFieldAccess(" ++ showName n ++ ")"
+  show (ArrayLengthAccess e)                 = "ArrayLengthAccess(" ++ show e ++ ".length)"
+  show (LocalAccess n)                       = "LocalAccess(" ++ n ++ ")"
+  show (ExpressionName n)                    = "ExpressionName(" ++ showName n ++ ")"
   show (NewExpression name args)             = "(new " ++ showName name ++ "(" ++ intercalate "," (map show args) ++ "))"
   show (NewArrayExpression t e)              = "(new " ++ typeSignature t ++ "[" ++ show e ++ "])"
-  show (CastExpression t e)                  = "((" ++ typeSignature t ++ ")" ++ show e ++ ")"
+  show (CastExpression t e)                  = "CastExpression((" ++ typeSignature t ++ ")" ++ show e ++ ")"
   show (InstanceOfExpression e t)            = "(" ++ show e ++ " instanceof " ++ typeSignature t ++ ")"
-  show (ArrayExpression e1 e2)               = "(" ++ show e1 ++ "[" ++ show e2 ++ "])"
+  show (ArrayExpression e1 e2)               = "ArrayExpression(" ++ show e1 ++ "[" ++ show e2 ++ "])"
 
 instance Show Type where
   show Void           = "void"
@@ -167,9 +168,12 @@ mapStatementVars f vars x@(BlockStatement s _) =
     newInnerBlock = mapStatementVars f vars s
 
 mapStatementVars f vars x@LocalStatement{localVariable = v} =
-  applyNextMapStatement f newVars x
+  result
   where
-    newVars = Map.insert (variableName v) v vars
+    newVars = if (isJust $ Map.lookup (variableName v) vars)
+                 then error "Duplicate local"
+                 else Map.insert (variableName v) v vars
+    result = applyNextMapStatement f newVars x
 
 mapStatementVars f vars x@(LoopStatement _ s _) =
   applyNextMapStatement f vars x{ loopStatement = mapStatementVars f vars s }
@@ -229,11 +233,15 @@ mapStatementVarsExpression f vars old@ReturnStatement{ returnExpression = Just e
     next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
 mapStatementVarsExpression f vars old@LocalStatement{localVariable = v} =
-  old{ nextStatement = next }
+  old{ nextStatement = next
+     , localVariable = newLocalVar
+     }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) newVars $ nextStatement old
-    newVars = Map.insert (variableName v) v vars
-
+    oldValue = variableValue v
+    newLocalVar = trace
+      (intercalate "\n" [ (show vars) , (intercalate " = " [ variableName v , show $ mapExpression (f vars) oldValue])])
+      v { variableValue = mapExpression (f vars) oldValue }
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
 mapStatementVarsExpression f vars old =
   old{ nextStatement = next }

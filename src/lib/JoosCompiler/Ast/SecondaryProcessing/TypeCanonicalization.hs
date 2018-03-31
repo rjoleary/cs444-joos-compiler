@@ -129,7 +129,7 @@ makeOnDemandImportDeclaration name =
 
 canonicalizeStatement :: WholeProgram -> CompilationUnit -> VariableMap -> Statement -> Statement
 canonicalizeStatement program unit formalParameters statement =
-  mapStatementVarsExpression f formalParameters statement
+  mapStatementVars (mapStatementVarsExpression f) formalParameters statement
   where
     f :: VariableMap -> Expression -> Expression
     f vars (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
@@ -174,7 +174,7 @@ canonicalizeStatement program unit formalParameters statement =
 
 canonicalizeNameInExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Name -> Name
 canonicalizeNameInExpression program unit vars (n:ns)
-  | isJust $ Map.lookup n vars = n:ns
+  | isJust $ Map.lookup n $ trace ("Canonicalizing " ++ n ++ ": " ++ show vars) vars = n:ns
   -- TODO(Ahmed): super, interface
   | n `elem` fieldNames = n:ns
   | otherwise = canonicalize program unit (n:ns)
