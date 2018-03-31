@@ -49,9 +49,18 @@ disambiguateUnit program oldUnit
   where
     maybeOldTypeDecl = typeDecl oldUnit
     oldTypeDecl = fromMaybe (error "oldTypeDecl was Nothing") maybeOldTypeDecl
-    newTypeDecl = oldTypeDecl {methods = newMethods}
     newUnit = oldUnit {typeDecl = Just newTypeDecl}
     newMethods = map (disambiguateMethod program oldUnit) $ methods oldTypeDecl
+    newFields = map (disambiguateVariable program oldUnit) $ classFields oldTypeDecl
+    newTypeDecl = oldTypeDecl { methods = newMethods
+                              , classFields = newFields
+                              }
+
+disambiguateVariable program unit variable =
+  variable { variableValue = newValue }
+  where
+    value = variableValue variable
+    newValue = mapExpression (disambiguateExpression program unit Map.empty) value
 
 disambiguateMethod :: WholeProgram -> CompilationUnit -> Method -> Method
 disambiguateMethod program unit method =
