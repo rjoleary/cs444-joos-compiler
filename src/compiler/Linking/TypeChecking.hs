@@ -121,6 +121,7 @@ instance Analysis TypeAnalysis Type where
 
   -- JLS 15.11: Field Access Expressions
   analyze ctx (AstExpression e@(AmbiguousFieldAccess primary name)) = do
+    -- TODO: this should not be necessary
     classType <- analyze' ctx primary
     if isArray classType && name == "length"
       then return (Type Int False) -- TODO: add new AST node
@@ -134,14 +135,17 @@ instance Analysis TypeAnalysis Type where
 
   -- JLS 15.11: Field Access Expressions
   analyze ctx (AstExpression (DynamicFieldAccess _ name)) =
-    Right $ Type Int False
+    Right $ Type Int False -- TODO
 
   -- JLS 15.11: Field Access Expressions
   analyze ctx (AstExpression (StaticFieldAccess name)) =
-    Right $ Type Int False
+    Right $ Type Int False -- TODO
 
   analyze ctx (AstExpression (LocalAccess name)) =
-    Right $ Type Int False
+    case maybeLocalType of
+      Nothing -> Left ("Could not find local type '" ++ name ++ "'")
+      Just x  -> Right x
+    where maybeLocalType = Map.lookup name (ctxLocalEnv ctx)
 
   -- JLS 15.12: Method Invocation Expressions
   analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
@@ -157,7 +161,7 @@ instance Analysis TypeAnalysis Type where
     arrayType <- analyze' ctx arrayExpr
     sizeExpr <- analyze' ctx sizeExpr
     if not $ isArray arrayType
-      then Left ("Can only perform array access on an array " ++ show e)
+      then Left ("Can only perform array access on an array where " ++ show arrayExpr ++ " has type " ++ show arrayType)
       else do
         if not $ isNumeric sizeExpr
           then Left ("Can only perform array access with numbers " ++ show e)
