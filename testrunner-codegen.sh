@@ -63,14 +63,16 @@ find 'test' -name '*.parse' -delete
 find 'test' -name '*.stdout' -delete
 find 'test' -name '*.stderr' -delete
 
-CODEGEN_TESTS=$(echo $TESTSET/*)
+CODEGEN_POSITIVE_TESTS=$(echo $TESTSET/positive/*)
+CODEGEN_NEGATIVE_TESTS=$(echo $TESTSET/negative/*)
 
 echo 'Building stdlib...'
 runtests 123 42 'test/positive/BuildStdLib.java'
 export SKIP_STDLIB=1
 echo 'Running tests...'
 
-runtests 123 42 $CODEGEN_TESTS
+runtests 123 13 $CODEGEN_POSITIVE_TESTS
+runtests 13 123 $CODEGEN_NEGATIVE_TESTS
 
 echo
 echo "SUMMARY:"
