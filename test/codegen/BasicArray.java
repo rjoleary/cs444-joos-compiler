@@ -1,7 +1,7 @@
 public class BasicArray {
     public BasicArray() {}
 
-    public int test() {
+    public static int test() {
         int[] a = new int[1+2];
         int sum = a[0] + a[1] + a[2];
         a[0] = 1;

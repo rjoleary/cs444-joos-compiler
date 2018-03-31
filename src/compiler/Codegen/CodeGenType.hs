@@ -357,10 +357,10 @@ generateExpression ctx (NewArrayExpression t e) = do
   add Eax (I 2)
   extern "__malloc"
   call (L "__malloc")
-  mov (Addr Eax) (L addr)
+  movDword (Addr Eax) (L addr)
   push Eax
   add Eax (I 4)
-  mov (Addr Eax) Ebx
+  movDword (Addr Eax) Ebx
   pop Eax
   push Eax
   extern "memclear"
