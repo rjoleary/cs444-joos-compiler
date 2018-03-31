@@ -97,7 +97,7 @@ test.unit :
 	stack exec runghc -- -i"${HS_INCLUDE}" test/haskell/UnitTest.hs
 
 test.positive : compiler
-	@./testrunner-sequential.sh positive
+	@TESTNUM=1 ./testrunner-sequential.sh positive
 
 test.negative : compiler
 	@./testrunner-sequential.sh negative
