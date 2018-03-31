@@ -220,9 +220,9 @@ instance Analysis TypeAnalysis Type where
       Just t  -> Right t
       Nothing -> Left ("Could not resolve " ++ show name ++ " in program")
     argumentTypes <- foldEither $ map (analyze' ctx) argumentExprs
-    let constructor = findOverload (typeName classDecl) argumentTypes (constructors classDecl)
+    let constructor = findOverload "" argumentTypes (constructors classDecl)
     case constructor of
-      Just m  -> Right (methodReturn m)
+      Just m  -> Right (Type (NamedType $ typeCanonicalName classDecl) False)
       Nothing -> Left ("Could not find a matching constructor for " ++
         show name ++ " with arguments " ++ show argumentTypes)
 
