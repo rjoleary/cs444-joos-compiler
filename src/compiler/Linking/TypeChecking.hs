@@ -280,23 +280,27 @@ instance Analysis TypeAnalysis Type where
   -- JLS 15.11: Field Access Expressions (dynamic)
   analyze ctx (AstExpression (DynamicFieldAccess e name)) = do
     classType <- analyze' ctx e
-    when (not $ isName classType)
-      (Left $ "Cannot access field of non-class type " ++ showName name)
-    cu <- case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
-      Just x  -> Right x
-      Nothing -> Left $ ("Could not resolve type " ++ show classType ++
-        "; This should have been checked by disambiguation.")
-    field <- case findDynamicFieldInUnit cu (last name) of -- TODO: tail?
-      Just x  -> Right x
-      Nothing -> Left $ ("Could not resolve field " ++ showName name ++
-        " in " ++ show classType ++
-        "; This should have been checked by disambiguation.")
-    if isFieldStatic field
-    then Left "Cannot dynamically access static field"
-    else Right (variableType field)
+    if (isArray classType && (last name) == "length")
+    then (Right $ Type Int False) -- special case for array.length
+    else do
+      when (not $ isName classType)
+        (Left $ "Cannot access field of non-class type " ++ showName name)
+      cu <- case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
+        Just x  -> Right x
+        Nothing -> Left $ ("Could not resolve type " ++ show classType ++
+          "; This should have been checked by disambiguation.")
+      field <- case findDynamicFieldInUnit cu (last name) of -- TODO: last?
+        Just x  -> Right x
+        Nothing -> Left $ ("Could not resolve field " ++ showName name ++
+          " in " ++ show classType ++
+          "; This should have been checked by disambiguation.")
+      if isFieldStatic field
+      then Left "Cannot dynamically access static field"
+      else Right (variableType field)
 
-  -- JLS 15.11: Field Access Expressions (static)
+  -- JLS 15.11: Field Access Expressions (length)
   analyze ctx (AstExpression (ArrayLengthAccess e)) =
+    -- TODO: This is going to be removed
     Right $ Type Int False
 
   -- JLS 15.12: Method Invocation Expressions (static)
