@@ -378,7 +378,7 @@ generateExpression ctx (NewArrayExpression t e) = do
         maybeTd = resolveTypeInProgram (ctxProgram ctx) (unNamedType it)
         td = fromMaybe (error "Could not resolve type") maybeTd
         obj = mangle td
---  comment "TODO NewArrayExpression"  
+--  comment "TODO NewArrayExpression"
 --  mov Eax (I 123)
 --  return Void -- TODO
 
@@ -408,10 +408,11 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
   mov Ebx (I $fromIntegral g)
   imul Ebx (I 4)
   add Esp Ebx
-  return (methodReturn $resolveMethod n)
+  return (methodReturn $ na)
     where
       g = length as-- l = length of as
-      na = resolveMethod n
+      methods = resolveStaticMethodInProgram (ctxProgram ctx) n s
+      na = head methods
 
 generateExpression ctx (InstanceOfExpression e t) = do
   comment "TODO InstanceOfExpression"

@@ -230,7 +230,7 @@ canonicalizeTypeDecl
                   , interfaces     = newInterfaces
                   , classFields    = newFields
                   , methods        = newMethods
-                  , constructors   = _constructors
+                  , constructors   = newConstructors
                   , typeCanonicalName = _typeCanonicalName
                   }
   where
@@ -238,6 +238,7 @@ canonicalizeTypeDecl
     newInterfaces = map (canonicalize program unit) oldInterfaces
     newFields = map (canonicalizeVar program unit) fields
     newMethods = map (canonicalizeMethod program unit) _methods
+    newConstructors = map (canonicalizeMethod program unit) _constructors
     _typeCanonicalName = pName ++ [name]
 canonicalizeTypeDecl _ EmptyFile{} _ = error "Tried to canonicalize type in empty file"
 

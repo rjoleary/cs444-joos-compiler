@@ -3,6 +3,7 @@ module JoosCompiler.Ast.Utils where
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           Flow
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.Transformers.Types
@@ -99,9 +100,20 @@ resolveUnitInProgram :: WholeProgram -> Name -> Maybe CompilationUnit
 resolveUnitInProgram program name =
   find ((== name) . canonicalizeUnitName) $ programCus program
 
-resolveMethod :: Name -> Method
-resolveMethod _ = Method _type [] "method" [] TerminalStatement []
-  where _type = Type Int False
+resolveStaticMethodInProgram :: WholeProgram -> Name -> String -> [Method]
+resolveStaticMethodInProgram = resolveMethodInProgram True
+
+resolveDynamicMethodInProgram :: WholeProgram -> Name -> String -> [Method]
+resolveDynamicMethodInProgram = resolveMethodInProgram False
+
+resolveMethodInProgram :: Bool -> WholeProgram -> Name -> String -> [Method]
+resolveMethodInProgram expectingStatic program typeName mName = resolvedMethods
+  where
+    typeDeclMaybe = resolveTypeInProgram program typeName
+    typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
+    resolvedMethods =
+      methods typeDecl |>
+      filter (\m -> (mName == methodName m && isMethodStatic m == expectingStatic))
 
 canonicalizeUnitName :: CompilationUnit -> Name
 canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]
