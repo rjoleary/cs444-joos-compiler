@@ -100,16 +100,20 @@ resolveUnitInProgram :: WholeProgram -> Name -> Maybe CompilationUnit
 resolveUnitInProgram program name =
   find ((== name) . canonicalizeUnitName) $ programCus program
 
-resolveMethodInProgram :: Bool -> WholeProgram -> Name -> Maybe Method
-resolveMethodInProgram expectingStatic program name = resolvedMethod
+resolveStaticMethodInProgram :: WholeProgram -> Name -> String -> [Method]
+resolveStaticMethodInProgram = resolveMethodInProgram True
+
+resolveDynamicMethodInProgram :: WholeProgram -> Name -> String -> [Method]
+resolveDynamicMethodInProgram = resolveMethodInProgram False
+
+resolveMethodInProgram :: Bool -> WholeProgram -> Name -> String -> [Method]
+resolveMethodInProgram expectingStatic program typeName mName = resolvedMethods
   where
-    typeName = init name
-    mName = last name
     typeDeclMaybe = resolveTypeInProgram program typeName
     typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
-    resolvedMethod =
+    resolvedMethods =
       methods typeDecl |>
-      find (\m -> (mName == methodName m && isMethodStatic m == expectingStatic))
+      filter (\m -> (mName == methodName m && isMethodStatic m == expectingStatic))
 
 canonicalizeUnitName :: CompilationUnit -> Name
 canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]
