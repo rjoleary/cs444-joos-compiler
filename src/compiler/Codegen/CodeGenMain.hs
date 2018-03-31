@@ -72,3 +72,19 @@ memclearFunction = do
     jmp (L "memclear_loop")
     label "memclear_return"
     ret
+
+
+-- Create the nullcheck function
+nullCheck :: Asm ()
+nullCheck = do
+  comment "check whether value in eax is Null/0"
+  global "nullcheck"
+  label "nullcheck"
+  indent $ do 
+     cmp Eax (I 0)
+     extern "__exception"
+     je (L "__exception")
+     ret
+
+    
+

@@ -30,6 +30,7 @@ module Codegen.X86
   , jne
   , jg
   , jge
+  , jl
   , jle
   , ja
   , jb
@@ -213,6 +214,7 @@ je     :: Arg a => a -> Asm ()
 jne    :: Arg a => a -> Asm ()
 jg     :: Arg a => a -> Asm ()
 jge    :: Arg a => a -> Asm ()
+jl     :: Arg a => a -> Asm ()
 jle    :: Arg a => a -> Asm ()
 ja     :: Arg a => a -> Asm ()
 jb     :: Arg a => a -> Asm ()
@@ -260,6 +262,7 @@ je     = generic1 "je"
 jne    = generic1 "jne"
 jg     = generic1 "jg"
 jge    = generic1 "jge"
+jl     = generic1 "je"
 jle    = generic1 "jle"
 ja     = generic1 "ja"
 jb     = generic1 "jb"

@@ -419,9 +419,30 @@ generateExpression ctx (InstanceOfExpression e t) = do
   return Void
 
 generateExpression ctx (ArrayExpression expr exprIdx) = do
-  comment "TODO ArrayExpression"
-  mov Eax (I 123)
-  return Void
+  t <- generateExpression' ctx expr
+  push Eax
+  p <- generateExpression' ctx exprIdx
+  mov Ebx Eax
+  pop Eax
+  extern "nullcheck"
+  call (L "nullcheck")
+  cmp Ebx (I 0)
+  extern "__exception"
+  jl (L "__exception")
+  push Eax
+  add Eax (I 4)
+  cmp (Addr Eax) Ebx
+  jle (L "__exception")
+  pop Eax
+  add Ebx (I 2)
+  shl Ebx (I 2)
+  add Eax Ebx
+  return t
+
+
+  -- comment "TODO ArrayExpression"
+  -- mov Eax (I 123)
+  -- return Void
 
 generateExpression ctx (AmbiguousFieldAccess _ _) = do
   error "AmbiguousFieldAccess should never be present into CodeGen"
