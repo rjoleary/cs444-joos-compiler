@@ -55,12 +55,15 @@ instance Analysis TypeAnalysis () where
     exprType <- analyze' ctx (variableValue v)
     when (exprType /= variableType v)
       (Left $ "Field type doesn't match (got " ++ show exprType ++ ", expected " ++ show (variableType v) ++ ")")
-    -- `this` is inaccessible in field declarations.
-    propagateAnalyze ctx{ ctxThis = Nothing } a
+    -- `this` is inaccessible in static fields.
+    let newThis = if isFieldStatic v then Nothing else ctxThis ctx
+    propagateAnalyze ctx{ ctxThis = newThis } a
 
   analyze ctx (AstMethod m@Method{}) = do
     let newEnv = Map.fromList [(variableName param, variableType param) | param <- methodParameters m]
-    analyze' ctx{ ctxLocalEnv = newEnv } (methodStatement m)
+    -- `this` is inaccessible in static methods.
+    let newThis = if isMethodStatic m then Nothing else ctxThis ctx
+    analyze' ctx{ ctxLocalEnv = newEnv, ctxThis = newThis } (methodStatement m)
 
   analyze ctx (AstStatement s@ExpressionStatement{nextStatement=n}) = do
     -- The type annotation is required here because the return is ignored.
