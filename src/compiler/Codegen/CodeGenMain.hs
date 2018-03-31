@@ -61,6 +61,7 @@ memclearFunction = do
   global "memclear"
   label "memclear"
   indent $ do
+    add Eax (I 8)
     shl Ebx (I 2)
     add Ebx Eax
     label "memclear_loop"
@@ -68,6 +69,6 @@ memclearFunction = do
     je (L "memclear_return")
     movDword (Addr Eax) (I 0)
     add Eax (I 4)
-    jmp (L "memclear")
+    jmp (L "memclear_loop")
     label "memclear_return"
     ret
