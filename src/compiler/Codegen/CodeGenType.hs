@@ -326,9 +326,33 @@ generateExpression ctx (LiteralExpression (CharacterLiteral x)) = do
     else mov Eax (I $ fromInteger $ toInteger $ ord x)
   return (Type Char False)
 
+generateExpression ctx (LiteralExpression (StringLiteral x)) = do
+  comment "TODO StringLiteral"
+  mov Eax (I 123)
+  return (Type (NamedType ["java", "lang", "String"]) False)
+
 generateExpression ctx (LiteralExpression NullLiteral) = do
   mov Eax (I 0)
   return Null
+
+generateExpression ctx This = do
+  comment "TODO This"
+  mov Eax (I 123)
+  return Void -- TODO
+
+generateExpression ctx ExpressionName{} = do
+  error "ExpressionName should never be present into CodeGen"
+  return Void
+
+generateExpression ctx (NewExpression e n) = do
+  comment "TODO NewExpression"
+  mov Eax (I 123)
+  return Void -- TODO
+
+generateExpression ctx (NewArrayExpression t e) = do
+  comment "TODO NewArrayExpression"
+  mov Eax (I 123)
+  return Void -- TODO
 
 generateExpression ctx (CastExpression t e) = do
   generateExpression' ctx e -- TODO: is instanceof
@@ -336,7 +360,10 @@ generateExpression ctx (CastExpression t e) = do
   return t
 
 generateExpression ctx (StaticMethodInvocation n s as) = do
-  t <- mapM_ (generateExpressionPush ctx) as
+  t <- mapM_ (\arg -> do
+    t <- generateExpression' ctx arg
+    push Eax
+    return ()) as
   mapM_ (\method -> do
     generateExpression' ctx method
     push Eax
@@ -357,25 +384,46 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
     where
       g = length as-- l = length of as
       na = resolveMethod n
---  m = map (generateExpressionpush ctx a) as
+
+generateExpression ctx (InstanceOfExpression e t) = do
+  comment "TODO InstanceOfExpression"
+  mov Eax (I 123)
+  return Void
+
+generateExpression ctx (ArrayExpression expr exprIdx) = do
+  comment "TODO ArrayExpression"
+  mov Eax (I 123)
+  return Void
+
+generateExpression ctx (AmbiguousFieldAccess _ _) = do
+  error "ExpressionName should never be present into CodeGen"
+  return Void
+
+generateExpression ctx (DynamicMethodInvocation _ _ _) = do
+  comment "TODO DynamicMethodInvocation"
+  mov Eax (I 123)
+  return Void
+
+generateExpression ctx (DynamicFieldAccess _ _) = do
+  comment "TODO DynamicFieldAccess"
+  mov Eax (I 123)
+  return Void
+
+generateExpression ctx (ArrayLengthAccess _) = do
+  comment "TODO ArrayLengthAccess"
+  mov Eax (I 123)
+  return Void
+
+generateExpression ctx (StaticFieldAccess _) = do
+  comment "TODO StaticFieldAccess"
+  mov Eax (I 123)
+  return Void
 
 generateExpression ctx (LocalAccess n) = do
   mov Eax (AddrOffset Ebp (fromMaybe (error "Could not find local") $ Map.lookup n (ctxFrame ctx)))
   return $ fromMaybe (error "Could not find local") $ Map.lookup n (ctxLocals ctx)
 
--- TODO: other expressions
-generateExpression _ _ = do
-  comment "TODO"
-  mov Eax (I 123)
-  return Void
 
-
-
-generateExpressionPush :: CodeGenCtx -> Expression -> Asm Type
-generateExpressionPush ctx exp = do
-  t <- generateExpression' ctx exp
-  push Eax
-  return Null
 ---------- LValues ----------
 
 -- This gets placed between each recursive call to generateLValue to indent
