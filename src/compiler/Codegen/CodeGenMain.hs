@@ -44,7 +44,9 @@ codeGenMain wp = Right $ do
 
   memclearFunction
   space
-
+  nullcheckFunction
+  space
+  
 -- Exit with the value stored in eax.
 exitSyscall :: Asm ()
 exitSyscall = do
@@ -75,8 +77,8 @@ memclearFunction = do
 
 
 -- Create the nullcheck function
-nullCheck :: Asm ()
-nullCheck = do
+nullcheckFunction :: Asm ()
+nullcheckFunction = do
   comment "check whether value in eax is Null/0"
   global "nullcheck"
   label "nullcheck"

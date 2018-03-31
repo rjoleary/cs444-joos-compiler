@@ -352,7 +352,7 @@ generateExpression ctx (NewExpression e n) = do
 
 generateExpression ctx (NewArrayExpression t e) = do
   t <- generateExpression' ctx e
-  add Eax (I 1)
+--  add Eax (I 1)
   mov Ebx Eax
   add Eax (I 2)
   push Ebx
@@ -433,6 +433,7 @@ generateExpression ctx (ArrayExpression expr exprIdx) = do
   push Eax
   add Eax (I 4)
   cmp (Addr Eax) Ebx
+  extern "__exception"
   jle (L "__exception")
   pop Eax
   add Ebx (I 2)
