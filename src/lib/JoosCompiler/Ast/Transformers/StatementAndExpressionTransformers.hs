@@ -66,7 +66,7 @@ arrayTypeTransformer :: TaggedParseTree -> Type
 arrayTypeTransformer = match . asRule
   where
     match [("ArrayType", _), ("PrimitiveType", x), ("[", _), ("]", _)] =
-      Type (primitiveTypeTransformer x) False
+      Type (primitiveTypeTransformer x) True
     match [("ArrayType", _), ("Name", x), ("[", _), ("]", _)] =
       Type (NamedType $ nameTransformer x) True
 
@@ -394,7 +394,7 @@ arrayCreationExpressionTransformer :: TaggedParseTree -> Expression
 arrayCreationExpressionTransformer = match . asRule
   where
     match [("ArrayCreationExpression", _), ("new", _), ("Name", t), ("[", _), ("Expression", e), ("]", _)] =
-      NewArrayExpression (Type (NamedType $ nameTransformer t) False) (expressionTransformer e) -- TODO: convert char to Char, etc..
+      NewArrayExpression (Type (NamedType $ nameTransformer t) False) (expressionTransformer e)
     match [("ArrayCreationExpression", _), ("new", _), ("PrimitiveType", t), ("[", _), ("Expression", e), ("]", _)] =
       NewArrayExpression (Type (primitiveTypeTransformer t) False) (expressionTransformer e)
 
