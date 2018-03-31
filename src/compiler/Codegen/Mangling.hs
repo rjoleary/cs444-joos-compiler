@@ -34,7 +34,11 @@ instance Mangleable Method where
       t = map (show . variableType) v
       secondPart = intercalate "#" t
       prepare = [firstPart, secondPart]
-      mangledCanonical = (intercalate "#" prepare) ++ "#"
+      mangledCanonical = replaceBrackets $ (intercalate "#" prepare) ++ "#"
+      -- The assembler does not like [] brackets in labels.
+      replaceBrackets ('[':']':xs) = "#Array" ++ replaceBrackets xs
+      replaceBrackets (x:xs)       = x:replaceBrackets xs
+      replaceBrackets []           = []
 
 -- Class$p$q$A
 -- Can also be interface
