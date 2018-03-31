@@ -95,6 +95,105 @@ instance Analysis TypeAnalysis () where
 
 -- Analysis on expressions. Type is returned.
 instance Analysis TypeAnalysis Type where
+  -- Binary Operations
+  analyze ctx (AstExpression e@(BinaryOperation op expr1 expr2))
+
+    -- JLS 15.17: Multiplicative Operators (*, /, %)
+    | op `elem` [Multiply, Divide, Modulus] = do
+      expr1Type <- analyze' ctx expr1
+      expr2Type <- analyze' ctx expr2
+      if isNumeric expr1Type && isNumeric expr2Type
+        then return (Type Int False)
+        else Left ("Bad multiplicative types (" ++
+          show expr1Type ++
+          show op ++
+          show expr2Type ++ ")")
+
+    -- JLS 15.18.1: String Concatenation Operator (+)
+    -- JLS 15.18.2: Additive Operators (+) for Numeric Types
+    | op `elem` [Add] = do
+      expr1Type <- analyze' ctx expr1
+      expr2Type <- analyze' ctx expr2
+      if isString expr1Type || isString expr2Type
+        then return (Type (NamedType ["java", "lang", "String"]) False)
+        else if isNumeric expr1Type && isNumeric expr2Type
+          then return (Type Int False) -- TODO: promotions
+          else Left ("Bad additive types (" ++
+            show expr1Type ++
+            show op ++
+            show expr2Type ++ ")")
+
+    -- JLS 15.18.2: Additive Operators (-) for Numeric Types
+    | op `elem` [Subtract] = do
+      expr1Type <- analyze' ctx expr1
+      expr2Type <- analyze' ctx expr2
+      if isNumeric expr1Type && isNumeric expr2Type
+        then return (Type Int False)
+        else Left ("Bad additive types (" ++
+          show expr1Type ++
+          show op ++
+          show expr2Type ++ ")")
+
+    -- JLS 15.20: Relational Operators (<, >, <=, >=)
+    | op `elem` [Less, Greater, LessEqual, GreaterEqual] = do
+      expr1Type <- analyze' ctx expr1
+      expr2Type <- analyze' ctx expr2
+      if (isNumeric expr1Type && isNumeric expr2Type)
+        then return (Type Boolean False) -- TODO: more checks are required
+        else Left ("Bad relational types (" ++
+          show expr1Type ++
+          show op ++
+          show expr2Type ++ ")")
+
+    -- JLS 15.21: Equality Operators (==, !=)
+    | op `elem` [Equality, Inequality] = do
+      expr1Type <- analyze' ctx expr1
+      expr2Type <- analyze' ctx expr2
+      if ((expr1Type :: Type) == (expr2Type :: Type))
+         then return (Type Boolean False)
+         else Left ("Bad equality types (" ++
+          show expr1Type ++
+          show op ++
+          show expr2Type ++ ")")
+
+    -- JLS 15.22.2: Boolean Logical Operators &, ^, and |
+    -- JLS 15.23: Conditional-And Operator (&&)
+    -- JLS 15.24: Conditional-Or Operator (||)
+    | op `elem` [LazyAnd, LazyOr, And, Or] = do
+      expr1Type <- analyze' ctx expr1
+      expr2Type <- analyze' ctx expr2
+      if (isBoolean expr1Type && isBoolean expr2Type)
+        then return (Type Boolean False)
+        else Left ("Bad conditional types (" ++
+          show expr1Type ++
+          show op ++
+          show expr2Type ++ ")")
+
+    -- JLS 15.26: Assignment Operators (=)
+    | op `elem` [Assign] = do
+      expr1Type <- analyze' ctx expr1
+      expr2Type <- analyze' ctx expr2
+      if expr1Type == expr2Type
+        then return expr1Type -- TODO: more checks are required
+        else Left ("Bad assignment operator (" ++
+          show expr1Type ++
+          show op ++
+          show expr2Type ++ ")")
+
+  -- JLS 15.15.4: Unary Minus Operator (-)
+  analyze ctx (AstExpression e@(UnaryOperation Negate expr)) = do
+    exprType <- analyze' ctx expr
+    if not $ isNumeric exprType
+      then Left ("Can only negate numeric types (-" ++ show exprType ++ ")")
+      else return (Type Int False) -- promotion
+
+  -- JLS 15.15.6: Logical Complement Operator (!)
+  analyze ctx (AstExpression e@(UnaryOperation Not expr)) = do
+    exprType <- analyze' ctx expr
+    if not $ isBoolean exprType
+      then Left ("Can only not boolean types (!" ++ show exprType ++ ")")
+      else return exprType
+
   -- JLS 15.8.1: Lexical Literals
   analyze ctx (AstExpression (LiteralExpression t))
     = Right (literalType t)
@@ -105,11 +204,18 @@ instance Analysis TypeAnalysis Type where
   analyze TypeAnalysis{ctxThis=Just name} (AstExpression This)
     = Right (Type (NamedType name) False)
 
+  -- TODO: This is a hack. Once disambiguation works properly, remove this.
+  analyze ctx (AstExpression (ExpressionName name)) =
+    if (isJust maybeLocalType)
+    then (return $ fromJust maybeLocalType)
+    else analyze' ctx (AmbiguousFieldAccess This (last name))
+    where maybeLocalType = Map.lookup (last name) (ctxLocalEnv ctx)
+
   -- JLS 15.9: Class Instance Creation Expressions
   analyze ctx (AstExpression e@(NewExpression name arguments))
     = if foundConstructor
       then Right (Type (NamedType name) False) -- TODO: qualify
-      else Left ("Could not find a matching constructor" ++ show e)
+      else Left ("Could not find a matching constructor " ++ show e)
     where foundConstructor = and $ map (isRight . analyze'') arguments
           analyze'' x = analyze' ctx x :: Either String Type
   -- TODO: the previous just checks if the arguments are not error types.
@@ -120,9 +226,32 @@ instance Analysis TypeAnalysis Type where
     sizeType <- analyze' ctx sizeExpr
     if isNumeric sizeType
       then return (toArray t)
-      else Left ("Array size must be numeric type " ++ show e)
+      else Left ("Array size must be numeric (" ++ show sizeType ++ ")")
 
-  -- JLS 15.11: Field Access Expressions (AmbiguousFieldAccess)
+  -- JLS 15.16: Cast Expressions
+  analyze ctx (AstExpression e@(CastExpression t expr)) = do
+    exprType <- analyze' ctx expr :: Either String Type
+    return $ t -- TODO: there are more rules
+
+  -- JLS 15.20.2: Type Comparison Operator instanceof
+  analyze ctx (AstExpression e@(InstanceOfExpression expr t)) = do
+    exprType <- analyze' ctx expr
+    if (isReference exprType || exprType == Null) && (isReference t)
+      then return (Type Boolean False)
+      else Left ("Bad instanceof operator (" ++ show exprType ++ " instanceof " ++ show t ++ ")")
+
+  -- JLS 15.13: Array Access Expressions
+  analyze ctx (AstExpression e@(ArrayExpression arrayExpr idxExpr)) = do
+    arrayType <- analyze' ctx arrayExpr
+    idxExpr <- analyze' ctx idxExpr
+    if not $ isArray arrayType
+      then Left ("Can only perform array access on an array (" ++ show arrayType ++ ")")
+      else do
+        if not $ isNumeric idxExpr
+          then Left ("Can only perform array access with numbers (" ++ show idxExpr ++ ")")
+          else return (toScalar arrayType)
+
+  -- TODO: This is a hack. Once disambiguation works properly, remove this.
   analyze ctx (AstExpression e@(AmbiguousFieldAccess primary name)) = do
     -- TODO: this should not be necessary
     classType <- analyze' ctx primary
@@ -136,8 +265,23 @@ instance Analysis TypeAnalysis Type where
         else Left ("Can only access fields of reference types " ++ show e)
       -- TODO: the above assumes the primary is of this type
 
+  -- JLS 15.12: Method Invocation Expressions
+  analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
+    exprType <- analyze' ctx expr
+    when (not $ isReference exprType)
+      (Left $ "Method may only be invoked on reference types " ++ show e)
+    argTypes <- foldEither $ map (analyze' ctx) argExprs
+    let lookupSignature = createLookupSignature name argTypes
+    return (Type Int False) -- TODO: lookup
+
   -- JLS 15.11: Field Access Expressions (DynamicFieldAccess)
   analyze ctx (AstExpression (DynamicFieldAccess _ name)) =
+    Right $ Type Int False -- TODO
+
+  analyze ctx (AstExpression (ArrayLengthAccess e)) =
+    Right $ Type Int False -- TODO
+
+  analyze ctx (AstExpression (StaticMethodInvocation className name argExprs)) = do
     Right $ Type Int False -- TODO
 
   -- JLS 15.11: Field Access Expressions
@@ -151,127 +295,7 @@ instance Analysis TypeAnalysis Type where
       Just x  -> Right x
     where maybeLocalType = Map.lookup name (ctxLocalEnv ctx)
 
-  -- JLS 15.12: Method Invocation Expressions
-  analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
-    exprType <- analyze' ctx expr
-    when (not $ isReference exprType)
-      (Left $ "Method may only be invoked on reference types " ++ show e)
-    argTypes <- foldEither $ map (analyze' ctx) argExprs
-    let lookupSignature = createLookupSignature name argTypes
-    return (Type Int False) -- TODO: lookup
-
-  -- JLS 15.13: Array Access Expressions
-  analyze ctx (AstExpression e@(ArrayExpression arrayExpr sizeExpr)) = do
-    arrayType <- analyze' ctx arrayExpr
-    sizeExpr <- analyze' ctx sizeExpr
-    if not $ isArray arrayType
-      then Left ("Can only perform array access on an array where " ++ show arrayExpr ++ " has type " ++ show arrayType)
-      else do
-        if not $ isNumeric sizeExpr
-          then Left ("Can only perform array access with numbers " ++ show e)
-          else return (toScalar arrayType)
-
-  -- JLS 15.15.4: Unary Minus Operator (-)
-  analyze ctx (AstExpression e@(UnaryOperation Negate expr)) = do
-    exprType <- analyze' ctx expr
-    if not $ isNumeric exprType
-      then Left ("Can only negate numeric types " ++ show e)
-      else return (Type Int False) -- promotion
-
-  -- JLS 15.15.6: Logical Complement Operator (!)
-  analyze ctx (AstExpression e@(UnaryOperation Not expr)) = do
-    exprType <- analyze' ctx expr
-    if not $ isBoolean exprType
-      then Left ("Can only not boolean types" ++ show e)
-      else return exprType
-
-  -- JLS 15.16: Cast Expressions
-  analyze ctx (AstExpression e@(CastExpression t expr)) = do
-    exprType <- analyze' ctx expr :: Either String Type
-    return $ t -- TODO: there are more rules
-
-  -- Binary Operations
-  analyze ctx (AstExpression e@(BinaryOperation op expr1 expr2))
-
-    -- JLS 15.17: Multiplicative Operators (*, /, %)
-    | op `elem` [Multiply, Divide, Modulus] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if isNumeric expr1Type && isNumeric expr2Type
-        then return (Type Int False)
-        else Left ("Bad multiplicative types" ++ show e)
-
-    -- JLS 15.18.1: String Concatenation Operator (+)
-    -- JLS 15.18.2: Additive Operators (+) for Numeric Types
-    | op `elem` [Add] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if isString expr1Type || isString expr2Type
-        then return (Type (NamedType ["java", "lang", "String"]) False)
-        else if isNumeric expr1Type && isNumeric expr2Type
-          then return (Type Int False) -- TODO: promotions
-          else Left ("Bad additive types " ++ show e)
-
-    -- JLS 15.18.2: Additive Operators (-) for Numeric Types
-    | op `elem` [Subtract] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if isNumeric expr1Type && isNumeric expr2Type
-        then return (Type Int False)
-        else Left ("Bad additive types " ++ show e)
-
-    -- JLS 15.20: Relational Operators (<, >, <=, >=)
-    | op `elem` [Less, Greater, LessEqual, GreaterEqual] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if (isNumeric expr1Type && isNumeric expr2Type)
-        then return (Type Boolean False) -- TODO: more checks are required
-        else Left ("Bad relational types " ++ show e)
-
-    -- JLS 15.21: Equality Operators (==, !=)
-    | op `elem` [Equality, Inequality] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if ((expr1Type :: Type) == (expr2Type :: Type))
-         then return (Type Boolean False)
-         else Left ("Bad equality types " ++ show e)
-
-    -- JLS 15.22.2: Boolean Logical Operators &, ^, and |
-    -- JLS 15.23: Conditional-And Operator (&&)
-    -- JLS 15.24: Conditional-Or Operator (||)
-    | op `elem` [LazyAnd, LazyOr, And, Or] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if (isBoolean expr1Type && isBoolean expr2Type)
-        then return (Type Boolean False)
-        else Left ("Bad conditional types " ++ show e)
-
-    -- JLS 15.26: Assignment Operators (=)
-    | op `elem` [Assign] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if expr1Type == expr2Type
-        then return expr1Type -- TODO: more checks are required
-        else Left ("Bad assignment operator " ++ show e)
-
-  -- JLS 15.20.2: Type Comparison Operator instanceof
-  analyze ctx (AstExpression e@(InstanceOfExpression expr t)) = do
-    exprType <- analyze' ctx expr
-    if (isReference exprType || exprType == Null) && (isReference t)
-      then return (Type Boolean False)
-      else Left ("Bad instanceof operator " ++ show e)
-
-  -- TODO: disambiguation
-  analyze ctx (AstExpression (ExpressionName name)) =
-    if (isJust maybeLocalType)
-    then (return $ fromJust maybeLocalType)
-    else analyze' ctx (AmbiguousFieldAccess This (last name))
-    -- TODO: global env
-    where maybeLocalType = Map.lookup (last name) (ctxLocalEnv ctx) -- TODO: last is wrong
-
-  analyze _ (AstExpression (BinaryOperation _ _ _)) = error "TODO"
-
-  analyze _ t = error $ " Invalid analysis type: " ++ show t
+  analyze _ e = Left ("Invalid analysis expression: " ++ show e)
 
 
 ---------- Helper Functions ----------
