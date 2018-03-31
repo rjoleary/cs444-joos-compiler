@@ -73,6 +73,9 @@ module Codegen.X86
   , or
   , and
   , mov
+  , movByte
+  , movWord
+  , movDword
   , cmp
 
   ) where
@@ -295,18 +298,24 @@ setz   = generic1 "setz"
 generic2 :: (Arg a, Arg b) => String -> a -> b -> Asm ()
 generic2 op x y = raw (op ++ " " ++ showArg x ++ ", " ++ showArg y ++ ";")
 
-add  :: (Arg a, Arg b) => a -> b -> Asm ()
-sub  :: (Arg a, Arg b) => a -> b -> Asm ()
-imul :: (Arg a, Arg b) => a -> b -> Asm ()
-or   :: (Arg a, Arg b) => a -> b -> Asm ()
-and  :: (Arg a, Arg b) => a -> b -> Asm ()
-mov  :: (Arg a, Arg b) => a -> b -> Asm ()
-cmp  :: (Arg a, Arg b) => a -> b -> Asm ()
+add      :: (Arg a, Arg b) => a -> b -> Asm ()
+sub      :: (Arg a, Arg b) => a -> b -> Asm ()
+imul     :: (Arg a, Arg b) => a -> b -> Asm ()
+or       :: (Arg a, Arg b) => a -> b -> Asm ()
+and      :: (Arg a, Arg b) => a -> b -> Asm ()
+mov      :: (Arg a, Arg b) => a -> b -> Asm ()
+movByte  :: (Arg a, Arg b) => a -> b -> Asm ()
+movWord  :: (Arg a, Arg b) => a -> b -> Asm ()
+movDword :: (Arg a, Arg b) => a -> b -> Asm ()
+cmp      :: (Arg a, Arg b) => a -> b -> Asm ()
 
-add  = generic2 "add"
-sub  = generic2 "sub"
-imul = generic2 "imul"
-or   = generic2 "or"
-and  = generic2 "and"
-mov  = generic2 "mov"
-cmp  = generic2 "cmp"
+add      = generic2 "add"
+sub      = generic2 "sub"
+imul     = generic2 "imul"
+or       = generic2 "or"
+and      = generic2 "and"
+mov      = generic2 "mov"
+movByte  = generic2 "mov byte"
+movWord  = generic2 "mov word"
+movDword = generic2 "mov dword"
+cmp      = generic2 "cmp"
