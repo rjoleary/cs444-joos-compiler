@@ -258,19 +258,17 @@ instance Analysis TypeAnalysis Type where
 
   -- TODO: This is a hack. Once disambiguation works properly, remove this.
   analyze ctx (AstExpression e@(AmbiguousFieldAccess primary name)) = do
-    -- TODO: this should not be necessary
     classType <- analyze' ctx primary
     if isArray classType && name == "length"
-      then return (Type Int False) -- TODO: add new AST node
+      then return (Type Int False)
       else if isName classType
         then let
           classDecl = fromJust $ resolveTypeInProgram (ctxProgram ctx) (getTypeName classType)
           fields = [(variableName x, variableType x) | x <- classFields $ classDecl]
           in fromMaybe (Left "Cannot find field") $ fmap Right $ lookup name fields
         else Left ("Can only access fields of reference types " ++ show e)
-      -- TODO: the above assumes the primary is of this type
 
-  -- JLS 15.12: Method Invocation Expressions
+  -- JLS 15.12: Method Invocation Expressions (dynamic)
   analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
     exprType <- analyze' ctx expr
     when (not $ isReference exprType)
@@ -279,21 +277,36 @@ instance Analysis TypeAnalysis Type where
     let lookupSignature = createLookupSignature name argTypes
     return (Type Int False) -- TODO: lookup
 
-  -- JLS 15.11: Field Access Expressions (DynamicFieldAccess)
-  analyze ctx (AstExpression (DynamicFieldAccess _ name)) =
-    Right $ Type Int False -- TODO
+  -- JLS 15.11: Field Access Expressions (dynamic)
+  analyze ctx (AstExpression (DynamicFieldAccess e name)) = do
+    classType <- analyze' ctx e
+    when (not $ isName classType)
+      (Left $ "Cannot access field of non-class type " ++ showName name)
+    cu <- case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
+      Just x  -> Right x
+      Nothing -> Left $ ("Could not resolve type " ++ show classType ++
+        "; This should have been checked by disambiguation.")
+    field <- case findDynamicFieldInUnit cu (last name) of -- TODO: tail?
+      Just x  -> Right x
+      Nothing -> Left $ ("Could not resolve field " ++ showName name ++
+        " in " ++ show classType ++
+        "; This should have been checked by disambiguation.")
+    if isFieldStatic field
+    then Left "Cannot dynamically access static field"
+    else Right (variableType field)
 
+  -- JLS 15.11: Field Access Expressions (static)
   analyze ctx (AstExpression (ArrayLengthAccess e)) =
-    Right $ Type Int False -- TODO
+    Right $ Type Int False
 
+  -- JLS 15.12: Method Invocation Expressions (static)
   analyze ctx (AstExpression (StaticMethodInvocation className name argExprs)) = do
     Right $ Type Int False -- TODO
 
-  -- JLS 15.11: Field Access Expressions
+  -- JLS 15.11: Field Access Expressions (static)
   analyze ctx (AstExpression (StaticFieldAccess name)) =
     Right $ Type Int False -- TODO
 
-  -- JLS 15.11:
   analyze ctx (AstExpression (LocalAccess name)) =
     case maybeLocalType of
       Nothing -> Left ("Could not find local type '" ++ name ++ "'")
