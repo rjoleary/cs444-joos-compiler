@@ -12,7 +12,7 @@ case "$ret" in
 esac
 
 # Assemble
-for filename in $(echo output/*.s); do
+for filename in $(echo output/*.s) test/stdlib/5.0/runtime.s; do
     test/nasm -O1 -f elf -g -F dwarf $filename
 done
 
