@@ -109,11 +109,13 @@ generateMethod' ctx x = indent $ do
   generateMethod ctx x
 
 generateMethod :: CodeGenCtx -> Method -> Asm ()
-generateMethod ctx m =
-  if isMethodNative m
+generateMethod ctx m
+  -- Abstract methods
+  | isMethodAbstract m = do
+    return ()
 
   -- Native methods
-  then do
+  | isMethodNative m = do
     global m
     label m
 
@@ -125,8 +127,8 @@ generateMethod ctx m =
     extern nativeLabel
     jmp (L nativeLabel)
 
-  -- Non-native methods
-  else do
+  -- Regular static and non-static methods
+  | otherwise = do
     global m
     label m
     push Ebp
