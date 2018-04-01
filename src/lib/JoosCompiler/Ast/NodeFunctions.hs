@@ -198,7 +198,7 @@ applyNextMapStatement f vars s
   | otherwise = error "Tried to replace non-terminal statement with terminal statement"
   where
     newStatement = f vars s
-    newNext = mapStatementVars f vars $ nextStatement newStatement
+    newNext = mapStatementVars f vars $ nextStatement s
 
 -- Goes through statements and if it finds an expressions, recursively
 -- applies f to it
