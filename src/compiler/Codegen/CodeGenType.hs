@@ -8,6 +8,7 @@ module Codegen.CodeGenType
 import Data.Char
 import Data.Int
 import Data.Maybe
+import Debug.Trace(trace)
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.NodeTypes
@@ -346,7 +347,7 @@ generateExpression ctx ExpressionName{} = do
   return Void
 
 generateExpression ctx (NewExpression n e) = do
---  mov Eax (I $fromIntegral v)
+  mov Eax (I $fromIntegral v)
   mov Ebx Eax -- ebx contains the number of fields
   add Eax (I 1)
   extern "__malloc"
@@ -364,11 +365,9 @@ generateExpression ctx (NewExpression n e) = do
     addr = "Vtable$" ++ (mangle td)
     td = fromMaybe (error "Could not resolve type") maybeTd
     maybeTd = resolveTypeInProgram wp n
-  --  v = length $ directAndIndirectNonstaticFields wp n 
+    v = length $ trace (show fields) fields
+    fields = directAndIndirectDynamicFields wp n 
     wp = ctxProgram ctx
-  -- comment "TODO NewExpression"
-  -- mov Eax (I 123)
-  -- return Void -- TODO
 
 generateExpression ctx (NewArrayExpression t e) = do
   t <- generateExpression' ctx e
