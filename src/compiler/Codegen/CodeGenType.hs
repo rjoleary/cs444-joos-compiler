@@ -375,20 +375,21 @@ generateExpression ctx (NewExpression n e) = do
   mov Eax (I $fromIntegral v)
   mov Ebx Eax -- ebx contains the number of fields
   add Eax (I 1)
+  push Ebx
   extern "__malloc"
   call (L "__malloc")
   movDword (Addr Eax) (L addr)
   push Eax
-  push Ebx
   add Eax (I 4)
   extern "memclear"
   call (L "memclear")
-  pop Ebx
   pop Eax
-
- -- push Eax
- -- t <- mapM (initializeObjectField ctx wp n) fields
- -- pop Eax
+  pop Ebx
+  push Eax
+  add Eax (I 4)
+  push Eax
+  t <- mapM_ (initializeObjectField ctx wp n) fields
+  pop Eax
   return Void
   where
     addr = "Vtable$" ++ (mangle td)
