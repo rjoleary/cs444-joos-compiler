@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Woverlapping-patterns #-}
+
 module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
   (disambiguate) where
 
@@ -97,6 +98,15 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
     resolvedClass =
       resolvedClassMaybe |>
       fromMaybe (error $ "resolvedClass was nothing: " ++ showName name)
+
+disambiguateExpression program unit vars old@(DynamicMethodInvocation (ClassAccess cName) mName args) =
+  StaticMethodInvocation cName mName args
+
+disambiguateExpression program unit vars old@(DynamicMethodInvocation (ExpressionName cName) mName args) =
+  error "Ambiguous (ExpressionName) in method invocation"
+
+disambiguateExpression program unit vars old@(DynamicMethodInvocation AmbiguousFieldAccess{} mName args) =
+  error "AmbiguousFieldAccess in method invocation"
 
 disambiguateExpression _ _ _ e = e
 

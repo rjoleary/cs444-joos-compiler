@@ -109,6 +109,7 @@ instance Show Expression where
   show (CastExpression t e)                  = "CastExpression((" ++ typeSignature t ++ ")" ++ show e ++ ")"
   show (InstanceOfExpression e t)            = "(" ++ show e ++ " instanceof " ++ typeSignature t ++ ")"
   show (ArrayExpression e1 e2)               = "ArrayExpression(" ++ show e1 ++ "[" ++ show e2 ++ "])"
+  show (ClassAccess n)                       = "ClassAccess(" ++ showName n ++ ")"
 
 instance Show Type where
   show Void           = "void"
@@ -232,14 +233,14 @@ mapStatementVarsExpression f vars old@ReturnStatement{ returnExpression = Just e
   where
     next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
-mapStatementVarsExpression f vars old@LocalStatement{localVariable = v} =
+mapStatementVarsExpression f vars old@LocalStatement{ localVariable = v } =
   old{ nextStatement = next
      , localVariable = newLocalVar
      }
   where
     oldValue = variableValue v
     newLocalVar = trace
-      (intercalate "\n" [ (show vars) , (intercalate " = " [ variableName v , show $ mapExpression (f vars) oldValue])])
+      (intercalate "\n" [ (show vars) , (intercalate " = " [ variableName v , show $ mapExpression (f vars) oldValue]) ])
       v { variableValue = mapExpression (f vars) oldValue }
     next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
 
@@ -285,6 +286,7 @@ mapExpression f old@StaticFieldAccess{} = f old
 mapExpression f old@LocalAccess{}  = f old
 mapExpression f old@ExpressionName{}    = f old
 mapExpression f old@LiteralExpression{} = f old
+mapExpression f old@ClassAccess{}    = f old
 mapExpression f This = f This
 
 ---------- Other Functions ----------

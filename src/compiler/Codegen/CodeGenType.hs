@@ -504,6 +504,7 @@ generateExpression ctx (LocalAccess n) = do
   return $ mapLookupWith (ctxLocals ctx)
   where mapLookupWith m = fromMaybe (error $ "Could not find " ++ n) $ Map.lookup n m
 
+generateExpression ctx (ClassAccess _) = error "ClassAccess should not reach code generation"
 
 ---------- LValues ----------
 

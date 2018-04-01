@@ -179,6 +179,7 @@ canonicalizeExpression program unit _ old@ArrayLengthAccess{} = old
 canonicalizeExpression program unit _ old@StaticMethodInvocation{} = old
 canonicalizeExpression program unit _ old@StaticFieldAccess{} = old
 canonicalizeExpression program unit _ old@LocalAccess{} = old
+canonicalizeExpression program unit _ old@ClassAccess{} = old
 
 canonicalizeNameInExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Name -> Name
 canonicalizeNameInExpression program unit vars (n:ns)

@@ -119,24 +119,34 @@ data Scope = Scope
   } deriving (Eq)
 
 data Expression
-  = BinaryOperation BinaryOperator Expression Expression
+  = This
+
+  | BinaryOperation BinaryOperator Expression Expression
   | UnaryOperation UnaryOperator Expression
+
   | LiteralExpression Literal
-  | This
-  | ExpressionName Name
+
   | NewExpression Name [Expression]
   | NewArrayExpression Type Expression -- TODO: confusion on primitive types
+
   | CastExpression Type Expression
   | InstanceOfExpression Expression Type
+
   | ArrayExpression Expression Expression
-  | AmbiguousFieldAccess Expression String
+
   | DynamicMethodInvocation Expression String [Expression]
+  | StaticMethodInvocation Name String [Expression]
+
+  -- Ambiguous accesses
+  | ExpressionName Name
+  | AmbiguousFieldAccess Expression String
+
+  -- Non-ambiguous accesses
   | DynamicFieldAccess Expression String
   | ArrayLengthAccess Expression
-  -- TODO(Ahmed): convert to this constructor if method is static
-  | StaticMethodInvocation Name String [Expression]
   | StaticFieldAccess Name
   | LocalAccess String
+  -- Only used as an intermediate for StaticMethodAccess
   | ClassAccess Name
   deriving (Eq)
 
