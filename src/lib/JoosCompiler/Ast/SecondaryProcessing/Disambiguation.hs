@@ -28,11 +28,12 @@ import qualified Data.Map.Strict as Map
 
 disambiguate :: AstNode -> AstNode
 disambiguate (Node p@(AstWholeProgram oldProgram) unitNodes) =
-  Node (AstWholeProgram newProgram) $ map (disambiguateUnitNode oldProgram) unitNodes
+  Node (AstWholeProgram newProgram) $ map (disambiguateUnitNode oldProgram) newUnitNodes
   where
     newProgram = oldProgram { programCus = newUnits }
     newUnits = map (disambiguateUnit oldProgram) oldUnits
     oldUnits = programCus oldProgram
+    newUnitNodes = map (disambiguateUnitNode oldProgram) unitNodes
 disambiguate _ = error "Invalid node type in disambiguate"
 
 disambiguateUnitNode :: WholeProgram -> AstNode -> AstNode

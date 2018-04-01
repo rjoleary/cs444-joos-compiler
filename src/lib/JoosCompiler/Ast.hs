@@ -10,7 +10,6 @@ module JoosCompiler.Ast
   , isMethod
   , isModifier
   , isModifiers
-  , isPackage
   , isType
   ) where
 
