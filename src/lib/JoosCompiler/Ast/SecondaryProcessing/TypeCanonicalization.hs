@@ -136,48 +136,49 @@ canonicalizeStatement program unit formalParameters statement =
       canonicalizedStatement { localVariable = canonicalizedVar }
       where
         canonicalizedVar = canonicalizeVar program unit oldVar
-        canonicalizedStatement = mapStatementVarsExpression f vars old
-    g vars old = mapStatementVarsExpression f vars old
-    f :: VariableMap -> Expression -> Expression
-    f vars (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
-      CastExpression newType e
-      where
-        newType = oldType{ innerType = NamedType $ canonicalize program unit name}
-    f vars old@(CastExpression oldType e) = old
+        canonicalizedStatement = mapStatementVarsExpression (canonicalizeExpression program unit) vars old
+    g vars old = mapStatementVarsExpression (canonicalizeExpression program unit) vars old
 
-    f vars (NewArrayExpression oldType@Type{ innerType = (NamedType name) } e) =
-      NewArrayExpression newType e
-      where
-        newType = oldType{ innerType = NamedType $ canonicalize program unit name}
-    f vars old@(NewArrayExpression oldType e) = old
+canonicalizeExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
+canonicalizeExpression program unit vars (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
+  CastExpression newType e
+  where
+    newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+canonicalizeExpression program unit vars old@(CastExpression oldType e) = old
 
-    f vars (InstanceOfExpression e oldType@Type{ innerType = (NamedType name) }) =
-      InstanceOfExpression e newType
-      where
-        newType = oldType{ innerType = NamedType $ canonicalize program unit name}
-    f vars old@(InstanceOfExpression e oldType) = old
+canonicalizeExpression program unit vars (NewArrayExpression oldType@Type{ innerType = (NamedType name) } e) =
+  NewArrayExpression newType e
+  where
+    newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+canonicalizeExpression program unit vars old@(NewArrayExpression oldType e) = old
 
-    f vars (ExpressionName name) =
-      ExpressionName $ canonicalizeNameInExpression program unit vars name
+canonicalizeExpression program unit vars (InstanceOfExpression e oldType@Type{ innerType = (NamedType name) }) =
+  InstanceOfExpression e newType
+  where
+    newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+canonicalizeExpression program unit vars old@(InstanceOfExpression e oldType) = old
 
-    f vars (NewExpression name e) =
-      NewExpression (canonicalizeNameInExpression program unit vars name) e
+canonicalizeExpression program unit vars (ExpressionName name) =
+  ExpressionName $ canonicalizeNameInExpression program unit vars name
 
-    -- Do not need canonicalization
-    -- Explicitly list expression types to expose bugs
-    f _ old@BinaryOperation{} = old
-    f _ old@UnaryOperation{} = old
-    f _ old@LiteralExpression{} = old
-    f _ old@This{} = old
-    f _ old@ArrayExpression{} = old
-    f _ old@AmbiguousFieldAccess{} = old
-    -- Those are only available after disambiguation
-    f _ old@DynamicMethodInvocation{} = old
-    f _ old@DynamicFieldAccess{} = old
-    f _ old@ArrayLengthAccess{} = old
-    f _ old@StaticMethodInvocation{} = old
-    f _ old@StaticFieldAccess{} = old
-    f _ old@LocalAccess{} = old
+canonicalizeExpression program unit vars (NewExpression name e) =
+  NewExpression (canonicalizeNameInExpression program unit vars name) e
+
+-- Do not need canonicalization
+-- Explicitly list expression types to expose bugs
+canonicalizeExpression program unit _ old@BinaryOperation{} = old
+canonicalizeExpression program unit _ old@UnaryOperation{} = old
+canonicalizeExpression program unit _ old@LiteralExpression{} = old
+canonicalizeExpression program unit _ old@This{} = old
+canonicalizeExpression program unit _ old@ArrayExpression{} = old
+canonicalizeExpression program unit _ old@AmbiguousFieldAccess{} = old
+-- Those are only available after disambiguation
+canonicalizeExpression program unit _ old@DynamicMethodInvocation{} = old
+canonicalizeExpression program unit _ old@DynamicFieldAccess{} = old
+canonicalizeExpression program unit _ old@ArrayLengthAccess{} = old
+canonicalizeExpression program unit _ old@StaticMethodInvocation{} = old
+canonicalizeExpression program unit _ old@StaticFieldAccess{} = old
+canonicalizeExpression program unit _ old@LocalAccess{} = old
 
 canonicalizeNameInExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Name -> Name
 canonicalizeNameInExpression program unit vars (n:ns)
@@ -213,6 +214,7 @@ canonicalizeVar
   where
     newType = oldType{ innerType = (NamedType newTypeName) }
     newTypeName = canonicalize program unit oldTypeName
+    canonicalizedExpression = canonicalizeExpression
 -- Not NamedType
 canonicalizeVar _ unit old@Variable{ variableName = name } =
   old { variableCanonicalName = canonicalizeVariableName unit name }
