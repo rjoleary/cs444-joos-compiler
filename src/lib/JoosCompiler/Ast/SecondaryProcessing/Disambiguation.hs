@@ -116,33 +116,6 @@ fieldExistsInUnit :: Bool -> CompilationUnit -> String -> Bool
 fieldExistsInUnit expectingStatic unit name =
   isJust $ findFieldInUnit expectingStatic unit name
 
-getDynamicFieldInUnit :: CompilationUnit -> String -> Field
-getDynamicFieldInUnit = getFieldInUnit False
-
-getStaticFieldInUnit :: CompilationUnit -> String -> Field
-getStaticFieldInUnit = getFieldInUnit True
-
-getFieldInUnit :: Bool -> CompilationUnit -> String -> Field
-getFieldInUnit expectingStatic unit n =
-  fromMaybe (error "getFieldInUnit got Nothing") (findFieldInUnit expectingStatic unit n)
-
-findDynamicFieldInUnit :: CompilationUnit -> String -> Maybe Field
-findDynamicFieldInUnit  = findFieldInUnit False
-
-findStaticFieldInUnit :: CompilationUnit -> String -> Maybe Field
-findStaticFieldInUnit  = findFieldInUnit True
-
-findFieldInUnit :: Bool -> CompilationUnit -> String -> Maybe Field
-findFieldInUnit expectingStatic unit n
-  | isNothing maybeUnitType = Nothing
-  | otherwise =
-    unitType |>
-    classFields |>
-    find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
-  where
-    maybeUnitType = typeDecl unit
-    unitType = fromMaybe (error "unitType was nothing") maybeUnitType
-
 -- newName is the part of the name left after resolving as class
 resolveAsClass :: WholeProgram -> CompilationUnit -> Name -> (Maybe TypeDeclaration, Name)
 resolveAsClass program unit name = (resolvedClass, newName)

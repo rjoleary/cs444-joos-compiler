@@ -128,3 +128,30 @@ getTypeDeclarationsFromProgram program = typeDecls
   where
     units = programCus program
     typeDecls = catMaybes $ map typeDecl units
+
+getDynamicFieldInUnit :: CompilationUnit -> String -> Field
+getDynamicFieldInUnit = getFieldInUnit False
+
+getStaticFieldInUnit :: CompilationUnit -> String -> Field
+getStaticFieldInUnit = getFieldInUnit True
+
+getFieldInUnit :: Bool -> CompilationUnit -> String -> Field
+getFieldInUnit expectingStatic unit n =
+  fromMaybe (error "getFieldInUnit got Nothing") (findFieldInUnit expectingStatic unit n)
+
+findDynamicFieldInUnit :: CompilationUnit -> String -> Maybe Field
+findDynamicFieldInUnit  = findFieldInUnit False
+
+findStaticFieldInUnit :: CompilationUnit -> String -> Maybe Field
+findStaticFieldInUnit  = findFieldInUnit True
+
+findFieldInUnit :: Bool -> CompilationUnit -> String -> Maybe Field
+findFieldInUnit expectingStatic unit n
+  | isNothing maybeUnitType = Nothing
+  | otherwise =
+    unitType |>
+    classFields |>
+    find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
+  where
+    maybeUnitType = typeDecl unit
+    unitType = fromMaybe (error "unitType was nothing") maybeUnitType
