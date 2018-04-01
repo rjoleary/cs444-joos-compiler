@@ -42,51 +42,9 @@ codeGenMain wp = Right $ do
   exitSyscall
   space
 
-  memclearFunction
-  space
-  nullcheckFunction
-  space
-  
 -- Exit with the value stored in eax.
 exitSyscall :: Asm ()
 exitSyscall = do
   mov Ebx Eax
   mov Eax (I 1)
   int (I 0x80)
-
--- Create the memclear function.
-memclearFunction :: Asm ()
-memclearFunction = do
-  comment "eax is the first address."
-  comment "ebx is the size in dwords."
-  comment "Both registers are modified."
-  global "memclear"
-  label "memclear"
-  indent $ do
-    add Eax (I 8)
-    shl Ebx (I 2)
-    add Ebx Eax
-    label "memclear_loop"
-    cmp Eax Ebx
-    je (L "memclear_return")
-    movDword (Addr Eax) (I 0)
-    add Eax (I 4)
-    jmp (L "memclear_loop")
-    label "memclear_return"
-    ret
-
-
--- Create the nullcheck function
-nullcheckFunction :: Asm ()
-nullcheckFunction = do
-  comment "check whether value in eax is Null/0"
-  global "nullcheck"
-  label "nullcheck"
-  indent $ do 
-     cmp Eax (I 0)
-     extern "__exception"
-     je (L "__exception")
-     ret
-
-    
-
