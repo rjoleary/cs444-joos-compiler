@@ -46,12 +46,12 @@ canonicalizeUnit program (Node (AstCompilationUnit oldUnit) _children) =
     f (Node (AstField field) _children) =
       Node (AstField newField) (map f _children)
       where
-        newField = canonicalizeVar program oldUnit field
+        newField = canonicalizeVar program oldUnit Map.empty field
 
     f (Node (AstLocalVariable local) _children) =
       Node (AstLocalVariable newLocal) (map f _children)
       where
-        newLocal = canonicalizeVar program oldUnit local
+        newLocal = canonicalizeVar program oldUnit Map.empty local
 
     f (Node n _children) = Node n $ map f _children
 canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
@@ -135,7 +135,7 @@ canonicalizeStatement program unit formalParameters statement =
     g vars old@LocalStatement{ localVariable = oldVar } =
       canonicalizedStatement { localVariable = canonicalizedVar }
       where
-        canonicalizedVar = canonicalizeVar program unit oldVar
+        canonicalizedVar = canonicalizeVar program unit vars oldVar
         canonicalizedStatement = mapStatementVarsExpression (canonicalizeExpression program unit) vars old
     g vars old = mapStatementVarsExpression (canonicalizeExpression program unit) vars old
 
@@ -201,23 +201,36 @@ canonicalizeMethod program unit old@Method{methodName = n} =
     formalParameters = Map.fromList $ map (\v -> (variableName v, v)) $ methodParameters old
     newStatement = canonicalizeStatement program unit formalParameters statement
 
-canonicalizeVar :: WholeProgram -> CompilationUnit -> Variable -> Variable
+canonicalizeVar :: WholeProgram -> CompilationUnit -> VariableMap -> Variable -> Variable
 canonicalizeVar
   program
   unit
+  vars
   old@Variable{ variableType = oldType@Type{ innerType = NamedType{ unNamedType = oldTypeName }}
               , variableName = n
+              , variableValue = oldValue
            } =
   old { variableType = newType
       , variableCanonicalName = canonicalizeVariableName unit n
+      , variableValue = canonicalizedExpression
       }
   where
     newType = oldType{ innerType = (NamedType newTypeName) }
     newTypeName = canonicalize program unit oldTypeName
-    canonicalizedExpression = canonicalizeExpression
+    canonicalizedExpression = canonicalizeExpression program unit vars oldValue
 -- Not NamedType
-canonicalizeVar _ unit old@Variable{ variableName = name } =
-  old { variableCanonicalName = canonicalizeVariableName unit name }
+canonicalizeVar
+  program
+  unit
+  vars
+  old@Variable{ variableName = name
+              , variableValue = oldValue
+              } =
+  old { variableCanonicalName = canonicalizeVariableName unit name
+      , variableValue = canonicalizedExpression
+      }
+  where
+    canonicalizedExpression = canonicalizeExpression program unit vars oldValue
 
 canonicalizeTypeDecl :: WholeProgram -> CompilationUnit -> TypeDeclaration -> TypeDeclaration
 canonicalizeTypeDecl
@@ -245,7 +258,7 @@ canonicalizeTypeDecl
   where
     newSuper = canonicalize program unit oldSuper
     newInterfaces = map (canonicalize program unit) oldInterfaces
-    newFields = map (canonicalizeVar program unit) fields
+    newFields = map (canonicalizeVar program unit Map.empty) fields
     newMethods = map (canonicalizeMethod program unit) _methods
     newConstructors = map (canonicalizeMethod program unit) _constructors
     _typeCanonicalName = pName ++ [name]
