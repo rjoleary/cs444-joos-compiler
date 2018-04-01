@@ -386,9 +386,9 @@ generateExpression ctx (NewExpression n e) = do
   pop Ebx
   pop Eax
 
-  push Eax
-  t <- mapM (initializeObjectField ctx wp n) fields
-  pop Eax
+ -- push Eax
+ -- t <- mapM (initializeObjectField ctx wp n) fields
+ -- pop Eax
   return Void
   where
     addr = "Vtable$" ++ (mangle td)
