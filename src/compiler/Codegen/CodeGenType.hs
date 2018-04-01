@@ -345,10 +345,30 @@ generateExpression ctx ExpressionName{} = do
   --error "ExpressionName should never be present into CodeGen"
   return Void
 
-generateExpression ctx (NewExpression e n) = do
-  comment "TODO NewExpression"
-  mov Eax (I 123)
-  return Void -- TODO
+generateExpression ctx (NewExpression n e) = do
+  mov Eax (I $fromIntegral v)
+  mov Ebx Eax -- ebx contains the number of fields
+  add Eax (I 1)
+  extern "__malloc"
+  call (L "__malloc")
+  movDword (Addr Eax) (L addr)
+  push Eax
+  push Ebx
+  add Eax (I 4)
+  extern "memclear"
+  call (L "memclear")
+  pop Ebx
+  pop Eax 
+  return Void
+  where
+    addr = "Vtable$" ++ (mangle td)
+    td = fromMaybe (error "Could not resolve type") maybeTd
+    maybeTd = resolveTypeInProgram wp n
+    v = length $ directAndIndirectNonstaticFields wp n 
+    wp = ctxProgram ctx
+  -- comment "TODO NewExpression"
+  -- mov Eax (I 123)
+  -- return Void -- TODO
 
 generateExpression ctx (NewArrayExpression t e) = do
   t <- generateExpression' ctx e

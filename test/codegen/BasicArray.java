@@ -7,6 +7,6 @@ public class BasicArray {
         a[0] = 1;
         a[1] = 2;
         a[2] = 3;
-        return sum + a[0] * 100 + a[1] * 20 + a[2];
+        return sum + a[0] * 100 + a[1] * 10 + a[2];
     }
 }
