@@ -7,6 +7,7 @@ module Codegen.CodeGenType
 
 import Data.Char
 import Data.Int
+import Data.List
 import Data.Maybe
 import Debug.Trace(trace)
 import JoosCompiler.Ast
@@ -108,23 +109,40 @@ generateMethod' ctx x = indent $ do
   generateMethod ctx x
 
 generateMethod :: CodeGenCtx -> Method -> Asm ()
-generateMethod ctx m = do
-  global m
-  label m
-  push Ebp
-  mov Ebp Esp
+generateMethod ctx m =
+  if isMethodNative m
 
-  -- The caller already pushed these arguments onto the stack.
-  let newCtx = ctx {
-    ctxLocals      = Map.fromList [(variableName param, variableType param) | param <- methodParameters m],
-    -- The first argument is 16 to skip 4 registers: ebx, ebi, esn, ebp
-    ctxFrame       = Map.fromList (zip (map variableName $ methodParameters m) [16,20..]),
-    ctxFrameOffset = 0 }
+  -- Native methods
+  then do
+    global m
+    label m
 
-  generateStatement newCtx (methodStatement m)
-  mov Esp Ebp
-  pop Ebp
-  ret
+    -- Move the first (and only) argument into eax.
+    mov Eax (AddrOffset Esp 12)
+
+    -- Jump to the native function as if it was the original callee.
+    let nativeLabel = "NATIVE" ++ intercalate "." (methodCanonicalName m)
+    extern nativeLabel
+    jmp (L nativeLabel)
+
+  -- Non-native methods
+  else do
+    global m
+    label m
+    push Ebp
+    mov Ebp Esp
+
+    -- The caller already pushed these arguments onto the stack.
+    let newCtx = ctx {
+      ctxLocals      = Map.fromList [(variableName param, variableType param) | param <- methodParameters m],
+      -- The first argument is 16 to skip 4 registers: ebx, ebi, esn, ebp
+      ctxFrame       = Map.fromList (zip (map variableName $ methodParameters m) [16,20..]),
+      ctxFrameOffset = 0 }
+
+    generateStatement newCtx (methodStatement m)
+    mov Esp Ebp
+    pop Ebp
+    ret
 
 ---------- Statements ----------
 
