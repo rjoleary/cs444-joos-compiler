@@ -377,14 +377,14 @@ generateExpression ctx (NewExpression n e) = do
   extern "memclear"
   call (L "memclear")
   pop Ebx
-  pop Eax 
+  pop Eax
   return Void
   where
     addr = "Vtable$" ++ (mangle td)
     td = fromMaybe (error "Could not resolve type") maybeTd
     maybeTd = resolveTypeInProgram wp n
     v = length $ trace (show fields) fields
-    fields = directAndIndirectDynamicFields wp n 
+    fields = directAndIndirectDynamicFields wp n
     wp = ctxProgram ctx
 
 generateExpression ctx (NewArrayExpression t e) = do
