@@ -129,8 +129,15 @@ makeOnDemandImportDeclaration name =
 
 canonicalizeStatement :: WholeProgram -> CompilationUnit -> VariableMap -> Statement -> Statement
 canonicalizeStatement program unit formalParameters statement =
-  mapStatementVars (mapStatementVarsExpression f) formalParameters statement
+  mapStatementVars g formalParameters statement
   where
+    g :: VariableMap -> Statement -> Statement
+    g vars old@LocalStatement{ localVariable = oldVar } =
+      canonicalizedStatement { localVariable = canonicalizedVar }
+      where
+        canonicalizedVar = canonicalizeVar program unit oldVar
+        canonicalizedStatement = mapStatementVarsExpression f vars old
+    g vars old = mapStatementVarsExpression f vars old
     f :: VariableMap -> Expression -> Expression
     f vars (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
       CastExpression newType e
