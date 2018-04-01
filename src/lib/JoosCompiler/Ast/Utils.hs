@@ -52,6 +52,11 @@ resolvePackageInProgram :: WholeProgram -> Name -> Maybe Package
 resolvePackageInProgram (WholeProgram packages _) _name =
   find ((== _name) . packageName) packages
 
+getTypeInProgram :: WholeProgram -> Name -> TypeDeclaration
+getTypeInProgram program name =
+  resolveTypeInProgram program name |>
+  fromMaybe (error $ "Could not resolve type " ++ showName name)
+
 resolveTypeInProgram :: WholeProgram -> Name -> Maybe TypeDeclaration
 resolveTypeInProgram _ [] = Nothing
 resolveTypeInProgram program@(WholeProgram _ cus) name
@@ -155,3 +160,17 @@ findFieldInUnit expectingStatic unit n
   where
     maybeUnitType = typeDecl unit
     unitType = fromMaybe (error "unitType was nothing") maybeUnitType
+
+directAndIndirectDynamicFields :: WholeProgram -> Name -> [Variable]
+directAndIndirectDynamicFields = directAndIndirectFields True
+
+directAndIndirectFields :: Bool -> WholeProgram -> Name -> [Variable]
+directAndIndirectFields expectingStatic program name = fields
+  where
+    resolvedType = getTypeInProgram program name
+    canonicalName = typeCanonicalName resolvedType
+    _super = super resolvedType
+    superFields
+      | canonicalName == ["java", "lang", "Object"] = []
+      | otherwise = directAndIndirectFields expectingStatic program _super
+    fields = superFields ++ classFields resolvedType
