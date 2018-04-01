@@ -346,7 +346,7 @@ generateExpression ctx ExpressionName{} = do
   return Void
 
 generateExpression ctx (NewExpression n e) = do
-  mov Eax (I $fromIntegral v)
+--  mov Eax (I $fromIntegral v)
   mov Ebx Eax -- ebx contains the number of fields
   add Eax (I 1)
   extern "__malloc"
@@ -364,7 +364,7 @@ generateExpression ctx (NewExpression n e) = do
     addr = "Vtable$" ++ (mangle td)
     td = fromMaybe (error "Could not resolve type") maybeTd
     maybeTd = resolveTypeInProgram wp n
-    v = length $ directAndIndirectNonstaticFields wp n 
+  --  v = length $ directAndIndirectNonstaticFields wp n 
     wp = ctxProgram ctx
   -- comment "TODO NewExpression"
   -- mov Eax (I 123)
