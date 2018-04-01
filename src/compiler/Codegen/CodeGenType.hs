@@ -427,7 +427,7 @@ generateExpression ctx (ArrayExpression expr exprIdx) = do
   return t
 
 generateExpression ctx (AmbiguousFieldAccess _ _) = do
-  error "AmbiguousFieldAccess should never be present into CodeGen"
+  comment "TODO AmbiguousFieldAccess -- make this an error"
   return Void
 
 generateExpression ctx (DynamicMethodInvocation _ _ _) = do
