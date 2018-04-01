@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wincomplete-patterns #-}
+{-# OPTIONS_GHC -Woverlapping-patterns #-}
+
 module JoosCompiler.Ast.Transformers.Types where
 
 import           Data.Tree
@@ -20,7 +23,6 @@ data AstWrapper
   | AstMethod { astMethod :: Method }
   | AstModifier { astModifier :: Modifier }
   | AstModifiers { astModifiers :: [Modifier] }
-  | AstPackage { astPackage :: Package }
   | AstPackageDeclaration { astPackageDeclaration :: PackageDeclaration }
   | AstStatement { astStatement :: Statement }
   | AstTaggedToken { astTaggedToken :: TaggedToken }
@@ -51,6 +53,10 @@ children (AstExpression (NewArrayExpression t e))   = [AstExpression e]
 children (AstExpression (CastExpression t e))       = [AstExpression e, AstType t]
 children (AstExpression (InstanceOfExpression e t)) = [AstExpression e, AstType t]
 children (AstExpression (ArrayExpression e1 e2))    = [AstExpression e1, AstExpression e2]
+children (AstExpression (ArrayLengthAccess e)) = [AstExpression e]
+children (AstExpression (StaticMethodInvocation _ _ args)) = map AstExpression args
+children (AstExpression (StaticFieldAccess n)) = []
+children (AstExpression (LocalAccess _)) = []
 children (AstField x)           = [ AstType $ variableType x
                                   , AstExpression $ variableValue x ]
 children (AstImport x)          = []
@@ -179,10 +185,6 @@ isModifiers _                = False
 
 getModifiers :: [AstNode] -> AstWrapper
 getModifiers ts = rootLabel $ head $ findChildren1 isModifiers ts
-
-isPackage :: AstWrapper -> Bool
-isPackage (AstPackage _) = True
-isPackage _              = False
 
 isPackageDeclaration :: AstWrapper -> Bool
 isPackageDeclaration (AstPackageDeclaration _) = True

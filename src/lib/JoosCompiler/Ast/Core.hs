@@ -41,6 +41,8 @@ cstsToAst ts = program
       |> asAst
       |> asTree
       |> disambiguate
+      |> asAst
+      |> asTree
       |> insertBlocksAroundStatements
       |> injectScopesIntoChildrenBlocks
 

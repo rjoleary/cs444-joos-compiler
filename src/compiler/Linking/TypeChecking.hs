@@ -208,11 +208,8 @@ instance Analysis TypeAnalysis Type where
     = Right (Type (NamedType name) False)
 
   -- TODO: This is a hack. Once disambiguation works properly, remove this.
-  analyze ctx (AstExpression (ExpressionName name)) =
-    if (isJust maybeLocalType)
-    then (return $ fromJust maybeLocalType)
-    else analyze' ctx (AmbiguousFieldAccess This (last name))
-    where maybeLocalType = Map.lookup (last name) (ctxLocalEnv ctx)
+  analyze ctx (AstExpression (ExpressionName name))
+    = Left "TODO: Once disambiguation works properly, remove this"
 
   -- JLS 15.9: Class Instance Creation Expressions
   analyze ctx (AstExpression e@(NewExpression name argumentExprs)) = do
@@ -257,16 +254,8 @@ instance Analysis TypeAnalysis Type where
           else return (toScalar arrayType)
 
   -- TODO: This is a hack. Once disambiguation works properly, remove this.
-  analyze ctx (AstExpression e@(AmbiguousFieldAccess primary name)) = do
-    classType <- analyze' ctx primary
-    if isArray classType && name == "length"
-      then return (Type Int False)
-      else if isName classType
-        then let
-          classDecl = fromJust $ resolveTypeInProgram (ctxProgram ctx) (getTypeName classType)
-          fields = [(variableName x, variableType x) | x <- classFields $ classDecl]
-          in fromMaybe (Left "Cannot find field") $ fmap Right $ lookup name fields
-        else Left ("Can only access fields of reference types " ++ show e)
+  analyze ctx (AstExpression e@(AmbiguousFieldAccess primary name)) =
+    Left "TODO: Once disambiguation works properly, remove this."
 
   -- JLS 15.12: Method Invocation Expressions (dynamic)
   analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
