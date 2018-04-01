@@ -17,20 +17,18 @@ import JoosCompiler.TreeUtils
 -- TODO: fix name conflicts in records
 implements = JoosCompiler.Ast.NodeTypes.interfaces
 
-type TypeHierarchy = Tree TypeDeclaration
-
 -- Returns a error message if hierarchy checking fails.
 checkHierarchy :: AstNode -> Either String ()
 checkHierarchy ast@(Node (AstWholeProgram program) _) = do
     -- This check must be first; otherwise, the compiler might go into an infinite loop.
     ruleFor types "The hierarchy must be acyclic"
-      (null . drop (length types) . levels . typeHierarchy)
+      (null . drop (length types) . levels . typeHierarchy program)
 
     ruleFor classes "A class must not extend an interface"
-      (not . isInterface . smartResolve . super)
+      (not . isInterface . getTypeInProgram program . super)
 
     ruleFor classes "A class must not implement a class"
-      (and . map (isInterface . smartResolve) . implements)
+      (and . map (isInterface . getTypeInProgram program) . implements)
 
 
     ruleFor types "An interface must not be repeated in an implements or extends clause"
@@ -38,10 +36,10 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
           (allUnique $ trace (show $ map showName names) names))
 
     ruleFor classes "A class must not extend a final class"
-      (not . isClassFinal . smartResolve . super)
+      (not . isClassFinal . getTypeInProgram program . super)
 
     ruleFor interfaces "An interface must not extend a class"
-      (and . map (isInterface . smartResolve) . implements)
+      (and . map (isInterface . getTypeInProgram program) . implements)
 
     ruleFor types "A class or interface must not declare two methods with the same signature"
       (allUnique . map methodSignature . methods)
@@ -96,21 +94,7 @@ checkHierarchy ast@(Node (AstWholeProgram program) _) = do
     foldMethods x = nubBy ((==) `on` methodSignature) $ (methods x++) $ indirectMethods x
 
     indirectMethods :: TypeDeclaration -> [Method]
-    indirectMethods x = concatMap methods $ tail $ flatten $ typeHierarchy x
-
-    typeHierarchy :: TypeDeclaration -> TypeHierarchy
-    typeHierarchy x = typeHierarchy' x
-      where
-        typeHierarchy' TypeDeclaration{typeCanonicalName=["java", "lang", "Object"]} = createNode []
-        typeHierarchy' TypeDeclaration{isInterface=True}                             = createNode $ implements x
-        typeHierarchy' TypeDeclaration{}                                             = createNode $ super x:implements x
-        createNode xs = Node x $ map (typeHierarchy . smartResolve) xs
-
-    smartResolve :: Name -> TypeDeclaration
-    smartResolve []   = smartResolve ["java", "lang", "Object"]
-    smartResolve name = fromMaybe
-                       (error $ "Could not resolve type: " ++ showName name) $
-                       resolveTypeInProgram program name
+    indirectMethods x = concatMap methods $ tail $ flatten $ typeHierarchy program x
 
     classes = filter (not . isInterface) $ types
     concreteClasses = filter (not . (Abstract `elem`) . classModifiers) classes

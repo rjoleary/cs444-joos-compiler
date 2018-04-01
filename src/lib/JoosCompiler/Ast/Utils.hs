@@ -9,6 +9,8 @@ import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Treeify
 
+---------- Name Resolution Utils ----------
+
 extractName :: [TaggedParseTree] -> Name
 extractName nameNodes = map (tokenString . rootLabel) nameNodes
 
@@ -160,6 +162,23 @@ findFieldInUnit expectingStatic unit n
   where
     maybeUnitType = typeDecl unit
     unitType = fromMaybe (error "unitType was nothing") maybeUnitType
+
+
+---------- Hierarchy Utils ----------
+
+type TypeHierarchy = Tree TypeDeclaration
+
+typeHierarchy :: WholeProgram -> TypeDeclaration -> TypeHierarchy
+typeHierarchy wp x = typeHierarchy' x
+  where
+    typeHierarchy' TypeDeclaration{typeCanonicalName=["java", "lang", "Object"]} = createNode []
+    typeHierarchy' TypeDeclaration{isInterface=True} = createNode $ interfaces x
+    typeHierarchy' TypeDeclaration{}                 = createNode $ super x:interfaces x
+    createNode xs = Node x $ map (typeHierarchy' . getTypeInProgram wp) xs
+
+typeHierarchyUniqueNames :: WholeProgram -> Name -> [Name]
+typeHierarchyUniqueNames wp n =
+  nub . map typeCanonicalName . flatten . typeHierarchy wp . getTypeInProgram wp $ n
 
 directAndIndirectDynamicFields :: WholeProgram -> Name -> [Variable]
 directAndIndirectDynamicFields = directAndIndirectFields True
