@@ -5,6 +5,7 @@ module Codegen.CodeGenType
   ( codeGenType
   ) where
 
+import Data.List
 import Data.Char
 import Data.Int
 import Data.Maybe
@@ -359,7 +360,12 @@ generateExpression ctx (NewExpression n e) = do
   extern "memclear"
   call (L "memclear")
   pop Ebx
-  pop Eax 
+  pop Eax
+
+  push Eax
+  t <- mapM (initializeObjectField ctx wp n) fields
+  pop Eax
+  
   return Void
   where
     addr = "Vtable$" ++ (mangle td)
@@ -517,3 +523,23 @@ generateLValue _ _ = do
 -- comment "TODO"
   mov Eax (I 123)
   return Void
+
+initializeObjectField :: CodeGenCtx -> WholeProgram -> Name -> Variable -> Asm Type
+initializeObjectField ctx wp n var = do
+  ge <- generateExpression' ctx (variableValue var)
+  mov Ebx Eax
+  pop Eax
+  push Eax
+  add Eax (I offset)
+  mov (Addr Eax) Ebx
+  return (variableType var)
+  where
+    offset = getDynamicFieldOffset wp n var
+    
+getDynamicFieldOffset :: WholeProgram -> Name -> Variable -> Int32
+getDynamicFieldOffset wp n var = fromInteger $ toInteger offset
+  where
+    offset = index * 4
+    index = fromMaybe (error "Object doesn't have this field") maybeIndex
+    maybeIndex = elemIndex var vars
+    vars = directAndIndirectDynamicFields wp n
