@@ -7,11 +7,11 @@ import Data.List
 import Data.Maybe
 import Data.Tree
 import JoosCompiler.Ast
+import JoosCompiler.Ast.ConstantExpression
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Visitor.Analysis
 import JoosCompiler.Error
 import JoosCompiler.TreeUtils
-import StaticAnalysis.DefiniteAssignment
 
 data Status = CompletesNormally | CompletesAbnormally deriving (Eq, Show)
 

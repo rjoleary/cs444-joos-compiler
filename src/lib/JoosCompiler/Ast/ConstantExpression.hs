@@ -1,4 +1,4 @@
-module StaticAnalysis.DefiniteAssignment
+module JoosCompiler.Ast.ConstantExpression
   ( ConstValue(..)
   , evalExpr
   ) where
@@ -19,7 +19,7 @@ evalExpr _ = Unknown
 -- TODO: Some of these may be incorrect (especially for integer ranges) or missing (like Assign).
 binop :: BinaryOperator -> ConstValue -> ConstValue -> ConstValue
 binop Multiply     (ConstInt x) (ConstInt y)   = ConstInt (x * y)
-binop Divide       (ConstInt x) (ConstInt y)   = ConstInt (x `div` y)
+binop Divide       (ConstInt x) (ConstInt y)   = ConstInt (x `div` y) -- TODO: division by 0?
 binop Modulus      (ConstInt x) (ConstInt y)   = ConstInt (x `rem` y) -- TODO: same as java %?
 binop Add          (ConstInt x) (ConstInt y)   = ConstInt (x + y)
 binop Subtract     (ConstInt x) (ConstInt y)   = ConstInt (x - y)
