@@ -1,12 +1,26 @@
 module JoosCompiler.Ast.ConstantExpression
   ( ConstValue(..)
+  , evalInstanceOf
   , evalExpr
   ) where
 
 import Data.Int
 import JoosCompiler.Ast.NodeTypes
+import JoosCompiler.Ast.Utils
 
 data ConstValue = ConstInt Int32 | ConstBool Bool | Unknown deriving (Eq, Show)
+
+-- TODO: should this be included in evalExpr?
+evalInstanceOf :: WholeProgram -> Type -> Type -> ConstValue
+evalInstanceOf wp (Type (NamedType leftName) isArrLeft) (Type (NamedType rightName) isArrRight)
+  | isArrLeft /= isArrRight        = ConstBool False -- must both be arrays or both be non-arrays
+  | leftName `elem` rightHierarchy = ConstBool True  -- static cast
+  | rightName `elem` leftHierarchy = Unknown         -- dynamic cast
+  | otherwise                      = ConstBool False -- neither
+  where
+    leftHierarchy  = typeHierarchyNames wp leftName
+    rightHierarchy = typeHierarchyNames wp rightName
+evalInstanceOf _ _ _ = Unknown
 
 -- See JLS 16.1: Definite Assignment and Expressions
 evalExpr :: Expression -> ConstValue

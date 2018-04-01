@@ -176,9 +176,9 @@ typeHierarchy wp x = typeHierarchy' x
     typeHierarchy' TypeDeclaration{}                 = createNode $ super x:interfaces x
     createNode xs = Node x $ map (typeHierarchy' . getTypeInProgram wp) xs
 
-typeHierarchyUniqueNames :: WholeProgram -> Name -> [Name]
-typeHierarchyUniqueNames wp n =
-  nub . map typeCanonicalName . flatten . typeHierarchy wp . getTypeInProgram wp $ n
+typeHierarchyNames :: WholeProgram -> Name -> [Name]
+typeHierarchyNames wp n =
+  map typeCanonicalName . flatten . typeHierarchy wp . getTypeInProgram wp $ n
 
 directAndIndirectDynamicFields :: WholeProgram -> Name -> [Variable]
 directAndIndirectDynamicFields = directAndIndirectFields True

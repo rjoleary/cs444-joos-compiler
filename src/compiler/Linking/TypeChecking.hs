@@ -15,6 +15,7 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe
 import Data.Tree
 import JoosCompiler.Ast
+import JoosCompiler.Ast.ConstantExpression
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Transformers.Types
@@ -238,9 +239,11 @@ instance Analysis TypeAnalysis Type where
   -- JLS 15.20.2: Type Comparison Operator instanceof
   analyze ctx (AstExpression e@(InstanceOfExpression expr t)) = do
     exprType <- analyze' ctx expr
-    if (isReference exprType || exprType == Null) && (isReference t)
-      then return (Type Boolean False)
-      else Left ("Bad instanceof operator (" ++ show exprType ++ " instanceof " ++ show t ++ ")")
+    when ((not $ isReference exprType || exprType == Null) ||
+        (not $ isReference t) ||
+        evalInstanceOf (ctxProgram ctx) exprType t == ConstBool False)
+      (Left $ "Bad instanceof operator (" ++ show exprType ++ " instanceof " ++ show t ++ ")")
+    return $ Type Boolean False
 
   -- JLS 15.13: Array Access Expressions
   analyze ctx (AstExpression e@(ArrayExpression arrayExpr idxExpr)) = do
