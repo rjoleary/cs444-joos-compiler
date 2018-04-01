@@ -59,3 +59,5 @@ case "$ret" in
     42) exit 42; ;;
     *) echo "Exiting due to compiler error"; exit 42; ;;
 esac
+
+cp def/fixed.s output

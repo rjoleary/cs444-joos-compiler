@@ -8,6 +8,7 @@ module Codegen.CodeGenType
 import Data.List
 import Data.Char
 import Data.Int
+import Data.List
 import Data.Maybe
 import Debug.Trace(trace)
 import JoosCompiler.Ast
@@ -23,11 +24,11 @@ import qualified Data.Map.Strict as Map
 codeGenType :: WholeProgram -> TypeDeclaration -> Either String (Asm ())
 codeGenType wp t = analyze' ctx t
   where ctx = CodeGenCtx {
-      ctxProgram     = wp
-    , ctxLocals      = Map.empty
-    , ctxFrame       = Map.empty
-    , ctxFrameOffset = 0
-    }
+      ctxProgram     = wp,
+      ctxThis        = typeCanonicalName t,
+      ctxLocals      = Map.empty,
+      ctxFrame       = Map.empty,
+      ctxFrameOffset = 0 }
 
 -- For local types only.
 type LocalEnvironment = Map.Map String Type
@@ -35,6 +36,7 @@ type LocalFrame = Map.Map String Int32
 
 data CodeGenCtx = CodeGenCtx
   { ctxProgram     :: WholeProgram
+  , ctxThis        :: Name
   , ctxLocals      :: LocalEnvironment
   , ctxFrame       :: LocalFrame
   , ctxFrameOffset :: Int32
@@ -109,23 +111,47 @@ generateMethod' ctx x = indent $ do
   generateMethod ctx x
 
 generateMethod :: CodeGenCtx -> Method -> Asm ()
-generateMethod ctx m = do
-  global m
-  label m
-  push Ebp
-  mov Ebp Esp
+generateMethod ctx m
+  -- Abstract methods
+  | isMethodAbstract m = do
+    return ()
 
-  -- The caller already pushed these arguments onto the stack.
-  let newCtx = ctx {
-    ctxLocals      = Map.fromList [(variableName param, variableType param) | param <- methodParameters m],
-    -- The first argument is 16 to skip 4 registers: ebx, ebi, esn, ebp
-    ctxFrame       = Map.fromList (zip (map variableName $ methodParameters m) [16,20..]),
-    ctxFrameOffset = 0 }
+  -- Native methods
+  | isMethodNative m = do
+    global m
+    label m
 
-  generateStatement newCtx (methodStatement m)
-  mov Esp Ebp
-  pop Ebp
-  ret
+    -- Move the first (and only) argument into eax.
+    mov Eax (AddrOffset Esp 12)
+
+    -- Jump to the native function as if it was the original callee.
+    let nativeLabel = "NATIVE" ++ intercalate "." (methodCanonicalName m)
+    extern nativeLabel
+    jmp (L nativeLabel)
+
+  -- Regular static and non-static methods
+  | otherwise = do
+    global m
+    label m
+    push Ebp
+    mov Ebp Esp
+
+    -- The caller already pushed these arguments onto the stack.
+    -- Type checking has already ensured static methods do not use "this", so
+    -- the final parameter will simply be ignored for static methods.
+    let thisType = Type (NamedType (ctxThis ctx)) False
+    let paramNames = map variableName (methodParameters m) ++["this"]
+    let paramTypes = map variableType (methodParameters m) ++ [thisType]
+    let newCtx = ctx {
+      ctxLocals      = Map.fromList (zip paramNames paramTypes),
+      -- The first argument is 16 to skip 4 registers: ebx, ebi, esn, ebp
+      ctxFrame       = Map.fromList (zip paramNames [16,20..]),
+      ctxFrameOffset = 0 }
+
+    generateStatement newCtx (methodStatement m)
+    mov Esp Ebp
+    pop Ebp
+    ret
 
 ---------- Statements ----------
 
@@ -337,10 +363,8 @@ generateExpression ctx (LiteralExpression NullLiteral) = do
   mov Eax (I 0)
   return Null
 
-generateExpression ctx This = do
-  comment "TODO This"
-  mov Eax (I 123)
-  return Void -- TODO
+-- "this" is treated as a special kind of local argument.
+generateExpression ctx This = generateExpression ctx (LocalAccess "this")
 
 generateExpression ctx ExpressionName{} = do
   comment "TODO ExpressionName"
@@ -365,14 +389,13 @@ generateExpression ctx (NewExpression n e) = do
   push Eax
   t <- mapM (initializeObjectField ctx wp n) fields
   pop Eax
-  
   return Void
   where
     addr = "Vtable$" ++ (mangle td)
     td = fromMaybe (error "Could not resolve type") maybeTd
     maybeTd = resolveTypeInProgram wp n
     v = length $ trace (show fields) fields
-    fields = directAndIndirectDynamicFields wp n 
+    fields = directAndIndirectDynamicFields wp n
     wp = ctxProgram ctx
 
 generateExpression ctx (NewArrayExpression t e) = do
@@ -476,8 +499,9 @@ generateExpression ctx (StaticFieldAccess _) = do
   return Void
 
 generateExpression ctx (LocalAccess n) = do
-  mov Eax (AddrOffset Ebp (fromMaybe (error "Could not find local") $ Map.lookup n (ctxFrame ctx)))
-  return $ fromMaybe (error "Could not find local") $ Map.lookup n (ctxLocals ctx)
+  mov Eax $ AddrOffset Ebp (mapLookupWith (ctxFrame ctx))
+  return $ mapLookupWith (ctxLocals ctx)
+  where mapLookupWith m = fromMaybe (error $ "Could not find " ++ n) $ Map.lookup n m
 
 
 ---------- LValues ----------

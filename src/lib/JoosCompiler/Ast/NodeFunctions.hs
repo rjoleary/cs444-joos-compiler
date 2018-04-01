@@ -356,3 +356,6 @@ isMethodStatic x = Static `elem` methodModifiers x
 
 isMethodAbstract :: Method -> Bool
 isMethodAbstract x = Abstract `elem` methodModifiers x
+
+isMethodNative :: Method -> Bool
+isMethodNative x = Native `elem` methodModifiers x
