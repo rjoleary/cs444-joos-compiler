@@ -124,7 +124,7 @@ generateMethod ctx m
     label m
 
     -- Move the first (and only) argument into eax.
-    mov Eax (AddrOffset Esp 12)
+    mov Eax (AddrOffset Esp 16)
 
     -- Jump to the native function as if it was the original callee.
     let nativeLabel = "NATIVE" ++ intercalate "." (methodCanonicalName m)
@@ -142,12 +142,12 @@ generateMethod ctx m
     -- Type checking has already ensured static methods do not use "this", so
     -- the final parameter will simply be ignored for static methods.
     let thisType = Type (NamedType (ctxThis ctx)) False
-    let paramNames = map variableName (methodParameters m) ++ ["this"]
-    let paramTypes = map variableType (methodParameters m) ++ [thisType]
+    let paramNames = reverse $ "this":map variableName (methodParameters m)
+    let paramTypes = reverse $ thisType:map variableType (methodParameters m)
     let newCtx = ctx {
       ctxLocals      = Map.fromList (zip paramNames paramTypes),
-      -- The first argument is 16 to skip 4 registers: ebx, ebi, esn, ebp
-      ctxFrame       = Map.fromList (zip paramNames [16,20..]),
+      -- The first argument is 16 to skip 4 registers: ebx, ebi, esi, link, ebp
+      ctxFrame       = Map.fromList (zip paramNames [20,24..]),
       ctxFrameOffset = 0 }
 
     generateStatement newCtx (methodStatement m)
@@ -451,12 +451,12 @@ generateExpression ctx (CastExpression t e) = do
   -- TODO: (x instanceof Object) is true at compile time
   return t
 
-generateExpression ctx (StaticMethodInvocation n s as) = do
+generateExpression ctx (StaticMethodInvocation n s args) = do
   t <- mapM_ (\(idx, arg) -> do
     comment ("Argument number " ++ show idx)
     t <- generateExpression' ctx arg
     push Eax
-    return ()) (zip [1..] as)
+    ) (zip [1..] args)
   push Ebx
   push Edi
   push Esi
@@ -468,11 +468,9 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
   pop Esi
   pop Edi
   pop Ebx
-  mov Ebx (I $ fromIntegral (g * 4))
-  add Esp Ebx
+  add Esp (I $ fromIntegral (length args * 4))
   return (methodReturn $ na)
     where
-      g = length as
       argTypes = [Type Int False]
       methods = resolveStaticMethodInProgram (ctxProgram ctx) n s argTypes
       na = case methods of
