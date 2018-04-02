@@ -26,11 +26,18 @@ literalTransformer = match . asRule
     match [("Literal", _), ("BooleanLiteral", x)] =
       BooleanLiteral (if tokenString (lhs x) == "true" then True else False)
     match [("Literal", _), ("CharacterLiteral", x)] =
-      CharacterLiteral (head $ tokenString $ lhs x) -- TODO: escapes
+      CharacterLiteral (head . read . quote '\"' . tokenString . lhs $ x)
     match [("Literal", _), ("StringLiteral", x)] =
-      StringLiteral (tokenString $ lhs x) -- TODO: escapes
+      StringLiteral (read . quote '\"' . tokenString . lhs $ x)
     match [("Literal", _), ("NullLiteral", x)] =
       NullLiteral
+
+    -- Haskell uses \o for octal escapes instead of \0.
+    mapEscapes ('\\':'0':xs) = '\\':'o':mapEscapes xs
+    mapEscapes (x:xs)        = x:mapEscapes xs
+    mapEscapes []            = []
+
+    quote x xs = [x] ++ xs ++ [x]
 
 typeTransformer :: TaggedParseTree -> Type
 typeTransformer = match . asRule
