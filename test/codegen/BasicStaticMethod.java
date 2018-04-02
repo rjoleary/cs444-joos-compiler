@@ -6,6 +6,6 @@ public class BasicStaticMethod {
     }
 
     public static int test() {
-        return f();
+        return BasicStaticMethod.f();
     }
 }
