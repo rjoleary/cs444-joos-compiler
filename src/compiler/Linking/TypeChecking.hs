@@ -78,17 +78,17 @@ instance Analysis TypeAnalysis () where
     exprType <- analyze' ctx (statementExpression s) :: Either String Type
     analyze' ctx n
 
-  analyze ctx (AstStatement s@LoopStatement{nextStatement=n}) = do
+  analyze ctx x@(AstStatement s@LoopStatement{nextStatement=n}) = do
     predicateType <- analyze' ctx (loopPredicate s)
     when (not $ isBoolean $ predicateType)
       (Left "Loop predicate must be a boolean")
-    analyze' ctx n
+    propagateAnalyze ctx x
 
-  analyze ctx (AstStatement s@IfStatement{nextStatement=n}) = do
+  analyze ctx x@(AstStatement s@IfStatement{nextStatement=n}) = do
     predicateType <- analyze' ctx (ifPredicate s)
     when (not $ isBoolean $ predicateType)
       (Left "If predicate must be a boolean")
-    analyze' ctx n
+    propagateAnalyze ctx x
 
   analyze ctx (AstStatement ReturnStatement{returnExpression=Nothing, nextStatement=n}) = do
     let returnType = ctxReturn ctx
