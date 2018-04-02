@@ -380,6 +380,9 @@ generateExpression ctx (NewExpression n e) = do
   push Ebx
   extern "__malloc"
   call (L "__malloc")
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in extern addr
   movDword (Addr Eax) (L addr)
   push Eax
   add Eax (I 4)
@@ -410,7 +413,11 @@ generateExpression ctx (NewArrayExpression t e) = do
   extern "__malloc"
   call (L "__malloc")
   pop Ebx
-  movDword (Addr Eax) (L addr)
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in case it of
+      (NamedType name) -> extern td >> movDword (Addr Eax) (L (mangle td))
+      otherwise        -> movDword (Addr Eax) (I 0)
   push Eax
   add Eax (I 4)
   movDword (Addr Eax) Ebx
@@ -421,17 +428,10 @@ generateExpression ctx (NewArrayExpression t e) = do
   pop Eax
   return t
   where
-    addr = case it of
-      (NamedType name) -> "Vtable$" ++ obj
-      _                -> "0"
-      where
-        it = innerType t
-        maybeTd = resolveTypeInProgram (ctxProgram ctx) (unNamedType it)
-        td = fromMaybe (error "Could not resolve type") maybeTd
-        obj = mangle td
---  comment "TODO NewArrayExpression"
---  mov Eax (I 123)
---  return Void -- TODO
+    it = innerType t
+    maybeTd = resolveTypeInProgram (ctxProgram ctx) (unNamedType it)
+    td = fromMaybe (error "Could not resolve type") maybeTd
+    obj = mangle td
 
 generateExpression ctx (CastExpression t e) = do
   generateExpression' ctx e -- TODO: is instanceof
