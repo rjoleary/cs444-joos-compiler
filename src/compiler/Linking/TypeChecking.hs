@@ -98,14 +98,14 @@ instance Analysis TypeAnalysis () where
     sourceType <- analyze' ctx e
     let targetType = ctxReturn ctx
     when (not $ isTypeAssignable (ctxProgram ctx) targetType sourceType)
-      (Left $ "Not type assignable (" ++ show targetType ++ " to " ++ show sourceType ++ ")")
+      (Left $ "Not type assignable (" ++ show sourceType ++ " to " ++ show targetType ++ ")")
     analyze' ctx n
 
   analyze ctx (AstStatement LocalStatement{localVariable=v, nextStatement=n}) = do
     sourceType <- analyze' ctx (variableValue v)
     let targetType = variableType v
     when (not $ isTypeAssignable (ctxProgram ctx) targetType sourceType)
-      (Left $ "Not type assignable (" ++ show targetType ++ " to " ++ show sourceType ++ ")")
+      (Left $ "Not type assignable (" ++ show sourceType ++ " to " ++ show targetType ++ ")")
     let newEnv = Map.insert (variableName v) (variableType v) (ctxLocalEnv ctx)
     analyze' ctx{ ctxLocalEnv = newEnv } n
 
@@ -191,12 +191,9 @@ instance Analysis TypeAnalysis Type where
     | op `elem` [Assign] = do
       targetType <- analyze' ctx expr1
       sourceType <- analyze' ctx expr2
-      if isTypeAssignable (ctxProgram ctx) targetType sourceType
-        then return targetType
-        else Left ("Not type assignable (" ++
-          show targetType ++
-          show op ++
-          show sourceType ++ ")")
+      when (not $ isTypeAssignable (ctxProgram ctx) targetType sourceType)
+        (Left $ "Not type assignable (" ++ show sourceType ++ " to " ++ show targetType ++ ")")
+      return targetType
 
   -- JLS 15.15.4: Unary Minus Operator (-)
   analyze ctx (AstExpression e@(UnaryOperation Negate expr)) = do
@@ -253,11 +250,12 @@ instance Analysis TypeAnalysis Type where
   -- JLS 15.20.2: Type Comparison Operator instanceof
   analyze ctx (AstExpression e@(InstanceOfExpression expr t)) = do
     exprType <- analyze' ctx expr
-    when ((not $ isReference exprType || exprType == Null) ||
+    if ((not $ isReference exprType || exprType == Null) ||
         (not $ isReference t) ||
         evalInstanceOf (ctxProgram ctx) exprType t == ConstBool False)
-      (Left $ "Bad instanceof operator (" ++ show exprType ++ " instanceof " ++ show t ++ ")")
-    return $ Type Boolean False
+      then (Left $ "Bad instanceof operator (" ++ show exprType ++
+        " instanceof " ++ show t ++ ")")
+      else return $ Type Boolean False
 
   -- JLS 15.13: Array Access Expressions
   analyze ctx (AstExpression e@(ArrayExpression arrayExpr idxExpr)) = do
@@ -339,12 +337,12 @@ isTypeAssignable wp target source
   | otherwise                                = False
 
 isReferenceAssignable :: WholeProgram -> Type -> Type -> Bool
-isReferenceAssignable wp s@(Type (NamedType sName) sArr) t@(Type (NamedType tName) tArr)
-  | sArr && tArr                          = isReferenceAssignable wp (toScalar s) (toScalar t)
+isReferenceAssignable wp t@(Type (NamedType tName) tArr) s@(Type (NamedType sName) sArr)
   | s == t                                = True  -- Identity conversion
-  | not sArr && tArr                      = False -- Cannot assign named type to array
+  | sArr && tArr                          = isReferenceAssignable wp (toScalar s) (toScalar t)
+  | not sArr && tArr                      = False -- Cannot assign class/interface type to array
   | sArr && tName `elem` arrayAssignables = True  -- Can assign array to limited interfaces
-  | tName `elem` sourceHierarchy          = True  -- Widening reference conversion
+  | not sArr && not tArr && tName `elem` sourceHierarchy = True  -- Widening reference conversion
   | otherwise                             = False
   where sourceHierarchy = typeHierarchyNames wp sName
 isReferenceAssignable _ t Null = isReference t -- Can assign null to reference type
