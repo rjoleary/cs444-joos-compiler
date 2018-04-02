@@ -357,8 +357,21 @@ generateExpression ctx (LiteralExpression (CharacterLiteral x)) = do
   return (Type Char False)
 
 generateExpression ctx (LiteralExpression (StringLiteral x)) = do
-  comment "TODO StringLiteral"
-  mov Eax (I 123)
+  strStart <- uniqueLabel
+  strEnd <- uniqueLabel
+  comment ("StringLiteral " ++ show x)
+  jmp (L strEnd) -- Jump over the string
+  label strStart
+  mapM_ (\c ->
+    if isAlphaNum c
+      then raw ("dd " ++ show c ++ ";") -- Pretty print characters
+      else dd (I $ fromInteger $ toInteger $ ord c)
+    ) x
+  label strEnd
+  mov Eax (L strStart)
+  mov Ebx (I $ fromIntegral $ length x)
+  extern "allocStrLiteral"
+  call (L "allocStrLiteral")
   return (Type (NamedType ["java", "lang", "String"]) False)
 
 generateExpression ctx (LiteralExpression NullLiteral) = do
