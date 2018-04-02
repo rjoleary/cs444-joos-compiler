@@ -14,19 +14,6 @@ import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Ast.Utils
 import qualified Data.Map.Strict as Map
 
-{- TODO
-    - traverse tree until we see expression name
-    - if expression name, try to resolve first part as local
-    - otherwise,          try to resolve as field (double check the order)
-    - otherwise,          try to resolve as an import
-    - otherwise,          try to resolve as a package
-      in this case, we keep resolving as a package until we hit a type
-
-   Once it's resolved, we recursively resolve the rest of the name. Needs to be
-   a type name in order for the resolution to be valid. We then generate a tree
-   of "accesses" (staticFieldAccess, fieldAccess, localAccess)
--}
-
 disambiguate :: AstNode -> AstNode
 disambiguate (Node p@(AstWholeProgram oldProgram) unitNodes) =
   Node (AstWholeProgram newProgram) $ map (disambiguateUnitNode oldProgram) newUnitNodes
@@ -186,6 +173,12 @@ wrapAccess
   oldExpression
   name@(n:ns) =
   error "TODO"
+  where
+    maybeTypeDecl = resolveTypeInProgram program t
+    typeDecl =
+      maybeTypeDecl |>
+      fromMaybe (error $ "typeDecl was Nothing: " ++ showName t)
+    field = getDynamicFieldInType typeDecl
 
 -- Wrong
 wrapAccess program oldExprType@(Type t False) oldExpression name@(n:ns) = error "TODO"

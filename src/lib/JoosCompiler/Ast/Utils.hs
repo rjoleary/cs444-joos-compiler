@@ -172,6 +172,17 @@ findFieldInType expectingStatic typeDecl n
     classFields |>
     find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
 
+getDynamicFieldInType :: TypeDeclaration -> String -> Field
+getDynamicFieldInType = getFieldInType False
+
+getStaticFieldInType :: TypeDeclaration -> String -> Field
+getStaticFieldInType = getFieldInType True
+
+getFieldInType :: Bool -> TypeDeclaration -> String -> Field
+getFieldInType expectingStatic typeDecl n =
+  findFieldInType expectingStatic typeDecl n |>
+  fromMaybe (error "getFieldInType got nothing")
+
 ---------- Hierarchy Utils ----------
 
 type TypeHierarchy = Tree TypeDeclaration
