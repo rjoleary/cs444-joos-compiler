@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
+{-# OPTIONS_GHC -Woverlapping-patterns #-}
 module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
   (disambiguate) where
 
@@ -96,14 +97,18 @@ disambiguateExpression program unit vars e@(ExpressionName [n])
     dynamicFieldMaybe = findDynamicFieldInUnit unit n
 
 disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
-  | isJust localMaybe               = e
+  | isJust localMaybe               = (LocalAccess n)
   | staticFieldExistsInUnit unit n  = e
   | dynamicFieldExistsInUnit unit n = e
-  | isJust resolvedClass            = e
-  | otherwise                       = e -- error $ "Could not disambiguate expression: " ++ showName (n:ns)
+  | isJust resolvedClassMaybe       =
+    wrapClassAccess program resolvedClass restOfName
+  | otherwise                       = error $ "Could not disambiguate expression: " ++ showName (n:ns)
   where
     localMaybe = Map.lookup n vars
-    (resolvedClass, restOfName) = resolveAsClass program unit name
+    (resolvedClassMaybe, restOfName) = resolveAsClass program unit name
+    resolvedClass =
+      resolvedClassMaybe |>
+      fromMaybe (error $ "resolvedClass was nothing: " ++ showName name)
 
 disambiguateExpression _ _ _ e = e
 
@@ -117,9 +122,71 @@ fieldExistsInUnit :: Bool -> CompilationUnit -> String -> Bool
 fieldExistsInUnit expectingStatic unit name =
   isJust $ findFieldInUnit expectingStatic unit name
 
+disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode
+disambiguateTree _ _ = id
+
 -- newName is the part of the name left after resolving as class
 resolveAsClass :: WholeProgram -> CompilationUnit -> Name -> (Maybe TypeDeclaration, Name)
-resolveAsClass program unit name = (resolvedClass, newName)
+resolveAsClass program unit name
+  | isNothing resolvedClassMaybe = (Nothing, name)
+  | otherwise = (resolvedClass, restOfName)
   where
-    resolvedClass = resolveTypeInProgram program name
-    newName = name
+    resolvedClasses = map (resolveTypeInProgram program) $ inits name
+    resolvedClassMaybe = find isJust resolvedClasses
+    resolvedClass =
+      resolvedClassMaybe |>
+      fromMaybe (error "resolvedClass was nothing")
+    resolvedClassNameLength =
+      findIndex isJust resolvedClasses |>
+      fromMaybe (error "Used resolvedClassNameLength when class is Nothing")
+    restOfName = drop resolvedClassNameLength name
+
+-- Can't access a class, so turn it into a StaticFieldAccess
+wrapClassAccess :: WholeProgram -> TypeDeclaration -> Name -> Expression
+wrapClassAccess program typeDecl name@(n:ns)
+  | isJust maybeField = wrapAccess program eType e ns
+  | otherwise = error $ "could not find field: " ++ n
+  where
+    maybeField = findDynamicFieldInType typeDecl n
+    field =
+      maybeField |>
+      fromMaybe (error $ "Could not access field in class" ++ showName name)
+    eType = variableType field
+    e = StaticFieldAccess $ variableCanonicalName field
+wrapClassAccess program typeDecl [] =
+  error $ "Cannot access class (No fields left): " ++ (error $ show typeDecl)
+
+-- This is used for multi-part names
+-- If we have something like a.b.c, then we use this to return:
+--
+-- c
+--  `b
+--    `a
+--
+-- This is done by finding a then wrapping it with b, then wrapping
+-- that with c
+wrapAccess :: WholeProgram -> Type -> Expression -> Name -> Expression
+wrapAccess _ _ oldExpression [] = oldExpression
+
+-- Array
+wrapAccess
+  program
+  oldExprType@(Type t True)
+  oldExpression
+  name@(n:ns)
+  | n == "length" = wrapAccess program (Type Int False) newExpression ns
+  | otherwise = error $ intercalate " " ["Tried to access field", n, "in array"]
+  where
+    newExpression = ArrayLengthAccess oldExpression
+
+-- Object
+wrapAccess
+  program
+  oldExprType@(Type (NamedType t) False)
+  oldExpression
+  name@(n:ns) =
+  error "TODO"
+
+-- Wrong
+wrapAccess program oldExprType@(Type t False) oldExpression name@(n:ns) = error "TODO"
+wrapAccess _ _ _ (n:ns) = error "Called on Null or Void"

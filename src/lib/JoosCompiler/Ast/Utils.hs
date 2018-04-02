@@ -155,14 +155,22 @@ findStaticFieldInUnit  = findFieldInUnit True
 findFieldInUnit :: Bool -> CompilationUnit -> String -> Maybe Field
 findFieldInUnit expectingStatic unit n
   | isNothing maybeUnitType = Nothing
-  | otherwise =
-    unitType |>
-    classFields |>
-    find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
+  | otherwise = findFieldInType expectingStatic unitType n
   where
     maybeUnitType = typeDecl unit
     unitType = fromMaybe (error "unitType was nothing") maybeUnitType
 
+findDynamicFieldInType :: TypeDeclaration -> String -> Maybe Field
+findDynamicFieldInType = findFieldInType False
+
+findStaticFieldInType :: TypeDeclaration -> String -> Maybe Field
+findStaticFieldInType = findFieldInType True
+
+findFieldInType :: Bool -> TypeDeclaration -> String -> Maybe Field
+findFieldInType expectingStatic typeDecl n
+  = typeDecl |>
+    classFields |>
+    find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
 
 ---------- Hierarchy Utils ----------
 
