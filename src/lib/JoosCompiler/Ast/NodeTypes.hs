@@ -131,12 +131,13 @@ data Expression
   | ArrayExpression Expression Expression
   | AmbiguousFieldAccess Expression String
   | DynamicMethodInvocation Expression String [Expression]
-  | DynamicFieldAccess Expression Name
+  | DynamicFieldAccess Expression String
   | ArrayLengthAccess Expression
   -- TODO(Ahmed): convert to this constructor if method is static
   | StaticMethodInvocation Name String [Expression]
   | StaticFieldAccess Name
   | LocalAccess String
+  | ClassAccess Name
   deriving (Eq)
 
 data Type

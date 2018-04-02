@@ -99,7 +99,7 @@ instance Show Expression where
   show (LiteralExpression v)                 = "LiteralExpression(" ++ show v ++ ")"
   show This                                  = "(this)"
   show (AmbiguousFieldAccess e s)            = "AmbiguousFieldAccess(" ++ show e ++ "." ++ s ++ ")"
-  show (DynamicFieldAccess e n)              = "DynamicFieldAccess(" ++ show e ++ "." ++ showName n ++ ")"
+  show (DynamicFieldAccess e n)              = "DynamicFieldAccess(" ++ show e ++ "." ++ n ++ ")"
   show (StaticFieldAccess n)                 = "StaticFieldAccess(" ++ showName n ++ ")"
   show (ArrayLengthAccess e)                 = "ArrayLengthAccess(" ++ show e ++ ".length)"
   show (LocalAccess n)                       = "LocalAccess(" ++ n ++ ")"

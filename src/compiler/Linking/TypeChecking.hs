@@ -272,18 +272,18 @@ instance Analysis TypeAnalysis Type where
   -- JLS 15.11: Field Access Expressions (dynamic)
   analyze ctx (AstExpression (DynamicFieldAccess e name)) = do
     classType <- analyze' ctx e
-    if (isArray classType && (last name) == "length")
+    if (isArray classType && name == "length")
     then (Right $ Type Int False) -- special case for array.length
     else do
       when (not $ isName classType)
-        (Left $ "Cannot access field of non-class type " ++ showName name)
+        (Left $ "Cannot access field of non-class type " ++ name)
       cu <- case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
         Just x  -> Right x
         Nothing -> Left $ ("Could not resolve type " ++ show classType ++
           "; This should have been checked by disambiguation.")
-      field <- case findDynamicFieldInUnit cu (last name) of -- TODO: last?
+      field <- case findDynamicFieldInUnit cu name of -- TODO: last?
         Just x  -> Right x
-        Nothing -> Left $ ("Could not resolve field " ++ showName name ++
+        Nothing -> Left $ ("Could not resolve field " ++ name ++
           " in " ++ show classType ++
           "; This should have been checked by disambiguation.")
       if isFieldStatic field

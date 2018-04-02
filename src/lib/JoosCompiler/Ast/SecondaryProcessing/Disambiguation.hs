@@ -71,7 +71,7 @@ disambiguateExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expr
 disambiguateExpression program unit vars e@(ExpressionName [n])
   | isJust localMaybe = LocalAccess $ variableName local
   | isJust staticFieldMaybe = StaticFieldAccess $ variableCanonicalName staticField
-  | isJust dynamicFieldMaybe = DynamicFieldAccess This $ variableCanonicalName dynamicField
+  | isJust dynamicFieldMaybe = DynamicFieldAccess This  n
   | otherwise = e --  error $ "Could not disambiguate expression: " ++  show e
   where
     localMaybe = Map.lookup n vars
@@ -88,7 +88,8 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | staticFieldExistsInUnit unit n  = e
   | dynamicFieldExistsInUnit unit n = e
   | isJust resolvedClassMaybe       =
-    wrapClassAccess program resolvedClass restOfName
+    wrapClassAccess program resolvedClass restOfName |>
+    trace ("Wrapping class access: " ++ showName name)
   | otherwise                       = error $ "Could not disambiguate expression: " ++ showName (n:ns)
   where
     localMaybe = Map.lookup n vars
@@ -116,7 +117,12 @@ disambiguateTree _ _ = id
 resolveAsClass :: WholeProgram -> CompilationUnit -> Name -> (Maybe TypeDeclaration, Name)
 resolveAsClass program unit name
   | isNothing resolvedClassMaybe = (Nothing, name)
-  | otherwise = (resolvedClass, restOfName)
+  | otherwise =
+    (resolvedClass, restOfName) |>
+    trace ("name: " ++ showName name)
+    trace ("resolvedClasses: " ++ show resolvedClasses)
+    trace ("resolvedClass: " ++ show resolvedClass)
+    trace ("restOfName: " ++ showName restOfName)
   where
     resolvedClasses = map (resolveTypeInProgram program) $ inits name
     resolvedClassMaybe = find isJust resolvedClasses
@@ -128,10 +134,11 @@ resolveAsClass program unit name
       fromMaybe (error "Used resolvedClassNameLength when class is Nothing")
     restOfName = drop resolvedClassNameLength name
 
--- Can't access a class, so turn it into a StaticFieldAccess
 wrapClassAccess :: WholeProgram -> TypeDeclaration -> Name -> Expression
 wrapClassAccess program typeDecl name@(n:ns)
-  | isJust maybeField = wrapAccess program eType e ns
+  | isJust maybeField =
+    wrapAccess program eType e ns |>
+    trace ("Class access: " ++ (showName name))
   | otherwise = error $ "could not find field: " ++ n
   where
     maybeField = findDynamicFieldInType typeDecl n
@@ -141,7 +148,7 @@ wrapClassAccess program typeDecl name@(n:ns)
     eType = variableType field
     e = StaticFieldAccess $ variableCanonicalName field
 wrapClassAccess program typeDecl [] =
-  error $ "Cannot access class (No fields left): " ++ (error $ show typeDecl)
+  ClassAccess $ typeCanonicalName typeDecl
 
 -- This is used for multi-part names
 -- If we have something like a.b.c, then we use this to return:
@@ -161,7 +168,9 @@ wrapAccess
   oldExprType@(Type t True)
   oldExpression
   name@(n:ns)
-  | n == "length" = wrapAccess program (Type Int False) newExpression ns
+  | n == "length" =
+    wrapAccess program (Type Int False) newExpression ns |>
+    trace (showName name)
   | otherwise = error $ intercalate " " ["Tried to access field", n, "in array"]
   where
     newExpression = ArrayLengthAccess oldExpression
@@ -172,14 +181,18 @@ wrapAccess
   oldExprType@(Type (NamedType t) False)
   oldExpression
   name@(n:ns) =
-  error "TODO"
+    wrapAccess program fieldType newExpression ns |>
+    trace (showName name)
   where
     maybeTypeDecl = resolveTypeInProgram program t
     typeDecl =
       maybeTypeDecl |>
       fromMaybe (error $ "typeDecl was Nothing: " ++ showName t)
-    field = getDynamicFieldInType typeDecl
+    field = getDynamicFieldInType typeDecl n
+    fieldType = variableType field
+    newExpression = (DynamicFieldAccess oldExpression n)
 
 -- Wrong
-wrapAccess program oldExprType@(Type t False) oldExpression name@(n:ns) = error "TODO"
+wrapAccess program oldExprType@(Type t False) oldExpression name@(n:ns) =
+  error $ "Invalid type for access" ++ show t
 wrapAccess _ _ _ (n:ns) = error "Called on Null or Void"
