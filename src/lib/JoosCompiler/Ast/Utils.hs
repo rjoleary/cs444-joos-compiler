@@ -149,51 +149,54 @@ getTypeDeclarationsFromProgram program = typeDecls
     units = programCus program
     typeDecls = catMaybes $ map typeDecl units
 
-getDynamicFieldInUnit :: CompilationUnit -> String -> Field
+getDynamicFieldInUnit :: WholeProgram -> CompilationUnit -> String -> Field
 getDynamicFieldInUnit = getFieldInUnit False
 
-getStaticFieldInUnit :: CompilationUnit -> String -> Field
+getStaticFieldInUnit :: WholeProgram -> CompilationUnit -> String -> Field
 getStaticFieldInUnit = getFieldInUnit True
 
-getFieldInUnit :: Bool -> CompilationUnit -> String -> Field
-getFieldInUnit expectingStatic unit n =
-  fromMaybe (error "getFieldInUnit got Nothing") (findFieldInUnit expectingStatic unit n)
+getFieldInUnit :: Bool -> WholeProgram -> CompilationUnit -> String -> Field
+getFieldInUnit expectingStatic program unit n =
+  (findFieldInUnit expectingStatic program unit n) |>
+  fromMaybe (error "getFieldInUnit got Nothing")
 
-findDynamicFieldInUnit :: CompilationUnit -> String -> Maybe Field
+findDynamicFieldInUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
 findDynamicFieldInUnit  = findFieldInUnit False
 
-findStaticFieldInUnit :: CompilationUnit -> String -> Maybe Field
+findStaticFieldInUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
 findStaticFieldInUnit  = findFieldInUnit True
 
-findFieldInUnit :: Bool -> CompilationUnit -> String -> Maybe Field
-findFieldInUnit expectingStatic unit n
+findFieldInUnit :: Bool -> WholeProgram -> CompilationUnit -> String -> Maybe Field
+findFieldInUnit expectingStatic program unit n
   | isNothing maybeUnitType = Nothing
-  | otherwise = findFieldInType expectingStatic unitType n
+  | otherwise = findFieldInType expectingStatic program unitType n
   where
     maybeUnitType = typeDecl unit
     unitType = fromMaybe (error "unitType was nothing") maybeUnitType
 
-findDynamicFieldInType :: TypeDeclaration -> String -> Maybe Field
+findDynamicFieldInType :: WholeProgram -> TypeDeclaration -> String -> Maybe Field
 findDynamicFieldInType = findFieldInType False
 
-findStaticFieldInType :: TypeDeclaration -> String -> Maybe Field
+findStaticFieldInType :: WholeProgram -> TypeDeclaration -> String -> Maybe Field
 findStaticFieldInType = findFieldInType True
 
-findFieldInType :: Bool -> TypeDeclaration -> String -> Maybe Field
-findFieldInType expectingStatic typeDecl n
-  = typeDecl |>
-    classFields |>
+findFieldInType :: Bool -> WholeProgram -> TypeDeclaration -> String -> Maybe Field
+findFieldInType expectingStatic program typeDecl n
+  = typeCanonicalName typeDecl |>
+    directAndIndirectFields expectingStatic program |>
+    -- the function above returns super first. We want the opposite
+    reverse |>
     find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
 
-getDynamicFieldInType :: TypeDeclaration -> String -> Field
+getDynamicFieldInType :: WholeProgram -> TypeDeclaration -> String -> Field
 getDynamicFieldInType = getFieldInType False
 
-getStaticFieldInType :: TypeDeclaration -> String -> Field
+getStaticFieldInType :: WholeProgram -> TypeDeclaration -> String -> Field
 getStaticFieldInType = getFieldInType True
 
-getFieldInType :: Bool -> TypeDeclaration -> String -> Field
-getFieldInType expectingStatic typeDecl n =
-  findFieldInType expectingStatic typeDecl n |>
+getFieldInType :: Bool -> WholeProgram -> TypeDeclaration -> String -> Field
+getFieldInType expectingStatic program typeDecl n =
+  findFieldInType expectingStatic program typeDecl n |>
   fromMaybe (error "getFieldInType got nothing")
 
 ---------- Hierarchy Utils ----------

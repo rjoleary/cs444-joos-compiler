@@ -80,16 +80,16 @@ disambiguateExpression program unit vars e@(ExpressionName [n])
     localMaybe = Map.lookup n vars
     local      = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
 
-    staticField = getStaticFieldInUnit unit n
-    staticFieldMaybe = findStaticFieldInUnit unit n
+    staticField = getStaticFieldInUnit program unit n
+    staticFieldMaybe = findStaticFieldInUnit program unit n
 
-    dynamicField = getDynamicFieldInUnit unit n
-    dynamicFieldMaybe = findDynamicFieldInUnit unit n
+    dynamicField = getDynamicFieldInUnit program unit n
+    dynamicFieldMaybe = findDynamicFieldInUnit program unit n
 
 disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | isJust localMaybe               = (LocalAccess n)
-  | staticFieldExistsInUnit unit n  = e
-  | dynamicFieldExistsInUnit unit n = e
+  | staticFieldExistsInUnit program unit n  = e
+  | dynamicFieldExistsInUnit program unit n = e
   | isJust resolvedClassMaybe       =
     wrapClassAccess program resolvedClass restOfName |>
     trace ("Wrapping class access: " ++ showName name)
@@ -113,15 +113,15 @@ disambiguateExpression program unit vars old@(DynamicMethodInvocation AmbiguousF
 
 disambiguateExpression _ _ _ e = e
 
-staticFieldExistsInUnit :: CompilationUnit -> String -> Bool
+staticFieldExistsInUnit :: WholeProgram -> CompilationUnit -> String -> Bool
 staticFieldExistsInUnit = fieldExistsInUnit True
 
-dynamicFieldExistsInUnit :: CompilationUnit -> String -> Bool
+dynamicFieldExistsInUnit :: WholeProgram -> CompilationUnit -> String -> Bool
 dynamicFieldExistsInUnit = fieldExistsInUnit False
 
-fieldExistsInUnit :: Bool -> CompilationUnit -> String -> Bool
-fieldExistsInUnit expectingStatic unit name =
-  isJust $ findFieldInUnit expectingStatic unit name
+fieldExistsInUnit :: Bool -> WholeProgram -> CompilationUnit -> String -> Bool
+fieldExistsInUnit expectingStatic program unit name =
+  isJust $ findFieldInUnit expectingStatic program unit name
 
 disambiguateTree :: WholeProgram -> CompilationUnit -> AstNode -> AstNode
 disambiguateTree _ _ = id
@@ -156,7 +156,7 @@ wrapClassAccess program typeDecl name@(n:ns)
   | otherwise = error $ "could not find field: " ++ n
   where
     trace = DumbTrace.trace
-    maybeField = findDynamicFieldInType typeDecl n
+    maybeField = findDynamicFieldInType program typeDecl n
     field =
       maybeField |>
       fromMaybe (error $ "Could not access field in class" ++ showName name)
@@ -191,7 +191,25 @@ wrapAccess
     trace = DumbTrace.trace
     newExpression = ArrayLengthAccess oldExpression
 
--- Object
+-- Static Access
+wrapAccess
+  program
+  oldExprType@(Type (NamedType t) False)
+  oldExpression@(ClassAccess cName)
+  name@(n:ns) =
+    wrapAccess program fieldType newExpression ns |>
+    trace (showName name)
+  where
+    maybeTypeDecl = resolveTypeInProgram program t
+    typeDecl =
+      maybeTypeDecl |>
+      fromMaybe (error $ "typeDecl was Nothing: " ++ showName t)
+    field = getStaticFieldInType program typeDecl n
+    fieldType = variableType field
+    fieldName = variableCanonicalName field
+    newExpression = (StaticFieldAccess fieldName)
+
+-- Dynamic Access
 wrapAccess
   program
   oldExprType@(Type (NamedType t) False)
@@ -204,7 +222,7 @@ wrapAccess
     typeDecl =
       maybeTypeDecl |>
       fromMaybe (error $ "typeDecl was Nothing: " ++ showName t)
-    field = getDynamicFieldInType typeDecl n
+    field = getDynamicFieldInType program typeDecl n
     fieldType = variableType field
     newExpression = (DynamicFieldAccess oldExpression n)
 
