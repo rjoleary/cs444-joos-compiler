@@ -174,7 +174,7 @@ typeHierarchy wp x = typeHierarchy' x
     typeHierarchy' TypeDeclaration{typeCanonicalName=["java", "lang", "Object"]} = createNode []
     typeHierarchy' TypeDeclaration{isInterface=True} = createNode $ interfaces x
     typeHierarchy' TypeDeclaration{}                 = createNode $ super x:interfaces x
-    createNode xs = Node x $ map (typeHierarchy' . getTypeInProgram wp) xs
+    createNode xs = Node x $ map (typeHierarchy wp . getTypeInProgram wp) xs
 
 typeHierarchyNames :: WholeProgram -> Name -> [Name]
 typeHierarchyNames wp n =
