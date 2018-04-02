@@ -37,13 +37,15 @@ instanceOfLookup:
     sub eax, 4;
     mov ecx, [eax];
     cmp ecx, 0;
-    je instanceOfReturn;
+    je instanceOfReturnFalse;
     cmp ecx, ebx;
     je instanceOfReturnTrue;
     jmp instanceOfLookupLoop;
   instanceOfReturnTrue:
     mov eax, 1;
-  instanceOfReturn:
+    ret;
+  instanceOfReturnFalse:
+    mov eax, 0;
     ret;
 
 ; Create a string literal
