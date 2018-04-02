@@ -449,7 +449,9 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
   push Ebx
   push Edi
   push Esi
-  extern na
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in extern na
   mov Eax (L (mangle na))
   call Eax
   pop Esi

@@ -13,6 +13,7 @@ module Codegen.X86
   , label
   , global
   , extern
+  , externIfRequired
 
   -- generic 0
   , nop
@@ -85,7 +86,9 @@ module Codegen.X86
 
 import Prelude hiding (and, or)
 import Data.Int
+import Data.List hiding (and, or)
 import Codegen.Mangling
+import JoosCompiler.Ast.NodeTypes
 
 data AsmState = AsmState { code :: [String], counter :: Integer }
 data Asm a = Asm (AsmState -> (AsmState, a))
@@ -188,6 +191,19 @@ global m = raw ("global " ++ mangle m ++ ";")
 
 extern :: (Mangleable a) => a -> Asm ()
 extern m = raw ("extern " ++ mangle m ++ ";")
+
+-- You cannot extern something already defined in the same file/class.
+-- This only adds an extern if the label is not part of this file.
+externIfRequired :: (Mangleable a) => TypeDeclaration -> a -> Asm ()
+externIfRequired decl m =
+  if (stripPrefix $ mangle decl) `isPrefixOf` (stripPrefix $ mangle m)
+  then return ()
+  else extern m
+  where
+    stripPrefix ('C':'l':'a':'s':'s':'$':xs)     = xs
+    stripPrefix ('F':'i':'e':'l':'d':'$':xs)     = xs
+    stripPrefix ('M':'e':'t':'h':'o':'d':'$':xs) = xs
+    stripPrefix xs = error $ "Do not use externIfRequired on this type " ++ xs
 
 -- Generic instruction taking zero arguments.
 generic0 :: String -> Asm ()
