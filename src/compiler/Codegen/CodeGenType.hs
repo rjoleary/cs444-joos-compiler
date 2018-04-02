@@ -11,6 +11,7 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Debug.Trace(trace)
+import Flow
 import JoosCompiler.Ast
 import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.NodeTypes
@@ -459,9 +460,11 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
   add Esp Ebx
   return (methodReturn $ na)
     where
-      g = length as-- l = length of as
+      g = length as
       methods = resolveStaticMethodInProgram (ctxProgram ctx) n s
-      na = head methods
+      na = case methods of
+        (m:_) -> m
+        []    -> error $ "Expected to find a method: " ++ (showName (n ++ [s]))
 
 generateExpression ctx (InstanceOfExpression e t) = do
   comment "TODO InstanceOfExpression"
@@ -561,7 +564,7 @@ initializeObjectField ctx wp n var = do
   return (variableType var)
   where
     offset = getDynamicFieldOffset wp n var
-    
+
 getDynamicFieldOffset :: WholeProgram -> Name -> Variable -> Int32
 getDynamicFieldOffset wp n var = fromInteger $ toInteger offset
   where

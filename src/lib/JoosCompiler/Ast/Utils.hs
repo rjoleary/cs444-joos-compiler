@@ -3,6 +3,7 @@ module JoosCompiler.Ast.Utils where
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
+import           Debug.DumbTrace(trace)
 import           Flow
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.NodeFunctions
@@ -114,12 +115,24 @@ resolveDynamicMethodInProgram :: WholeProgram -> Name -> String -> [Method]
 resolveDynamicMethodInProgram = resolveMethodInProgram False
 
 resolveMethodInProgram :: Bool -> WholeProgram -> Name -> String -> [Method]
-resolveMethodInProgram expectingStatic program typeName mName = resolvedMethods
+resolveMethodInProgram expectingStatic program typeName mName =
+  resolvedMethods |>
+  trace ("Resolving " ++ (showName $ typeName ++ [mName]) ++ " in methods: " ++
+         (program |>
+          (programCus .>
+           map typeDecl .>
+           catMaybes .>
+           map (\t -> (typeCanonicalName t, methods t)) .>
+           map (\(t,ms) -> map (\m -> intercalate "." [showName t, methodName m]) ms) .>
+           mconcat .>
+           map ("\n  " ++) .>
+           mconcat
+          )))
   where
     typeDeclMaybe = resolveTypeInProgram program typeName
-    typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
+    _typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
     resolvedMethods =
-      methods typeDecl |>
+      methods _typeDecl |>
       filter (\m -> (mName == methodName m && isMethodStatic m == expectingStatic))
 
 canonicalizeUnitName :: CompilationUnit -> Name

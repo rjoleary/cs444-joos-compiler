@@ -8,6 +8,7 @@ import           Data.List
 import           Data.Maybe
 import           Data.Tree
 import           Debug.Trace(trace)
+import qualified Debug.DumbTrace as DumbTrace
 import           Flow
 import           JoosCompiler.Ast.NodeFunctions
 import           JoosCompiler.Ast.NodeTypes
@@ -35,8 +36,9 @@ disambiguateUnitNode _ _ = error "Wrong node type in disambiguateUnit"
 disambiguateUnit :: WholeProgram -> CompilationUnit -> CompilationUnit
 disambiguateUnit program oldUnit
   | maybeOldTypeDecl == Nothing = oldUnit
-  | otherwise = newUnit
+  | otherwise = newUnit |> trace ("Disambiguating unit: " ++ cuTypeName oldUnit)
   where
+    trace = DumbTrace.trace
     maybeOldTypeDecl = typeDecl oldUnit
     oldTypeDecl = fromMaybe (error "oldTypeDecl was Nothing") maybeOldTypeDecl
     newUnit = oldUnit {typeDecl = Just newTypeDecl}
@@ -93,6 +95,7 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
     trace ("Wrapping class access: " ++ showName name)
   | otherwise                       = error $ "Could not disambiguate expression: " ++ showName (n:ns)
   where
+    trace = DumbTrace.trace
     localMaybe = Map.lookup n vars
     (resolvedClassMaybe, restOfName) = resolveAsClass program unit name
     resolvedClass =
@@ -134,6 +137,7 @@ resolveAsClass program unit name
     trace ("resolvedClass: " ++ show resolvedClass)
     trace ("restOfName: " ++ showName restOfName)
   where
+    trace = DumbTrace.trace
     resolvedClasses = map (resolveTypeInProgram program) $ inits name
     resolvedClassMaybe = find isJust resolvedClasses
     resolvedClass =
@@ -151,6 +155,7 @@ wrapClassAccess program typeDecl name@(n:ns)
     trace ("Class access: " ++ (showName name))
   | otherwise = error $ "could not find field: " ++ n
   where
+    trace = DumbTrace.trace
     maybeField = findDynamicFieldInType typeDecl n
     field =
       maybeField |>
@@ -183,6 +188,7 @@ wrapAccess
     trace (showName name)
   | otherwise = error $ intercalate " " ["Tried to access field", n, "in array"]
   where
+    trace = DumbTrace.trace
     newExpression = ArrayLengthAccess oldExpression
 
 -- Object
