@@ -251,14 +251,13 @@ instance Analysis TypeAnalysis Type where
     return $ targetType
 
   -- JLS 15.20.2: Type Comparison Operator instanceof
-  analyze ctx (AstExpression e@(InstanceOfExpression expr t)) = do
-    exprType <- analyze' ctx expr
-    if ((not $ isReference exprType || exprType == Null) ||
-        (not $ isReference t) ||
-        evalInstanceOf (ctxProgram ctx) exprType t == ConstBool False)
-      then (Left $ "Bad instanceof operator (" ++ show exprType ++
-        " instanceof " ++ show t ++ ")")
-      else return $ Type Boolean False
+  analyze ctx (AstExpression e@(InstanceOfExpression expr targetType)) = do
+    sourceType <- analyze' ctx expr
+    when (not $ isReference sourceType && isReference targetType)
+      (Left $ "Bad instanceof operator (" ++ show sourceType ++ " instanceof " ++ show targetType ++ ")")
+    when (not $ isTypeCastable (ctxProgram ctx) targetType sourceType)
+      (Left $ "Not cast assignable (" ++ show sourceType ++ " to " ++ show targetType ++ ")")
+    return $ Type Boolean False
 
   -- JLS 15.13: Array Access Expressions
   analyze ctx (AstExpression e@(ArrayExpression arrayExpr idxExpr)) = do
