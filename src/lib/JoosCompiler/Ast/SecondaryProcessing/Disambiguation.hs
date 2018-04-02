@@ -113,10 +113,10 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
       resolvedClassMaybe |>
       fromMaybe (error $ "resolvedClass was nothing: " ++ showName name)
 
-disambiguateExpression program unit vars old@(AmbiguousFieldAccess e n)
-  | True = error "Ok"
-  where
-    s = 's'
+disambiguateExpression _ _ _ (AmbiguousFieldAccess (ClassAccess c) n) =
+  error "Ok"
+disambiguateExpression _ _ _ (AmbiguousFieldAccess e n) =
+  error "Ok"
 
 disambiguateExpression program unit vars old@(DynamicMethodInvocation (ClassAccess cName) mName args) =
   StaticMethodInvocation cName mName args

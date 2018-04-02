@@ -27,6 +27,7 @@ canonicalizeProgram (Node p@(AstWholeProgram program) oldUnits) =
   Node p newUnits
   where
     newUnits = map (canonicalizeUnit program) oldUnits
+
 canonicalizeProgram _ = error "Invalid node type in canonicalizeProgram"
 
 canonicalizeUnit :: WholeProgram -> AstNode -> AstNode
