@@ -461,7 +461,8 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
   return (methodReturn $ na)
     where
       g = length as
-      methods = resolveStaticMethodInProgram (ctxProgram ctx) n s
+      argTypes = [Type Int False]
+      methods = resolveStaticMethodInProgram (ctxProgram ctx) n s argTypes
       na = case methods of
         (m:_) -> m
         []    -> error $ "Expected to find a method: " ++ (showName (n ++ [s]))

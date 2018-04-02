@@ -108,14 +108,14 @@ resolveUnitInProgram :: WholeProgram -> Name -> Maybe CompilationUnit
 resolveUnitInProgram program name =
   find ((== name) . canonicalizeUnitName) $ programCus program
 
-resolveStaticMethodInProgram :: WholeProgram -> Name -> String -> [Method]
+resolveStaticMethodInProgram :: WholeProgram -> Name -> String -> [Type] -> [Method]
 resolveStaticMethodInProgram = resolveMethodInProgram True
 
-resolveDynamicMethodInProgram :: WholeProgram -> Name -> String -> [Method]
+resolveDynamicMethodInProgram :: WholeProgram -> Name -> String -> [Type] -> [Method]
 resolveDynamicMethodInProgram = resolveMethodInProgram False
 
-resolveMethodInProgram :: Bool -> WholeProgram -> Name -> String -> [Method]
-resolveMethodInProgram expectingStatic program typeName mName =
+resolveMethodInProgram :: Bool -> WholeProgram -> Name -> String -> [Type] -> [Method]
+resolveMethodInProgram expectingStatic program typeName mName signaure =
   resolvedMethods |>
   trace ("Resolving " ++ (showName $ typeName ++ [mName]) ++ " in methods: " ++
          (program |>
@@ -140,8 +140,15 @@ canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]
 
 -- Returns the first candidate which matches.
 findOverload :: String -> [Type] -> [Method] -> Maybe Method
-findOverload name args candidates = listToMaybe $ filter (\x -> methodSignature x == needle) candidates
-  where needle = methodSignature2 name args
+findOverload name args candidates =
+  filterOverload name args candidates |>
+  listToMaybe
+
+filterOverload :: String -> [Type] -> [Method] -> [Method]
+filterOverload name args candidates =
+  filter (\x -> methodSignature x == needle) candidates
+  where
+    needle = methodSignature2 name args
 
 getTypeDeclarationsFromProgram :: WholeProgram -> [TypeDeclaration]
 getTypeDeclarationsFromProgram program = typeDecls
