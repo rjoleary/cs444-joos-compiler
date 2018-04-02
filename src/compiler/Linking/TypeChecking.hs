@@ -55,9 +55,10 @@ instance Analysis TypeAnalysis () where
     propagateAnalyze ctx{ ctxThis = Just [typeName x] } a
 
   analyze ctx a@(AstField v) = do
-    exprType <- analyze' ctx (variableValue v)
-    when (exprType /= variableType v)
-      (Left $ "Field type doesn't match (got " ++ show exprType ++ ", expected " ++ show (variableType v) ++ ")")
+    sourceType <- analyze' ctx (variableValue v)
+    let targetType = variableType v
+    when (not $ isTypeAssignable (ctxProgram ctx) targetType sourceType)
+      (Left $ "Not type assignable (" ++ show sourceType ++ " to " ++ show targetType ++ ")")
     -- `this` is inaccessible in static fields.
     let newThis = if isFieldStatic v then Nothing else ctxThis ctx
     propagateAnalyze ctx{ ctxThis = newThis } a
