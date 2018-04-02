@@ -452,14 +452,11 @@ generateExpression ctx (CastExpression t e) = do
   return t
 
 generateExpression ctx (StaticMethodInvocation n s as) = do
-  t <- mapM_ (\arg -> do
+  t <- mapM_ (\(idx, arg) -> do
+    comment ("Argument number " ++ show idx)
     t <- generateExpression' ctx arg
     push Eax
-    return ()) as
-  mapM_ (\method -> do
-    generateExpression' ctx method
-    push Eax
-    ) as
+    return ()) (zip [1..] as)
   push Ebx
   push Edi
   push Esi
@@ -471,8 +468,7 @@ generateExpression ctx (StaticMethodInvocation n s as) = do
   pop Esi
   pop Edi
   pop Ebx
-  mov Ebx (I $fromIntegral g)
-  imul Ebx (I 4)
+  mov Ebx (I $ fromIntegral (g * 4))
   add Esp Ebx
   return (methodReturn $ na)
     where
