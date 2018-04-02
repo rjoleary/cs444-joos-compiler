@@ -454,13 +454,13 @@ castExpressionTransformer = match . asRule
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), (")", _), ("UnaryExpression", x)] =
       CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("PrimitiveType", t), ("[", _), ("]", _), (")", _), ("UnaryExpression", x)] =
-      CastExpression (Type (primitiveTypeTransformer t) False) (unaryExpressionTransformer x)
+      CastExpression (Type (primitiveTypeTransformer t) True) (unaryExpressionTransformer x)
     match [("CastExpression", _), ("(", _), ("Expression", t), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
       CastExpression (getType $ expressionTransformer t) (unaryExpressionNotPlusMinusTransformer x)
       where getType (ExpressionName name) = Type (NamedType name) False -- TODO: this doesn't seem right
             getType _                     = error "Cast expression name should have been checked by the weeder"
     match [("CastExpression", _), ("(", _), ("Name", t), ("[", _), ("]", _), (")", _), ("UnaryExpressionNotPlusMinus", x)] =
-      CastExpression (Type (NamedType $ nameTransformer t) False) (unaryExpressionNotPlusMinusTransformer x)
+      CastExpression (Type (NamedType $ nameTransformer t) True) (unaryExpressionNotPlusMinusTransformer x)
 
 multiplicativeExpressionTransformer :: TaggedParseTree -> Expression
 multiplicativeExpressionTransformer = match . asRule
