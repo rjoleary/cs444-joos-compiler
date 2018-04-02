@@ -142,3 +142,15 @@ putStr $ drawTree $ fmap show ast
 ### Changing the test set
 
     make TESTSET=test/marmoset/a2 test.positive
+
+### Using GDB
+
+    gdb --tui output/main
+    (gdb) b _start
+    (gdb) r
+    (gdb) n
+    (gdb) layout regs
+
+### Downloading Profiling Libraries
+
+    stack build --prof
