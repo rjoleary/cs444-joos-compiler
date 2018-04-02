@@ -25,6 +25,27 @@ nullcheck:
   je __exception;
   ret;
 
+; Perform an instance of lookup (eax instanceof ebx).
+; eax is a pointer to the source vtable.
+; ebx is a pointer to the target vtable.
+; Returns:
+;   1: when eax can be dynamically cast to ebx
+;   0: otherwise
+global instanceOfLookup;
+instanceOfLookup:
+  instanceOfLookupLoop:
+    sub eax, 4;
+    mov ecx, [eax];
+    cmp ecx, 0;
+    je instanceOfReturn;
+    cmp ecx, ebx;
+    je instanceOfReturnTrue;
+    jmp instanceOfLookupLoop;
+  instanceOfReturnTrue:
+    mov eax, 1;
+  instanceOfReturn:
+    ret;
+
 ; Create a string literal
 ; eax is the address of the string's start.
 ; ebx is the length of the string.
