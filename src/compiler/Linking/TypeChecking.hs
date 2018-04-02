@@ -30,6 +30,7 @@ checkTypes program unit (Node x _) = analyze ctx x
     ctx = TypeAnalysis {
       ctxLocalEnv = Map.empty,
       ctxThis     = Nothing,
+      ctxReturn   = Void,
       ctxProgram  = program,
       ctxUnit     = unit }
 
@@ -39,6 +40,7 @@ type LocalEnvironment = Map.Map String Type
 data TypeAnalysis = TypeAnalysis
   { ctxLocalEnv :: LocalEnvironment
   , ctxThis     :: Maybe Name
+  , ctxReturn   :: Type
   , ctxProgram  :: WholeProgram
   , ctxUnit     :: CompilationUnit -- TODO: this last field is temporary
   }
@@ -61,10 +63,14 @@ instance Analysis TypeAnalysis () where
     propagateAnalyze ctx{ ctxThis = newThis } a
 
   analyze ctx (AstMethod m@Method{}) = do
-    let newEnv = Map.fromList [(variableName param, variableType param) | param <- methodParameters m]
-    -- `this` is inaccessible in static methods.
-    let newThis = if isMethodStatic m then Nothing else ctxThis ctx
-    analyze' ctx{ ctxLocalEnv = newEnv, ctxThis = newThis } (methodStatement m)
+    let newCtx = ctx {
+      ctxLocalEnv = Map.fromList
+        [(variableName param, variableType param) | param <- methodParameters m],
+      -- `this` is inaccessible in static methods.
+      ctxThis     = if isMethodStatic m then Nothing else ctxThis ctx,
+      ctxReturn   = methodReturn m }
+
+    analyze' newCtx (methodStatement m)
 
   analyze ctx (AstStatement s@ExpressionStatement{nextStatement=n}) = do
     -- The type annotation is required here because the return is ignored.
@@ -83,9 +89,16 @@ instance Analysis TypeAnalysis () where
       (Left "If predicate must be a boolean")
     analyze' ctx n
 
+  analyze ctx (AstStatement ReturnStatement{returnExpression=Nothing, nextStatement=n}) = do
+    let returnType = ctxReturn ctx
+    when (returnType /= Void) (Left $ "Cannot return nothing, expected " ++ show returnType)
+    analyze' ctx n
+
   analyze ctx (AstStatement ReturnStatement{returnExpression=Just e, nextStatement=n}) = do
-    returnType <- analyze' ctx e
-    when (returnType == Void) (Left "Cannot return void")
+    sourceType <- analyze' ctx e
+    let targetType = ctxReturn ctx
+    when (not $ isTypeAssignable (ctxProgram ctx) targetType sourceType)
+      (Left $ "Not type assignable (" ++ show targetType ++ " to " ++ show sourceType ++ ")")
     analyze' ctx n
 
   analyze ctx (AstStatement LocalStatement{localVariable=v, nextStatement=n}) = do
@@ -319,6 +332,7 @@ instance Analysis TypeAnalysis Type where
 -- Additionally, a narrowing conversion are not allowed in Joos.
 isTypeAssignable :: WholeProgram -> Type -> Type -> Bool
 isTypeAssignable wp target source
+  | target == Void || source == Void         = False -- Void is not a real type
   | target == source                         = True -- Identity conversion
   | canNumericWiden source target            = True -- Widening primitive conversion
   | isReference source && isReference target = isReferenceAssignable wp target source
