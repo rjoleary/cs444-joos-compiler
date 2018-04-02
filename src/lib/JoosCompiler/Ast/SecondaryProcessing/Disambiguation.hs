@@ -169,10 +169,14 @@ wrapClassAccess program typeDecl name@(n:ns)
   | isJust maybeField =
     wrapAccess program eType e ns |>
     trace ("Class access: " ++ (showName name))
-  | otherwise = error $ "could not find field: " ++ n
+  | otherwise = error $ intercalate " " [ "could not find field"
+                                        , n
+                                        , "in"
+                                        , showName $ typeCanonicalName typeDecl
+                                        ]
   where
     trace = DumbTrace.trace
-    maybeField = findDynamicFieldInType program typeDecl n
+    maybeField = findStaticFieldInType program typeDecl n
     field =
       maybeField |>
       fromMaybe (error $ "Could not access field in class" ++ showName name)

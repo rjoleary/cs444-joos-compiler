@@ -61,20 +61,22 @@ canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
 canonicalize program unit name
   -- If type is already canonical
-  | resolveTrace (showName name ++ " already Canonical") (resolveTypeInProgram program name /= Nothing) = name
+  | resolveTrace (showName name ++ " already Canonical") $ isJust resolvedAsCanonical = name
 
   -- SingleTypeImport. We don't need to worry about collisions because they're
   -- checked elsewhere (src/compiler/NameResolution)
 
-  | (singleTypePackageContainingType /= Nothing) =
+  | isJust singleTypePackageContainingType =
     packageName (fromJust singleTypePackageContainingType) ++ name
 
-  | (onDemandPackageContainingType /= Nothing) =
+  | isJust onDemandPackageContainingType =
     resolveTrace "On demand result:" $ packageName (fromMaybe (error "This should never happen. Expected package to exist")
                  onDemandPackageContainingType) ++ name
 
   | otherwise = error $ "Could not canonicalize: " ++ showName name
   where
+    resolvedAsCanonical = resolvePrefixes (resolveTypeInProgram program) name
+
     thisPackage = makeOnDemandImportDeclaration $ cuPackage unit
 
     importsWithoutDefault = imports unit
@@ -90,7 +92,8 @@ canonicalize program unit name
       onDemandImports |>
       map (importPackageName .>
            (resolvePackageInProgram program) .>
-           (fromMaybe (error $ "Imported on-demand package not found: " ++ showName name)))
+           (fromMaybe (error $ "Imported on-demand package not found: " ++ showName name))) |>
+      resolveTrace "On-demand packages: "
 
     -- HACK: This can fail, but if it fails then the program is wrong
     singleTypePackages =
@@ -99,19 +102,35 @@ canonicalize program unit name
            (resolvePackageInProgram program) .>
            (fromMaybe (error $ "Imported single-type package not found: " ++ showName name)))
 
-    singleTypePackageContainingType = resolveTrace (showName name ++ " single") $ find (typeIsInPackage name) singleTypePackages
+    singleTypePackageContainingType =
+      resolvePrefixes (findPackageContainingType singleTypePackages) name |>
+      resolveTrace (showName name ++ " single")
 
-    onDemandPackageContainingType = resolveTrace (showName name ++  " on-demand") $ find (typeIsInPackage name) onDemandPackages
+    onDemandPackageContainingType =
+      resolvePrefixes (findPackageContainingType onDemandPackages) name |>
+      resolveTrace (showName name ++ " on-demand")
+
+resolvePrefixes :: (Name -> Maybe a) -> Name -> Maybe a
+resolvePrefixes resolve name =
+  inits name |>
+  map resolve |>
+  catMaybes |>
+  listToMaybe
 
 resolveTrace :: Show a => String -> a -> a
 resolveTrace s x = trace (intercalate ": " [s, show x]) x
 
+findPackageContainingType :: [Package] -> Name -> Maybe Package
+findPackageContainingType packages name = find (typeIsInPackage name) packages
+
 typeIsInPackage :: Name -> Package -> Bool
+typeIsInPackage [] _ = False
 typeIsInPackage [n] Package {packageCompilationUnits = units}
   | length matches > 1 = error "Duplicate definition for type in package"
   | otherwise = length matches == 1
   where
     matches = filter (== n) units
+-- TODO(Ahmed) harden. This was written with a different design in mind
 typeIsInPackage n (Package _ units)
   | length matches > 1 = error "Duplicate definition for type in package"
   | (length matches == 1) = True
