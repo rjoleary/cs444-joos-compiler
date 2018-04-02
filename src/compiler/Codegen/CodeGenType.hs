@@ -10,6 +10,7 @@ import Data.Char
 import Data.Int
 import Data.List
 import Data.Maybe
+import Data.Tree
 import Debug.Trace(trace)
 import Flow
 import JoosCompiler.Ast
@@ -46,20 +47,20 @@ data CodeGenCtx = CodeGenCtx
 instance Analysis CodeGenCtx (Asm ()) where
   analyze ctx (AstTypeDeclaration t@TypeDeclaration{isInterface=False}) = Right $ do
     let wp = ctxProgram ctx
-    global t
-    label t
-    space
 
     -- instanceof table
     -- This excludes objects because (x instanceof Object) is true at compile time.
-    let instanceOfTable = filter (\x -> typeCanonicalName x /= ["java", "lang", "Object"]) $ map (fromJust . resolveTypeInProgram wp) (super t : interfaces t)
-    comment ("instanceof table of size " ++ show (length instanceOfTable + 1))
-    mapM_ (\l -> (extern l) >>  (dd . L . mangle $ l)) instanceOfTable
+    let instanceOfTable = nub $ tail $ flatten $ typeHierarchy wp t
+    comment "Instanceof table"
     dd (I 0)
+    dd . L . mangle $ t
+    mapM_ (\l -> (extern l) >> (dd . L . mangle $ l)) instanceOfTable
     space
 
     -- Vtable
     comment "TODO: vtable"
+    global t
+    label t
     space
 
     -- Uninitialized static fields
@@ -393,7 +394,7 @@ generateExpression ctx (NewExpression n e) = do
   pop Eax
   return Void
   where
-    addr = "Vtable$" ++ (mangle td)
+    addr = mangle td
     td = fromMaybe (error "Could not resolve type") maybeTd
     maybeTd = resolveTypeInProgram wp n
     v = length $ trace (show fields) fields
