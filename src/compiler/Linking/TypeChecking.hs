@@ -353,7 +353,7 @@ isTypeCastable wp target source
 isReferenceAssignable :: WholeProgram -> Type -> Type -> Bool
 isReferenceAssignable wp t@(Type (NamedType tName) tArr) s@(Type (NamedType sName) sArr)
   | s == t                                = True  -- Identity conversion
-  | sArr && tArr                          = isReferenceAssignable wp (toScalar s) (toScalar t)
+  | sArr && tArr                          = isReferenceAssignable wp (toScalar t) (toScalar s)
   | not sArr && tArr                      = False -- Cannot assign class/interface type to array
   | sArr && tName `elem` arrayAssignables = True  -- Can assign array to limited interfaces
   | not sArr && not tArr && tName `elem` sourceHierarchy = True  -- Widening reference conversion
