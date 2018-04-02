@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wincomplete-patterns #-}
 {-# OPTIONS_GHC -Woverlapping-patterns #-}
+
 module JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
   ( canonicalizeProgram
   ) where

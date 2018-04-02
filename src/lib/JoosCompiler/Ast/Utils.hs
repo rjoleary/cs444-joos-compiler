@@ -132,7 +132,7 @@ resolveMethodInProgram expectingStatic program typeName mName signaure =
     typeDeclMaybe = resolveTypeInProgram program typeName
     _typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
     resolvedMethods =
-      methods _typeDecl |>
+      allMethods program typeName |>
       filter (\m -> (mName == methodName m && isMethodStatic m == expectingStatic))
 
 canonicalizeUnitName :: CompilationUnit -> Name
@@ -235,3 +235,20 @@ directAndIndirectFields expectingStatic program name = fields
       | canonicalName == ["java", "lang", "Object"] = []
       | otherwise = directAndIndirectFields expectingStatic program _super
     fields = superFields ++ classFields resolvedType
+
+allMethods :: WholeProgram -> Name -> [Method]
+allMethods program name = ms
+  where
+    ms = (directMethods program name) ++ (indirectMethods program name)
+
+indirectMethods :: WholeProgram -> Name -> [Method]
+indirectMethods program name = ms
+  where
+    implemented = tail $ typeHierarchyNames program name
+    ms = mconcat $ map (getTypeInProgram program .> methods) implemented
+
+directMethods :: WholeProgram -> Name -> [Method]
+directMethods program name = ms
+  where
+    typeDecl = getTypeInProgram program name
+    ms = methods typeDecl
