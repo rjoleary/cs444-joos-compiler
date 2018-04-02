@@ -89,9 +89,10 @@ instance Analysis TypeAnalysis () where
     analyze' ctx n
 
   analyze ctx (AstStatement LocalStatement{localVariable=v, nextStatement=n}) = do
-    exprType <- analyze' ctx (variableValue v)
-    when (exprType /= variableType v)
-      (Left $ "Local statement type doesn't match (got " ++ show exprType ++ ", expected " ++ show (variableType v) ++ ")")
+    sourceType <- analyze' ctx (variableValue v)
+    let targetType = variableType v
+    when (not $ isTypeAssignable (ctxProgram ctx) targetType sourceType)
+      (Left $ "Not type assignable (" ++ show targetType ++ " to " ++ show sourceType ++ ")")
     let newEnv = Map.insert (variableName v) (variableType v) (ctxLocalEnv ctx)
     analyze' ctx{ ctxLocalEnv = newEnv } n
 
