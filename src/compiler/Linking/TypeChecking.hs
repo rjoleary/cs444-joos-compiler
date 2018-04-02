@@ -244,9 +244,11 @@ instance Analysis TypeAnalysis Type where
       else Left ("Array size must be numeric (" ++ show sizeType ++ ")")
 
   -- JLS 15.16: Cast Expressions
-  analyze ctx (AstExpression e@(CastExpression t expr)) = do
-    exprType <- analyze' ctx expr :: Either String Type
-    return $ t -- TODO: there are more rules
+  analyze ctx (AstExpression e@(CastExpression targetType expr)) = do
+    sourceType <- analyze' ctx expr :: Either String Type
+    when (not $ isTypeCastable (ctxProgram ctx) targetType sourceType)
+      (Left $ "Not cast assignable (" ++ show sourceType ++ " to " ++ show targetType ++ ")")
+    return $ targetType
 
   -- JLS 15.20.2: Type Comparison Operator instanceof
   analyze ctx (AstExpression e@(InstanceOfExpression expr t)) = do
@@ -332,11 +334,23 @@ instance Analysis TypeAnalysis Type where
 isTypeAssignable :: WholeProgram -> Type -> Type -> Bool
 isTypeAssignable wp target source
   | target == Void || source == Void         = False -- Void is not a real type
-  | target == source                         = True -- Identity conversion
-  | canNumericWiden source target            = True -- Widening primitive conversion
+  | target == source                         = True  -- Identity conversion
+  | canNumericWiden source target            = True  -- Widening primitive conversion
   | isReference source && isReference target = isReferenceAssignable wp target source
   | otherwise                                = False
 
+-- See JLS 5.5: Cast Conversion
+isTypeCastable :: WholeProgram -> Type -> Type -> Bool
+isTypeCastable wp target source
+  | target == Void || source == Void         = False -- Void is not a real type
+  | target == source                         = True  -- Identity conversion
+  | canNumericWiden source target            = True  -- Widening primitive conversion
+  | canNumericNarrow source target           = True  -- Narrowing primitive conversion
+  | isReference source && isReference target = isReferenceAssignable wp target source ||
+                                               isReferenceAssignable wp source target
+  | otherwise                                = False
+
+-- Joos uses this simplification in assignment, casting and instanceof.
 isReferenceAssignable :: WholeProgram -> Type -> Type -> Bool
 isReferenceAssignable wp t@(Type (NamedType tName) tArr) s@(Type (NamedType sName) sArr)
   | s == t                                = True  -- Identity conversion
@@ -356,6 +370,18 @@ canNumericWiden (Type Byte False)  (Type Int False)   = True
 canNumericWiden (Type Short False) (Type Int False)   = True
 canNumericWiden (Type Char False)  (Type Int False)   = True
 canNumericWiden _                  _                  = False
+
+-- See JLS 5.1.2: Narrowing Primitive Conversion
+canNumericNarrow :: Type -> Type -> Bool
+canNumericNarrow (Type Byte False)  (Type Char False)  = True
+canNumericNarrow (Type Short False) (Type Byte False)  = True
+canNumericNarrow (Type Short False) (Type Char False)  = True
+canNumericNarrow (Type Char False)  (Type Byte False)  = True
+canNumericNarrow (Type Char False)  (Type Short False) = True
+canNumericNarrow (Type Int False)   (Type Byte False)  = True
+canNumericNarrow (Type Int False)   (Type Short False) = True
+canNumericNarrow (Type Int False)   (Type Char False)  = True
+canNumericNarrow _                  _                  = False
 
 -- Classes/interfaces you can assign an array to.
 arrayAssignables :: [Name]
