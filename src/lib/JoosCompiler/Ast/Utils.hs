@@ -4,6 +4,7 @@ import           Data.List
 import           Data.Maybe
 import           Data.Tree
 import           Debug.DumbTrace(trace)
+import qualified Debug.DumbTrace as DumbTrace
 import           Flow
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.NodeFunctions
@@ -129,6 +130,7 @@ resolveMethodInProgram expectingStatic program typeName mName signaure =
            mconcat
           )))
   where
+    trace = DumbTrace.trace
     typeDeclMaybe = resolveTypeInProgram program typeName
     _typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
     resolvedMethods =
@@ -165,7 +167,7 @@ getStaticFieldInUnit = getFieldInUnit True
 getFieldInUnit :: Bool -> WholeProgram -> CompilationUnit -> String -> Field
 getFieldInUnit expectingStatic program unit n =
   (findFieldInUnit expectingStatic program unit n) |>
-  fromMaybe (error "getFieldInUnit got Nothing")
+  fromMaybe (error $ "getFieldInUnit got Nothing: " ++ (intercalate "." [cuTypeName unit, n]))
 
 findDynamicFieldInUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
 findDynamicFieldInUnit  = findFieldInUnit False
@@ -189,11 +191,16 @@ findStaticFieldInType = findFieldInType True
 
 findFieldInType :: Bool -> WholeProgram -> TypeDeclaration -> String -> Maybe Field
 findFieldInType expectingStatic program typeDecl n
-  = typeCanonicalName typeDecl |>
-    directAndIndirectFields expectingStatic program |>
+  = result |>
+    trace (show allFields)
+  where
+    canonicalName = typeCanonicalName typeDecl
     -- the function above returns super first. We want the opposite
-    reverse |>
-    find (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
+    allFields = directAndIndirectFields expectingStatic program canonicalName |>
+                reverse
+    result = find
+             (\v -> (variableName v == n && expectingStatic == (isFieldStatic v)))
+             allFields
 
 getDynamicFieldInType :: WholeProgram -> TypeDeclaration -> String -> Field
 getDynamicFieldInType = getFieldInType False

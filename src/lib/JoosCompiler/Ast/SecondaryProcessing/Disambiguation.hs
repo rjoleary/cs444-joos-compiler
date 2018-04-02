@@ -88,8 +88,10 @@ disambiguateExpression program unit vars e@(ExpressionName [n])
 
 disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | isJust localMaybe               = (LocalAccess n)
-  | staticFieldExistsInUnit program unit n  = e
-  | dynamicFieldExistsInUnit program unit n = e
+  | staticFieldExistsInUnit program unit n  =
+    wrapAccess program staticFieldType (StaticFieldAccess staticFieldName) ns
+  | dynamicFieldExistsInUnit program unit n =
+    wrapAccess program dynamicFieldType (DynamicFieldAccess This n) ns
   | isJust resolvedClassMaybe       =
     wrapClassAccess program resolvedClass restOfName |>
     trace ("Wrapping class access: " ++ showName name)
@@ -97,10 +99,24 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   where
     trace = DumbTrace.trace
     localMaybe = Map.lookup n vars
+
+    staticField = getStaticFieldInUnit program unit n
+    staticFieldName = variableCanonicalName staticField
+    staticFieldType = variableType staticField
+
+    dynamicField = getDynamicFieldInUnit program unit n
+    dynamicFieldName = variableCanonicalName dynamicField
+    dynamicFieldType = variableType dynamicField
+
     (resolvedClassMaybe, restOfName) = resolveAsClass program unit name
     resolvedClass =
       resolvedClassMaybe |>
       fromMaybe (error $ "resolvedClass was nothing: " ++ showName name)
+
+disambiguateExpression program unit vars old@(AmbiguousFieldAccess e n)
+  | True = error "Ok"
+  where
+    s = 's'
 
 disambiguateExpression program unit vars old@(DynamicMethodInvocation (ClassAccess cName) mName args) =
   StaticMethodInvocation cName mName args
