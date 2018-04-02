@@ -57,6 +57,7 @@ children (AstExpression (ArrayLengthAccess e)) = [AstExpression e]
 children (AstExpression (StaticMethodInvocation _ _ args)) = map AstExpression args
 children (AstExpression (StaticFieldAccess n)) = []
 children (AstExpression (LocalAccess _)) = []
+children (AstExpression (ClassAccess _)) = []
 children (AstField x)           = [ AstType $ variableType x
                                   , AstExpression $ variableValue x ]
 children (AstImport x)          = []
