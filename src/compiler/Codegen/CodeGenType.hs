@@ -72,7 +72,7 @@ instance Analysis CodeGenCtx (Asm ()) where
       ) staticFields
     space
 
-    -- Init function
+    -- Init function for initializing static variables.
     comment "Init function"
     global (Init t)
     label (Init t)
@@ -86,8 +86,8 @@ instance Analysis CodeGenCtx (Asm ()) where
     space
 
     -- Constructors
-    comment "TODO: constructors"
-    space
+    comment "Constructors"
+    mapM_ (\m -> comment "Constructor" >> generateMethod' ctx m >> space) (constructors t)
 
     -- Methods
     comment "Methods"
@@ -142,7 +142,7 @@ generateMethod ctx m
     -- Type checking has already ensured static methods do not use "this", so
     -- the final parameter will simply be ignored for static methods.
     let thisType = Type (NamedType (ctxThis ctx)) False
-    let paramNames = map variableName (methodParameters m) ++["this"]
+    let paramNames = map variableName (methodParameters m) ++ ["this"]
     let paramTypes = map variableType (methodParameters m) ++ [thisType]
     let newCtx = ctx {
       ctxLocals      = Map.fromList (zip paramNames paramTypes),
