@@ -175,14 +175,14 @@ instance Analysis TypeAnalysis Type where
 
     -- JLS 15.26: Assignment Operators (=)
     | op `elem` [Assign] = do
-      expr1Type <- analyze' ctx expr1
-      expr2Type <- analyze' ctx expr2
-      if expr1Type == expr2Type
-        then return expr1Type -- TODO: more checks are required
-        else Left ("Bad assignment operator (" ++
-          show expr1Type ++
+      targetType <- analyze' ctx expr1
+      sourceType <- analyze' ctx expr2
+      if isTypeAssignable (ctxProgram ctx) targetType sourceType
+        then return targetType
+        else Left ("Not type assignable (" ++
+          show targetType ++
           show op ++
-          show expr2Type ++ ")")
+          show sourceType ++ ")")
 
   -- JLS 15.15.4: Unary Minus Operator (-)
   analyze ctx (AstExpression e@(UnaryOperation Negate expr)) = do
@@ -313,6 +313,42 @@ instance Analysis TypeAnalysis Type where
 
 
 ---------- Helper Functions ----------
+
+-- See JLS 5.2: Assignment Conversion
+-- Additionally, a narrowing conversion are not allowed in Joos.
+isTypeAssignable :: WholeProgram -> Type -> Type -> Bool
+isTypeAssignable wp target source
+  | target == source                         = True -- Identity conversion
+  | canNumericWiden source target            = True -- Widening primitive conversion
+  | isReference source && isReference target = isReferenceAssignable wp target source
+  | otherwise                                = False
+
+isReferenceAssignable :: WholeProgram -> Type -> Type -> Bool
+isReferenceAssignable wp s@(Type (NamedType sName) sArr) t@(Type (NamedType tName) tArr)
+  | sArr && tArr                          = isReferenceAssignable wp (toScalar s) (toScalar t)
+  | s == t                                = True  -- Identity conversion
+  | not sArr && tArr                      = False -- Cannot assign named type to array
+  | sArr && tName `elem` arrayAssignables = True  -- Can assign array to limited interfaces
+  | tName `elem` sourceHierarchy          = True  -- Widening reference conversion
+  | otherwise                             = False
+  where sourceHierarchy = typeHierarchyNames wp sName
+isReferenceAssignable _ t Null = isReference t -- Can assign null to reference type
+isReferenceAssignable _ _ _ = error "Must pass reference types to isReferenceAssignable"
+
+-- See JLS 5.1.2: Widening Primitive Conversion
+canNumericWiden :: Type -> Type -> Bool
+canNumericWiden (Type Byte False)  (Type Short False) = True
+canNumericWiden (Type Byte False)  (Type Int False)   = True
+canNumericWiden (Type Short False) (Type Int False)   = True
+canNumericWiden (Type Char False)  (Type Int False)   = True
+canNumericWiden _                  _                  = False
+
+-- Classes/interfaces you can assign an array to.
+arrayAssignables :: [Name]
+arrayAssignables = [
+  ["java", "lang", "Object"],
+  ["java", "io", "Serializable"],
+  ["java", "lang", "Cloneable"]]
 
 toScalar :: Type -> Type
 toScalar (Type x _) = Type x False
