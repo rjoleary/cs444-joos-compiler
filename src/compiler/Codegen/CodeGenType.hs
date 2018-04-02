@@ -64,8 +64,10 @@ generateTypeDeclaration ctx t = do
   label t
   space
 
-  -- Uninitialized static fields
+  -- Interfaces only have instanceof table and vtable.
   when (not $ isInterface t) $ do
+
+    -- Uninitialized static fields
     comment (show (length staticFields) ++ " static fields")
     mapM_ (\field -> do
       comment (variableName field)
@@ -74,9 +76,8 @@ generateTypeDeclaration ctx t = do
       ) staticFields
     space
 
-  -- Init function for initializing static variables.
-  comment "Init function"
-  when (not $ isInterface t) $ do
+    -- Init function for initializing static variables.
+    comment "Init function"
     global (Init t)
     label (Init t)
     -- Initialized in the order defined
@@ -88,14 +89,12 @@ generateTypeDeclaration ctx t = do
       ) staticFields
     space
 
-  -- Constructors
-  comment "Constructors"
-  when (not $ isInterface t) $ do
+    -- Constructors
+    comment "Constructors"
     mapM_ (\m -> comment "Constructor" >> generateMethod' ctx m >> space) (constructors t)
 
-  -- Methods
-  comment "Methods"
-  when (not $ isInterface t) $ do
+    -- Methods
+    comment "Methods"
     mapM_ (\m -> generateMethod' ctx m >> space) (methods t)
 
 
