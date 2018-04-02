@@ -77,7 +77,7 @@ data Method = Method
   } deriving (Eq)
 
 
----------- Statemen ts and Expressions ----------
+---------- Statements and Expressions ----------
 
 data Block = Block
   { blockScope :: Scope
@@ -127,7 +127,7 @@ data Expression
   | LiteralExpression Literal
 
   | NewExpression Name [Expression]
-  | NewArrayExpression Type Expression -- TODO: confusion on primitive types
+  | NewArrayExpression Type Expression
 
   | CastExpression Type Expression
   | InstanceOfExpression Expression Type
