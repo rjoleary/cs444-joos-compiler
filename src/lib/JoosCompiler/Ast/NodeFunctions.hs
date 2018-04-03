@@ -6,6 +6,7 @@ import JoosCompiler.Ast.NodeTypes
 
 import Data.List
 import Data.Maybe
+import Flow
 import Debug.DumbTrace(trace)
 import qualified Data.Map.Strict as Map
 
@@ -169,7 +170,8 @@ mapStatementVars f vars x@(BlockStatement s _) =
     newInnerBlock = mapStatementVars f vars s
 
 mapStatementVars f vars x@LocalStatement{localVariable = v} =
-  result
+  result |>
+  (trace $ "Vars: " ++ show newVars)
   where
     newVars = if (isJust $ Map.lookup (variableName v) vars)
                  then error "Duplicate local"
@@ -206,48 +208,64 @@ applyNextMapStatement f vars s
 mapStatementVarsExpression :: (VariableMap -> Expression -> Expression) -> VariableMap -> Statement -> Statement
 mapStatementVarsExpression _ _ TerminalStatement = TerminalStatement
 
-mapStatementVarsExpression f vars old@ExpressionStatement{statementExpression = e} =
-  old{ statementExpression = mapExpression (f vars) e
-     , nextStatement = next
-     }
+mapStatementVarsExpression f vars (BlockStatement s n) =
+  BlockStatement
+  { statementBlock = g s
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@LoopStatement{loopPredicate = p} =
-  old{ loopPredicate = mapExpression (f vars) p
-     , nextStatement = next
-     }
+mapStatementVarsExpression f vars (ExpressionStatement e n) =
+  ExpressionStatement
+  { statementExpression = mapExpression (f vars) e
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@IfStatement{ifPredicate = p} =
-  old{ ifPredicate = mapExpression (f vars) p
-     , nextStatement = next
-     }
+mapStatementVarsExpression f vars (LoopStatement p s n) =
+  LoopStatement
+  { loopPredicate = mapExpression (f vars) p
+  , loopStatement = g s
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@ReturnStatement{ returnExpression = Just e } =
-  old{ returnExpression = Just $ mapExpression (f vars) e
-     , nextStatement = next }
+mapStatementVarsExpression f vars (IfStatement p t e n) =
+  IfStatement
+  { ifPredicate = mapExpression (f vars) p
+  , ifThenStatement = g t
+  , ifElseStatement = g e
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@LocalStatement{ localVariable = v } =
-  old{ nextStatement = next
-     , localVariable = newLocalVar
-     }
+mapStatementVarsExpression f vars (ReturnStatement maybeE n) =
+  ReturnStatement
+  { returnExpression = if (isNothing maybeE)
+                       then Nothing
+                       else Just $ (mapExpression (f vars) (fromMaybe (error "Should never happen") maybeE))
+  , nextStatement = g n
+  }
+  where
+    g = mapStatementVars (mapStatementVarsExpression f) vars
+
+mapStatementVarsExpression f vars (LocalStatement v n) =
+  LocalStatement newLocalVar next
   where
     oldValue = variableValue v
     newLocalVar = trace
       (intercalate "\n" [ (show vars) , (intercalate " = " [ variableName v , show $ mapExpression (f vars) oldValue]) ])
       v { variableValue = mapExpression (f vars) oldValue }
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ n
 
-mapStatementVarsExpression f vars old =
-  old{ nextStatement = next }
+mapStatementVarsExpression f vars (EmptyStatement n) =
+  EmptyStatement $ g n
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
 -- All the mapExpression functions apply f to the children first so f
 -- can discard the result if it wants to
