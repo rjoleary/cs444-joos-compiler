@@ -17,6 +17,7 @@ import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Utils
 import Codegen.X86
 import Codegen.Mangling
+import Linking.TypeChecking
 import qualified Codegen.X86 as X86
 import qualified Data.Map.Strict as Map
 
@@ -280,7 +281,10 @@ generateExpression ctx (BinaryOperation Add x y) = do
   mov Ebx Eax
   pop Eax
   add Eax Ebx
-  return (Type Int False) -- TODO: strings
+  return $
+    if isString t1 || isString t2
+    then (Type (NamedType ["java", "lang", "String"]) False)
+    else (Type Int False)
 
 -- And is special because short circuiting.
 generateExpression ctx (BinaryOperation And x y) = do
