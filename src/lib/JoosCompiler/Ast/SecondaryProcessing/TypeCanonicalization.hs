@@ -161,22 +161,22 @@ canonicalizeStatement program unit formalParameters statement =
     g vars old = mapStatementVarsExpression (canonicalizeExpression program unit) vars old
 
 canonicalizeExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
-canonicalizeExpression program unit vars (CastExpression oldType@Type{ innerType = (NamedType name) } e) =
+canonicalizeExpression program unit vars (CastExpression (Type (NamedType name) isArr) e) =
   CastExpression newType e
   where
-    newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+    newType = Type (NamedType $ canonicalize program unit name) isArr
 canonicalizeExpression program unit vars old@(CastExpression oldType e) = old
 
-canonicalizeExpression program unit vars (NewArrayExpression oldType@Type{ innerType = (NamedType name) } e) =
+canonicalizeExpression program unit vars (NewArrayExpression (Type (NamedType name) isArr) e) =
   NewArrayExpression newType e
   where
-    newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+    newType = Type (NamedType $ canonicalize program unit name) isArr
 canonicalizeExpression program unit vars old@(NewArrayExpression oldType e) = old
 
-canonicalizeExpression program unit vars (InstanceOfExpression e oldType@Type{ innerType = (NamedType name) }) =
+canonicalizeExpression program unit vars (InstanceOfExpression e (Type (NamedType name) isArr)) =
   InstanceOfExpression e newType
   where
-    newType = oldType{ innerType = NamedType $ canonicalize program unit name}
+    newType = Type (NamedType $ canonicalize program unit name) isArr
 canonicalizeExpression program unit vars old@(InstanceOfExpression e oldType) = old
 
 canonicalizeExpression program unit vars (ExpressionName name) =
@@ -228,7 +228,7 @@ canonicalizeVar
   program
   unit
   vars
-  old@Variable{ variableType = oldType@Type{ innerType = NamedType{ unNamedType = oldTypeName }}
+  old@Variable{ variableType = (Type NamedType{ unNamedType = oldTypeName } isArr)
               , variableName = n
               , variableValue = oldValue
            } =
@@ -237,7 +237,7 @@ canonicalizeVar
       , variableValue = canonicalizedExpression
       }
   where
-    newType = oldType{ innerType = (NamedType newTypeName) }
+    newType = Type (NamedType newTypeName) isArr
     newTypeName = canonicalize program unit oldTypeName
     canonicalizedExpression = canonicalizeExpression program unit vars oldValue
 -- Not NamedType

@@ -3,6 +3,10 @@
 
 module Linking.TypeChecking
   ( checkTypes
+  , canNumericNarrow
+  , toScalar
+  , isReference
+  , getTypeName
   ) where
 
 import Control.Monad
@@ -365,6 +369,7 @@ isReferenceAssignable _ (Type t True) (Type s True) = t == s -- Arrays of primit
 isReferenceAssignable _ _ _ = error "Must pass reference types to isReferenceAssignable"
 
 -- See JLS 5.1.2: Widening Primitive Conversion
+-- source -> target -> bool
 canNumericWiden :: Type -> Type -> Bool
 canNumericWiden (Type Byte False)  (Type Short False) = True
 canNumericWiden (Type Byte False)  (Type Int False)   = True
@@ -373,6 +378,7 @@ canNumericWiden (Type Char False)  (Type Int False)   = True
 canNumericWiden _                  _                  = False
 
 -- See JLS 5.1.2: Narrowing Primitive Conversion
+-- source -> target -> bool
 canNumericNarrow :: Type -> Type -> Bool
 canNumericNarrow (Type Byte False)  (Type Char False)  = True
 canNumericNarrow (Type Short False) (Type Byte False)  = True

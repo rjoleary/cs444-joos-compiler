@@ -17,6 +17,7 @@ import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Utils
 import Codegen.X86
 import Codegen.Mangling
+import Linking.TypeChecking
 import qualified Codegen.X86 as X86
 import qualified Data.Map.Strict as Map
 
@@ -126,9 +127,9 @@ generateMethod ctx m
     extern nativeLabel
     jmp (L nativeLabel)
 
-  -- constructor 
+  -- constructor
   | isConstructor m = do
-    generateConstructor ctx m 
+    generateConstructor ctx m
     generateStatement ctx (methodStatement m)
     mov Esp Ebp
     pop Ebp
@@ -473,10 +474,38 @@ generateExpression ctx (NewArrayExpression t e) = do
     td = fromMaybe (error "Could not resolve type") maybeTd
     obj = mangle td
 
-generateExpression ctx (CastExpression t e) = do
-  generateExpression' ctx e -- TODO: is instanceof
-  -- TODO: (x instanceof Object) is true at compile time
-  return t
+generateExpression ctx (CastExpression targetType e) = do
+  sourceType <- generateExpression' ctx e
+
+  -- Narrowing primitive conversion
+  when (canNumericNarrow sourceType targetType) $ do
+    comment $ "Narrowing primitive conversion: " ++ show sourceType ++ " to " ++ show targetType
+    case targetType of
+      (Type Byte False)  -> movsx Eax Al -- sign extend 8-bit
+      (Type Short False) -> movsx Eax Ax -- sign extend 16-bit
+      (Type Char False)  -> movzx Eax Ax -- zero extend 16-bit
+      otherwise          -> error $ "Cannot narrow to this type " ++ show targetType
+
+  -- Narrowing reference conversion
+  when (isArray sourceType == isArray targetType &&
+        isReference (toScalar targetType) &&
+        isReference (toScalar sourceType) &&
+        let sourceName      = getTypeName (toScalar sourceType)
+            targetName      = getTypeName (toScalar targetType)
+            targetHierarchy = typeHierarchyNames (ctxProgram ctx) targetName
+        in sourceName `elem` targetHierarchy) $ do
+    comment $ "Narrwoing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
+    push Eax
+    mov Eax (Addr Eax) -- Get pointer to vtable
+    mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
+    extern "instanceOfLookup"
+    call (L "instanceOfLookup")
+    extern "nullcheck"
+    call (L "nullcheck")
+    pop Eax
+
+  -- Otherwise, no additional work required.
+  return targetType
 
 generateExpression ctx (StaticMethodInvocation n s args) = do
   t <- mapM_ (\(idx, arg) -> do
@@ -535,10 +564,13 @@ generateExpression ctx (ArrayLengthAccess _) = do
   mov Eax (I 123)
   return Void
 
-generateExpression ctx (StaticFieldAccess _) = do
-  comment "TODO StaticFieldAccess"
-  mov Eax (I 123)
-  return Void
+generateExpression ctx (StaticFieldAccess name) =
+  case resolveFieldInType (ctxProgram ctx) (Type (NamedType $ ctxThis ctx) False) name of
+    Just field -> do
+      comment "TODO get field value"
+      mov Eax (I 123) -- TODO
+      return (variableType field)
+    Nothing -> error $ "Cannot find field " ++ showName name ++ " in ctx"
 
 generateExpression ctx (LocalAccess n) = do
   mov Eax $ AddrOffset Ebp (mapLookupWith (ctxFrame ctx))
@@ -592,7 +624,7 @@ generateLValue _ _ = do
   return Void
 
 generateConstructor :: CodeGenCtx -> Method -> Asm()
-generateConstructor ctx m 
+generateConstructor ctx m
   | isNoSuperObject ctx m = do
     push Ebp
     mov Esp Ebp
@@ -614,7 +646,7 @@ generateConstructor ctx m
     push Edi
     push Esi
     let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    let superConstructorLabel = "Class$" ++ intercalate "$" superName 
+    let superConstructorLabel = "Class$" ++ intercalate "$" superName
     extern superConstructorLabel
     call (L superConstructorLabel)
     pop Esi

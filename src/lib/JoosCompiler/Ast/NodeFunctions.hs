@@ -330,8 +330,20 @@ unitializedLiteral (Type (NamedType _) _) = NullLiteral
 unitializedLiteral (Type _ True)          = NullLiteral
 unitializedLiteral (Type Boolean _)       = BooleanLiteral False
 unitializedLiteral (Type _ _)             = IntegerLiteral 0
-unitializedLiteral Void = error "Void is not a literal"
-unitializedLiteral Null          = NullLiteral
+unitializedLiteral Void                   = error "Void is not a literal"
+unitializedLiteral Null                   = NullLiteral
+
+isArray :: Type -> Bool
+isArray (Type _ True) = True
+isArray _             = False
+
+innerType :: Type -> InnerType
+innerType (Type x _) = x
+innerType x          = error $ "No inner type for " ++ show x
+
+replaceInner :: InnerType -> Type -> Type
+replaceInner x (Type _ y) = Type x y
+replaceInner _ x          = error $ "No inner type for " ++ show x
 
 extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"
