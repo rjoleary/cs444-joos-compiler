@@ -6,6 +6,7 @@ import JoosCompiler.Ast.NodeTypes
 
 import Data.List
 import Data.Maybe
+import Flow
 import Debug.DumbTrace(trace)
 import qualified Data.Map.Strict as Map
 
@@ -206,48 +207,64 @@ applyNextMapStatement f vars s
 mapStatementVarsExpression :: (VariableMap -> Expression -> Expression) -> VariableMap -> Statement -> Statement
 mapStatementVarsExpression _ _ TerminalStatement = TerminalStatement
 
-mapStatementVarsExpression f vars old@ExpressionStatement{statementExpression = e} =
-  old{ statementExpression = mapExpression (f vars) e
-     , nextStatement = next
-     }
+mapStatementVarsExpression f vars (BlockStatement s n) =
+  BlockStatement
+  { statementBlock = g s
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@LoopStatement{loopPredicate = p} =
-  old{ loopPredicate = mapExpression (f vars) p
-     , nextStatement = next
-     }
+mapStatementVarsExpression f vars (ExpressionStatement e n) =
+  ExpressionStatement
+  { statementExpression = mapExpression (f vars) e
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@IfStatement{ifPredicate = p} =
-  old{ ifPredicate = mapExpression (f vars) p
-     , nextStatement = next
-     }
+mapStatementVarsExpression f vars (LoopStatement p s n) =
+  LoopStatement
+  { loopPredicate = mapExpression (f vars) p
+  , loopStatement = g s
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@ReturnStatement{ returnExpression = Just e } =
-  old{ returnExpression = Just $ mapExpression (f vars) e
-     , nextStatement = next }
+mapStatementVarsExpression f vars (IfStatement p t e n) =
+  IfStatement
+  { ifPredicate = mapExpression (f vars) p
+  , ifThenStatement = g t
+  , ifElseStatement = g e
+  , nextStatement = g n
+  }
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
-mapStatementVarsExpression f vars old@LocalStatement{ localVariable = v } =
-  old{ nextStatement = next
-     , localVariable = newLocalVar
-     }
+mapStatementVarsExpression f vars (ReturnStatement maybeE n) =
+  ReturnStatement
+  { returnExpression = if (isNothing maybeE)
+                       then Nothing
+                       else Just $ (mapExpression (f vars) (fromMaybe (error "Should never happen") maybeE))
+  , nextStatement = g n
+  }
+  where
+    g = mapStatementVars (mapStatementVarsExpression f) vars
+
+mapStatementVarsExpression f vars (LocalStatement v n) =
+  LocalStatement newLocalVar next
   where
     oldValue = variableValue v
     newLocalVar = trace
       (intercalate "\n" [ (show vars) , (intercalate " = " [ variableName v , show $ mapExpression (f vars) oldValue]) ])
       v { variableValue = mapExpression (f vars) oldValue }
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    next = mapStatementVars (mapStatementVarsExpression f) vars $ n
 
-mapStatementVarsExpression f vars old =
-  old{ nextStatement = next }
+mapStatementVarsExpression f vars (EmptyStatement n) =
+  EmptyStatement $ g n
   where
-    next = mapStatementVars (mapStatementVarsExpression f) vars $ nextStatement old
+    g = mapStatementVars (mapStatementVarsExpression f) vars
 
 -- All the mapExpression functions apply f to the children first so f
 -- can discard the result if it wants to
@@ -267,14 +284,14 @@ mapExpression f (BinaryOperation o e1 e2) =
     newE1 = mapExpression f e1
     newE2 = mapExpression f e2
 
-mapExpression f (UnaryOperation o e)       = UnaryOperation o (mapExpression f e)
-mapExpression f (AmbiguousFieldAccess e s) = AmbiguousFieldAccess (mapExpression f e) s
-mapExpression f (DynamicFieldAccess e s)   = f $ DynamicFieldAccess (mapExpression f e) s
-mapExpression f (ArrayLengthAccess e)      = f $ ArrayLengthAccess (mapExpression f e)
+mapExpression f (UnaryOperation o e)       = f $ UnaryOperation o      (mapExpression f e)
+mapExpression f (AmbiguousFieldAccess e s) = f $ AmbiguousFieldAccess  (mapExpression f e) s
+mapExpression f (DynamicFieldAccess e s)   = f $ DynamicFieldAccess    (mapExpression f e) s
+mapExpression f (ArrayLengthAccess e)      = f $ ArrayLengthAccess     (mapExpression f e)
 mapExpression f (NewExpression n le)       = f $ NewExpression n $ map (mapExpression f) le
 mapExpression f (NewArrayExpression t e)   = f $ NewArrayExpression t $ mapExpression f e
-mapExpression f (CastExpression t e)       = f $ CastExpression t $ mapExpression f e
-mapExpression f (InstanceOfExpression e t) = f $ InstanceOfExpression (mapExpression f e) t
+mapExpression f (CastExpression t e)       = f $ CastExpression t $     mapExpression f e
+mapExpression f (InstanceOfExpression e t) = f $ InstanceOfExpression   (mapExpression f e) t
 mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
   where
     newE1 = mapExpression f e1
@@ -283,11 +300,11 @@ mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
 -- All of those expressions have no sub-expressions. We could combine into one,
 -- but explicitly stating helps expose bugs more quickly
 mapExpression f old@StaticFieldAccess{} = f old
-mapExpression f old@LocalAccess{}  = f old
+mapExpression f old@LocalAccess{}       = f old
 mapExpression f old@ExpressionName{}    = f old
 mapExpression f old@LiteralExpression{} = f old
-mapExpression f old@ClassAccess{}    = f old
-mapExpression f This = f This
+mapExpression f old@ClassAccess{}       = f old
+mapExpression f This                    = f This
 
 ---------- Other Functions ----------
 
@@ -312,8 +329,20 @@ unitializedLiteral (Type (NamedType _) _) = NullLiteral
 unitializedLiteral (Type _ True)          = NullLiteral
 unitializedLiteral (Type Boolean _)       = BooleanLiteral False
 unitializedLiteral (Type _ _)             = IntegerLiteral 0
-unitializedLiteral Void = error "Void is not a literal"
-unitializedLiteral Null          = NullLiteral
+unitializedLiteral Void                   = error "Void is not a literal"
+unitializedLiteral Null                   = NullLiteral
+
+isArray :: Type -> Bool
+isArray (Type _ True) = True
+isArray _             = False
+
+innerType :: Type -> InnerType
+innerType (Type x _) = x
+innerType x          = error $ "No inner type for " ++ show x
+
+replaceInner :: InnerType -> Type -> Type
+replaceInner x (Type _ y) = Type x y
+replaceInner _ x          = error $ "No inner type for " ++ show x
 
 extractTypeName :: Maybe TypeDeclaration -> String
 extractTypeName Nothing  = "N/A"

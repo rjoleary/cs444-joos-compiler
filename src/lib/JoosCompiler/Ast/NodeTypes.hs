@@ -153,8 +153,7 @@ data Expression
 data Type
   = Void
   | Null
-  | Type { innerType :: InnerType
-         , isArray   :: Bool }
+  | Type InnerType Bool -- True = array, False = scalar
   deriving (Eq)
 
 data InnerType

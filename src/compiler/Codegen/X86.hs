@@ -75,6 +75,8 @@ module Codegen.X86
   , or
   , and
   , mov
+  , movsx
+  , movzx
   , movByte
   , movWord
   , movDword
@@ -92,7 +94,11 @@ import JoosCompiler.Ast.NodeTypes
 
 data AsmState = AsmState { code :: [String], counter :: Integer }
 data Asm a = Asm (AsmState -> (AsmState, a))
-data Reg = Eax | Ebx | Ecx | Edx | Esp | Ebp | Esi | Edi | Eip | Al | Bl | Cl | Dl
+data Reg =
+  Eax | Ebx | Ecx | Edx |     -- general purpose 32-bit
+  Ax | Bx | Cx | Dx |         -- general purpose 16-bit
+  Al | Bl | Cl | Dl |         -- general purpose 8-bit
+  Esp | Ebp | Esi | Edi | Eip -- special meaning
 data Addr = Addr Reg | AddrOffset Reg Int32
 data I = I Int32
 data L a = L a
@@ -123,6 +129,10 @@ instance Show Reg where
   show Esi = "esi"
   show Edi = "edi"
   show Eip = "eip"
+  show Ax  = "ax"
+  show Bx  = "bx"
+  show Cx  = "cx"
+  show Dx  = "dx"
   show Al  = "al"
   show Bl  = "bl"
   show Cl  = "cl"
@@ -325,6 +335,8 @@ imul     :: (Arg a, Arg b) => a -> b -> Asm ()
 or       :: (Arg a, Arg b) => a -> b -> Asm ()
 and      :: (Arg a, Arg b) => a -> b -> Asm ()
 mov      :: (Arg a, Arg b) => a -> b -> Asm ()
+movsx    :: (Arg a, Arg b) => a -> b -> Asm ()
+movzx    :: (Arg a, Arg b) => a -> b -> Asm ()
 movByte  :: (Arg a, Arg b) => a -> b -> Asm ()
 movWord  :: (Arg a, Arg b) => a -> b -> Asm ()
 movDword :: (Arg a, Arg b) => a -> b -> Asm ()
@@ -338,6 +350,8 @@ imul     = generic2 "imul"
 or       = generic2 "or"
 and      = generic2 "and"
 mov      = generic2 "mov"
+movsx    = generic2 "movsx"
+movzx    = generic2 "movzx"
 movByte  = generic2 "mov byte"
 movWord  = generic2 "mov word"
 movDword = generic2 "mov dword"

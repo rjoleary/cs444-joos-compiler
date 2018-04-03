@@ -1,5 +1,6 @@
 module JoosCompiler.Ast.Utils where
 
+import           Control.Applicative((<|>))
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
@@ -77,34 +78,6 @@ resolveTypeInProgram program@(WholeProgram _ cus) name
     unit = fromMaybe (error "Could not find unit in resolveTypeInProgram") $ find (\unit -> cuTypeName unit == _typeName) cus
     result = typeDecl unit
 
-resolveFieldInProgramUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
-resolveFieldInProgramUnit program unit name
-  | fieldMaybe /= Nothing = Just field
-  | superMaybe /= Nothing = resolveFieldInProgramUnit program superUnit name
-  | otherwise = error "Cannot resolveFieldInProgramUnit"
-  where
-    units = programCus program
-    thisTypeMaybe = typeDecl unit
-    thisType = fromJust thisTypeMaybe
-    fieldMaybe = find ((== name) . variableName) $ classFields thisType
-    field = fromJust fieldMaybe
-    superMaybe = resolveUnitInProgram program $ super thisType
-    superUnit = fromJust superMaybe
-
-resolveFieldInType :: WholeProgram -> Type -> Name -> Maybe Field
-resolveFieldInType _ _ [] = (error "Name should never be empty")
-resolveFieldInType program _type [n] = resolveFieldInProgramUnit program unit n
-  where
-    maybeUnit = resolveUnitInProgram program $ unNamedType $ innerType _type
-    unit = fromMaybe (error "maybeUnit is nothing") maybeUnit
-resolveFieldInType program _type (n:ns) = resolveFieldInType program newType ns
-  where
-    maybeUnit = resolveUnitInProgram program $ unNamedType $ innerType _type
-    maybeField = resolveFieldInProgramUnit program unit n
-    field = fromMaybe (error "mayField is nothing") maybeField
-    newType = variableType field
-    unit = fromMaybe (error "maybeUnit is nothing") maybeUnit
-
 resolveUnitInProgram :: WholeProgram -> Name -> Maybe CompilationUnit
 resolveUnitInProgram program name =
   find ((== name) . canonicalizeUnitName) $ programCus program
@@ -168,6 +141,10 @@ getFieldInUnit :: Bool -> WholeProgram -> CompilationUnit -> String -> Field
 getFieldInUnit expectingStatic program unit n =
   (findFieldInUnit expectingStatic program unit n) |>
   fromMaybe (error $ "getFieldInUnit got Nothing: " ++ (intercalate "." [cuTypeName unit, n]))
+
+findAnyFieldInUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
+findAnyFieldInUnit program unit name = findStaticFieldInUnit  program unit name <|>
+                                       findDynamicFieldInUnit program unit name
 
 findDynamicFieldInUnit :: WholeProgram -> CompilationUnit -> String -> Maybe Field
 findDynamicFieldInUnit  = findFieldInUnit False

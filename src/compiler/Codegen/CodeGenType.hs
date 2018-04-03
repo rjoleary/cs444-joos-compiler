@@ -422,15 +422,15 @@ generateExpression ctx (NewExpression n e) = do
   push Esi
 
   -- get constructor name
-  -- types <- mapM (generateExpression' ctx) e
-  -- let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
-  -- let tp = fromMaybe (error "Could not solve type") maybeTp
-  -- let maybeCtor = findOverload "" types (constructors tp)
-  -- let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
-  -- let ctorMangleName = mangle ctorName
+  types <- mapM (generateExpression' ctx) e
+  let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
+  let tp = fromMaybe (error "Could not solve type") maybeTp
+  let maybeCtor = findOverload "" types (constructors tp)
+  let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
+  let ctorMangleName = mangle ctorName
   
-  -- extern ctorMangleName
-  -- mov Eax (L ctorMangleName)
+  extern ctorMangleName
+  mov Eax (L ctorMangleName)
   call Eax
   pop Esi
   pop Edi

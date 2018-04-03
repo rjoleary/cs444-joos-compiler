@@ -3,6 +3,10 @@
 
 module Linking.TypeChecking
   ( checkTypes
+  , canNumericNarrow
+  , toScalar
+  , isReference
+  , getTypeName
   ) where
 
 import Control.Monad
@@ -359,10 +363,13 @@ isReferenceAssignable wp t@(Type (NamedType tName) tArr) s@(Type (NamedType sNam
   | not sArr && not tArr && tName `elem` sourceHierarchy = True  -- Widening reference conversion
   | otherwise                             = False
   where sourceHierarchy = typeHierarchyNames wp sName
+isReferenceAssignable _ (Type (NamedType ["java", "lang", "Object"]) False) s = isReference s
 isReferenceAssignable _ t Null = isReference t -- Can assign null to reference type
-isReferenceAssignable _ _ _ = error "Must pass reference types to isReferenceAssignable"
+isReferenceAssignable _ (Type t True) (Type s True) = t == s -- Arrays of primitives
+isReferenceAssignable _ target source = False
 
 -- See JLS 5.1.2: Widening Primitive Conversion
+-- source -> target -> bool
 canNumericWiden :: Type -> Type -> Bool
 canNumericWiden (Type Byte False)  (Type Short False) = True
 canNumericWiden (Type Byte False)  (Type Int False)   = True
@@ -371,6 +378,7 @@ canNumericWiden (Type Char False)  (Type Int False)   = True
 canNumericWiden _                  _                  = False
 
 -- See JLS 5.1.2: Narrowing Primitive Conversion
+-- source -> target -> bool
 canNumericNarrow :: Type -> Type -> Bool
 canNumericNarrow (Type Byte False)  (Type Char False)  = True
 canNumericNarrow (Type Short False) (Type Byte False)  = True

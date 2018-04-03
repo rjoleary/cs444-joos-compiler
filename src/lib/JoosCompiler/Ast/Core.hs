@@ -34,17 +34,14 @@ cstsToAst ts = program
       transformedCompilationUnits
       |> packageProgram
       |> canonicalizeProgram
-      -- Break program and repackage once again so that compilation units in
-      -- WholeProgram are updated
-      |> subForest
-      |> packageProgram
+      -- Now canonicalize methods. We can't do this in the previous pass because
+      -- it requires that WholeProgram is canonical
+      |> canonicalizeProgramMethods
       |> asAst
       |> asTree
       |> disambiguate
       |> asAst
       |> asTree
-      |> insertBlocksAroundStatements
-      |> injectScopesIntoChildrenBlocks
 
 getTransformer :: TaggedParseTree -> Transformer
 getTransformer t@(Node label _)
