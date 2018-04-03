@@ -72,19 +72,15 @@ disambiguateStatement program unit method statement = newStatement
 
 disambiguateExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
 disambiguateExpression program unit vars e@(ExpressionName [n])
-  | isJust localMaybe = LocalAccess $ variableName local
+  | isJust localMaybe       = LocalAccess $ variableName local
   | isJust staticFieldMaybe = StaticFieldAccess $ variableCanonicalName staticField
-  | isJust dynamicFieldMaybe = DynamicFieldAccess This  n
-  | otherwise = e --  error $ "Could not disambiguate expression: " ++  show e
+  | otherwise               = DynamicFieldAccess This  n
   where
     localMaybe = Map.lookup n vars
     local      = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
 
     staticField = getStaticFieldInUnit program unit n
     staticFieldMaybe = findStaticFieldInUnit program unit n
-
-    dynamicField = getDynamicFieldInUnit program unit n
-    dynamicFieldMaybe = findDynamicFieldInUnit program unit n
 
 disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | isJust localMaybe               = (LocalAccess n)
@@ -114,9 +110,9 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
       fromMaybe (error $ "resolvedClass was nothing: " ++ showName name)
 
 disambiguateExpression _ _ _ (AmbiguousFieldAccess (ClassAccess c) n) =
-  error "Ok"
+  StaticFieldAccess $ c ++ [n]
 disambiguateExpression _ _ _ (AmbiguousFieldAccess e n) =
-  error "Ok"
+  DynamicFieldAccess e n
 
 disambiguateExpression program unit vars old@(DynamicMethodInvocation (ClassAccess cName) mName args) =
   StaticMethodInvocation cName mName args

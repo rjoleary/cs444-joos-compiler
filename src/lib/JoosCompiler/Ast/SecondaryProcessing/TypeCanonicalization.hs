@@ -3,6 +3,7 @@
 
 module JoosCompiler.Ast.SecondaryProcessing.TypeCanonicalization
   ( canonicalizeProgram
+  , canonicalizeProgramMethods
   ) where
 
 -- The most important function in this file is canonicalize
@@ -23,16 +24,31 @@ javaLang = makeOnDemandImportDeclaration ["java", "lang"]
 
 -- Assumes the children are Compilation Units
 canonicalizeProgram :: AstNode -> AstNode
-canonicalizeProgram (Node p@(AstWholeProgram program) oldUnits) =
-  Node p newUnits
+canonicalizeProgram (Node (AstWholeProgram oldProgram@(WholeProgram packages oldUnits)) oldUnitNodes) =
+  Node (AstWholeProgram newProgram) newUnitNodes
   where
-    newUnits = map (canonicalizeUnit program) oldUnits
+    newProgram = WholeProgram packages newUnits
+    newUnits = map (canonicalizeUnit oldProgram) oldUnits
+    newUnitNodes =
+      oldUnitNodes |>
+      map (canonicalizeUnitNode oldProgram)
 
 canonicalizeProgram _ = error "Invalid node type in canonicalizeProgram"
 
-canonicalizeUnit :: WholeProgram -> AstNode -> AstNode
-canonicalizeUnit program (Node (AstCompilationUnit oldUnit) _children) =
-  (Node (AstCompilationUnit canonicalizedUnit) $ map f _children)
+canonicalizeProgramMethods :: AstNode -> AstNode
+canonicalizeProgramMethods (Node (AstWholeProgram oldProgram@(WholeProgram packages oldUnits)) oldUnitNodes) =
+  Node (AstWholeProgram newProgram) newUnitNodes
+  where
+    newProgram = WholeProgram packages newUnits
+    newUnits = map (canonicalizeUnitMethods oldProgram) oldUnits
+    newUnitNodes =
+      oldUnitNodes |>
+      map (canonicalizeUnitMethodsInNode oldProgram)
+
+canonicalizeProgramMethods _ = error "Invalid node type in canonicalizeProgram"
+
+canonicalizeUnit :: WholeProgram -> CompilationUnit -> CompilationUnit
+canonicalizeUnit program oldUnit = canonicalizedUnit
   where
     canonicalizedUnit = CompilationUnit { cuPackage = cuPackage oldUnit
                                         , imports = imports oldUnit
@@ -44,19 +60,30 @@ canonicalizeUnit program (Node (AstCompilationUnit oldUnit) _children) =
       | otherwise = Just (typeDecl oldUnit |>
                           fromJust |>
                           canonicalizeTypeDecl program oldUnit)
-    f :: AstNode -> AstNode
-    f (Node (AstField field) _children) =
-      Node (AstField newField) (map f _children)
-      where
-        newField = canonicalizeVar program oldUnit Map.empty field
 
-    f (Node (AstLocalVariable local) _children) =
-      Node (AstLocalVariable newLocal) (map f _children)
-      where
-        newLocal = canonicalizeVar program oldUnit Map.empty local
+canonicalizeUnitNode :: WholeProgram -> AstNode -> AstNode
+canonicalizeUnitNode program (Node (AstCompilationUnit oldUnit) _children) =
+  (Node (AstCompilationUnit canonicalizedUnit) _children)
+  where
+    canonicalizedUnit = canonicalizeUnit program oldUnit
+canonicalizeUnitNode _ _ = error "Invalid Node type in canonicalizeUnit"
 
-    f (Node n _children) = Node n $ map f _children
-canonicalizeUnit _ _ = error "Invalid Node type in canonicalizeUnit"
+canonicalizeUnitMethods :: WholeProgram -> CompilationUnit -> CompilationUnit
+canonicalizeUnitMethods program oldUnit =
+  oldUnit{typeDecl = newTypeDecl}
+  where
+    newTypeDecl
+      | typeDecl oldUnit == Nothing = Nothing
+      | otherwise = Just (typeDecl oldUnit |>
+                          fromJust |>
+                          canonicalizeTypeDeclMethods program oldUnit)
+
+canonicalizeUnitMethodsInNode :: WholeProgram -> AstNode -> AstNode
+canonicalizeUnitMethodsInNode program (Node (AstCompilationUnit oldUnit) _children) =
+  (Node (AstCompilationUnit canonicalizedUnit) _children)
+  where
+    canonicalizedUnit = canonicalizeUnit program oldUnit
+canonicalizeUnitMethodsInNode _ _ = error "Invalid Node type in canonicalizeUnit"
 
 -- THIS IS THE MEAT
 canonicalize :: WholeProgram -> CompilationUnit -> Name -> Name
@@ -183,7 +210,8 @@ canonicalizeExpression program unit vars (ExpressionName name) =
   ExpressionName $ canonicalizeNameInExpression program unit vars name
 
 canonicalizeExpression program unit vars (NewExpression name e) =
-  NewExpression (canonicalizeNameInExpression program unit vars name) e
+  (NewExpression (canonicalizeNameInExpression program unit vars name) $ e) |>
+  trace ("Canonicalizing new: " ++ showName name)
 
 -- Do not need canonicalization
 -- Explicitly list expression types to expose bugs
@@ -205,8 +233,7 @@ canonicalizeExpression program unit _ old@ClassAccess{} = old
 canonicalizeNameInExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Name -> Name
 canonicalizeNameInExpression program unit vars (n:ns)
   | isJust $ Map.lookup n $ trace ("Canonicalizing " ++ n ++ ": " ++ show vars) vars = n:ns
-  -- TODO(Ahmed): super, interface
-  | n `elem` fieldNames = n:ns
+  | isJust $ findAnyFieldInUnit program unit n = n:ns
   | otherwise = canonicalize program unit (n:ns)
   where
     fieldNames = map variableName $ classFields unitType
@@ -273,18 +300,31 @@ canonicalizeTypeDecl
                   , super          = newSuper
                   , interfaces     = newInterfaces
                   , classFields    = newFields
-                  , methods        = newMethods
-                  , constructors   = newConstructors
+                  , methods        = _methods
+                  , constructors   = _constructors
                   , typeCanonicalName = _typeCanonicalName
                   }
   where
     newSuper = canonicalize program unit oldSuper
     newInterfaces = map (canonicalize program unit) oldInterfaces
     newFields = map (canonicalizeVar program unit Map.empty) fields
-    newMethods = map (canonicalizeMethod program unit) _methods
-    newConstructors = map (canonicalizeMethod program unit) _constructors
     _typeCanonicalName = pName ++ [name]
 canonicalizeTypeDecl _ EmptyFile{} _ = error "Tried to canonicalize type in empty file"
+
+canonicalizeTypeDeclMethods :: WholeProgram -> CompilationUnit -> TypeDeclaration -> TypeDeclaration
+canonicalizeTypeDeclMethods
+  program
+  unit@(CompilationUnit pName _ _ _)
+  old@TypeDeclaration { methods = oldMethods
+                      , constructors = oldConstructors
+                      } =
+  old { methods = newMethods
+      , constructors = newConstructors
+      }
+  where
+    newMethods = map (canonicalizeMethod program unit) oldMethods
+    newConstructors = map (canonicalizeMethod program unit) oldConstructors
+canonicalizeTypeDeclMethods _ EmptyFile{} _ = error "Tried to canonicalize methods in empty file"
 
 canonicalizeMethodName :: CompilationUnit -> String -> Name
 canonicalizeMethodName = canonicalizeVariableName

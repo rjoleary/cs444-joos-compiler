@@ -285,14 +285,14 @@ mapExpression f (BinaryOperation o e1 e2) =
     newE1 = mapExpression f e1
     newE2 = mapExpression f e2
 
-mapExpression f (UnaryOperation o e)       = UnaryOperation o (mapExpression f e)
-mapExpression f (AmbiguousFieldAccess e s) = AmbiguousFieldAccess (mapExpression f e) s
-mapExpression f (DynamicFieldAccess e s)   = f $ DynamicFieldAccess (mapExpression f e) s
-mapExpression f (ArrayLengthAccess e)      = f $ ArrayLengthAccess (mapExpression f e)
+mapExpression f (UnaryOperation o e)       = f $ UnaryOperation o      (mapExpression f e)
+mapExpression f (AmbiguousFieldAccess e s) = f $ AmbiguousFieldAccess  (mapExpression f e) s
+mapExpression f (DynamicFieldAccess e s)   = f $ DynamicFieldAccess    (mapExpression f e) s
+mapExpression f (ArrayLengthAccess e)      = f $ ArrayLengthAccess     (mapExpression f e)
 mapExpression f (NewExpression n le)       = f $ NewExpression n $ map (mapExpression f) le
 mapExpression f (NewArrayExpression t e)   = f $ NewArrayExpression t $ mapExpression f e
-mapExpression f (CastExpression t e)       = f $ CastExpression t $ mapExpression f e
-mapExpression f (InstanceOfExpression e t) = f $ InstanceOfExpression (mapExpression f e) t
+mapExpression f (CastExpression t e)       = f $ CastExpression t $     mapExpression f e
+mapExpression f (InstanceOfExpression e t) = f $ InstanceOfExpression   (mapExpression f e) t
 mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
   where
     newE1 = mapExpression f e1
@@ -301,11 +301,11 @@ mapExpression f (ArrayExpression e1 e2)    = f $ ArrayExpression newE1 newE2
 -- All of those expressions have no sub-expressions. We could combine into one,
 -- but explicitly stating helps expose bugs more quickly
 mapExpression f old@StaticFieldAccess{} = f old
-mapExpression f old@LocalAccess{}  = f old
+mapExpression f old@LocalAccess{}       = f old
 mapExpression f old@ExpressionName{}    = f old
 mapExpression f old@LiteralExpression{} = f old
-mapExpression f old@ClassAccess{}    = f old
-mapExpression f This = f This
+mapExpression f old@ClassAccess{}       = f old
+mapExpression f This                    = f This
 
 ---------- Other Functions ----------
 
