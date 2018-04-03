@@ -330,7 +330,6 @@ generateExpression ctx (BinaryOperation Assign x y) = do
   push Eax
   t2 <- generateExpression' ctx y
   pop Ebx
-  -- TODO: casting
   mov (Addr Ebx) Eax
   return t1
 
