@@ -134,11 +134,7 @@ generateMethod ctx m
   | isConstructor m = do
     global m
     label m
-<<<<<<< HEAD
-    generateConstructor ctx m 
-=======
     generateConstructor ctx m
->>>>>>> d1b7e3e1c532223620a3326cc0132143c7b11e79
     generateStatement' ctx (methodStatement m)
     mov Esp Ebp
     pop Ebp
@@ -434,18 +430,9 @@ generateExpression ctx (NewExpression n es) = do
   push Esi
 
   -- get constructor name
-<<<<<<< HEAD
-  types <- mapM (generateExpression' ctx) e
-  -- types <- if length e == 0 then pure [] else (fmap (\x -> [x]) $ generateExpression' ctx (head e))
-  let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
-  let tp = fromMaybe (error "Could not solve type") maybeTp
-  let maybeCtor = findOverload "" (trace (show types) types) (constructors tp)
-  let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
-=======
   let tp = getTypeInProgram (ctxProgram ctx) n
   let maybeCtor = findOverload "" types (constructors tp)
   let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
->>>>>>> d1b7e3e1c532223620a3326cc0132143c7b11e79
   let ctorMangleName = mangle ctorName
 
   -- This special extern prevents externing something in the current file.
@@ -649,11 +636,7 @@ generateConstructor ctx m
     push Edi
     push Esi
     let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-<<<<<<< HEAD
     let superConstructorLabel = "Class$" ++ intercalate "$" superName 
-=======
-    let superConstructorLabel = "Method$" ++ intercalate "$" superName ++ "$##"
->>>>>>> d1b7e3e1c532223620a3326cc0132143c7b11e79
     extern superConstructorLabel
     call (L superConstructorLabel)
     pop Esi
