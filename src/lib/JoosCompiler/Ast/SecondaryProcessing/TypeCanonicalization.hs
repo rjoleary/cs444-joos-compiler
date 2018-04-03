@@ -179,11 +179,16 @@ canonicalizeStatement :: WholeProgram -> CompilationUnit -> VariableMap -> State
 canonicalizeStatement program unit formalParameters statement =
   canonicalizedReal
   where
-    g = (canonicalizeExpression program unit)
+    g :: (VariableMap -> Expression -> Expression) -> VariableMap -> Statement -> Statement
+    g fn vars old@LocalStatement{localVariable = v} = new {localVariable = newVar}
+      where
+      new = mapStatementVarsExpression fn vars old
+      newVar = canonicalizeVar program unit vars v
+    g fn vars old = mapStatementVarsExpression fn vars old
     fakeFirstStatement = EmptyStatement statement
     canonicalizedFake =
       fakeFirstStatement |>
-      mapStatementVarsExpression g formalParameters
+      mapStatementVars (g $ canonicalizeExpression program unit) formalParameters
     canonicalizedReal = nextStatement canonicalizedFake
 
 canonicalizeExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
