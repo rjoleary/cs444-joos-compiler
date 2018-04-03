@@ -61,10 +61,10 @@ generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
     space
 
   -- Vtable
+  global t
+  label t
   when (not $ isClassAbstract t) $ do
     comment "TODO: vtable"
-    global t
-    label t
     space
 
   -- Uninitialized static fields
@@ -131,6 +131,8 @@ generateMethod ctx m
 
   -- constructor
   | isConstructor m = do
+    global m
+    label m
     generateConstructor ctx m
     generateStatement' ctx (methodStatement m)
     mov Esp Ebp
@@ -668,7 +670,7 @@ generateConstructor ctx m
     push Edi
     push Esi
     let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    let superConstructorLabel = "Class$" ++ intercalate "$" superName
+    let superConstructorLabel = "Method$" ++ intercalate "$" superName ++ "$##"
     extern superConstructorLabel
     call (L superConstructorLabel)
     pop Esi
