@@ -52,18 +52,20 @@ generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
 
   -- instanceof table
   -- This excludes objects because (x instanceof Object) is true at compile time.
-  let instanceOfTable = nub $ tail $ flatten $ typeHierarchy wp t
-  comment "Instanceof table"
-  dd (I 0)
-  dd . L . mangle $ t
-  mapM_ (\l -> (extern l) >> (dd . L . mangle $ l)) instanceOfTable
-  space
+  when (not $ isClassAbstract t) $ do
+    let instanceOfTable = nub $ tail $ flatten $ typeHierarchy wp t
+    comment "Instanceof table"
+    dd (I 0)
+    dd . L . mangle $ t
+    mapM_ (\l -> (extern l) >> (dd . L . mangle $ l)) instanceOfTable
+    space
 
   -- Vtable
-  comment "TODO: vtable"
-  global t
-  label t
-  space
+  when (not $ isClassAbstract t) $ do
+    comment "TODO: vtable"
+    global t
+    label t
+    space
 
   -- Uninitialized static fields
   comment (show (length staticFields) ++ " static fields")

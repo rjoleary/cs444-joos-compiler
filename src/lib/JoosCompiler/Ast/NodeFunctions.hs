@@ -354,6 +354,9 @@ commaDelimit l = intercalate ", " l
 isClassFinal :: TypeDeclaration -> Bool
 isClassFinal x = Final `elem` classModifiers x
 
+isClassAbstract :: TypeDeclaration -> Bool
+isClassAbstract x = Abstract `elem` classModifiers x
+
 -- Create a method signature from the method name and parameter types. The
 -- return type is omitted.
 methodSignature :: Method -> String
