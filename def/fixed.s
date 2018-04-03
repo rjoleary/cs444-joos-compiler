@@ -26,13 +26,16 @@ nullcheck:
   ret;
 
 ; Perform an instance of lookup (eax instanceof ebx).
-; eax is a pointer to the source vtable.
+; eax is a pointer to the source object.
 ; ebx is a pointer to the target vtable.
 ; Returns:
 ;   1: when eax can be dynamically cast to ebx
 ;   0: otherwise
 global instanceOfLookup;
 instanceOfLookup:
+  cmp eax, 0;
+  je instanceOfReturnFalse;
+  mov eax, [eax];
   instanceOfLookupLoop:
     sub eax, 4;
     mov ecx, [eax];
