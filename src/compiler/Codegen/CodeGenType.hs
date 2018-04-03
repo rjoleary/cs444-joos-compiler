@@ -128,6 +128,8 @@ generateMethod ctx m
 
   -- constructor 
   | isConstructor m = do
+    global m
+    label m
     generateConstructor ctx m 
     generateStatement ctx (methodStatement m)
     mov Esp Ebp
@@ -395,6 +397,7 @@ generateExpression ctx (NewExpression n e) = do
   mov Ebx Eax -- ebx contains the number of fields
   add Eax (I 1)
   push Ebx
+  shl Eax (I 2)
   extern "__malloc"
   call (L "__malloc")
   -- This special extern prevents externing something in the current file.
@@ -402,22 +405,54 @@ generateExpression ctx (NewExpression n e) = do
     in extern addr
   movDword (Addr Eax) (L addr)
   push Eax
+  -- Eax contains the start address of the object.
+  -- initialize fields
   add Eax (I 4)
   extern "memclear"
   call (L "memclear")
-  pop Eax
+
+  -- call constructor
+  t <- mapM_ (\(idx, arg) -> do
+    comment ("Argument number " ++ show idx)
+    t <- generateExpression' ctx arg
+    push Eax
+    ) (zip [1..] e)
+  push Ebx
+  push Edi
+  push Esi
+
+  -- get constructor name
+  -- types <- mapM (generateExpression' ctx) e
+  -- let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
+  -- let tp = fromMaybe (error "Could not solve type") maybeTp
+  -- let maybeCtor = findOverload "" types (constructors tp)
+  -- let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
+  -- let ctorMangleName = mangle ctorName
+  
+  -- extern ctorMangleName
+  -- mov Eax (L ctorMangleName)
+  call Eax
+  pop Esi
+  pop Edi
   pop Ebx
-  push Eax
-  add Eax (I 4)
-  push Eax
-  t <- mapM_ (initializeObjectField ctx wp n) fields
+  add Esp (I $ fromIntegral (length e * 4))
   pop Eax
+ -- call Eax
+ -- add Esp (I 4)
+  -- pop Eax
+  -- pop Eax  
+  -- pop Ebx
+  -- push Eax
+  -- add Eax (I 4)
+  -- push Eax
+  -- t <- mapM_ (initializeObjectField ctx wp n) fields
+  -- pop Eax
   return Void
   where
     addr = mangle td
     td = fromMaybe (error "Could not resolve type") maybeTd
     maybeTd = resolveTypeInProgram wp n
-    v = length $ fields
+    v = length fields
     fields = directAndIndirectDynamicFields wp n
     wp = ctxProgram ctx
 
@@ -427,6 +462,8 @@ generateExpression ctx (NewArrayExpression t e) = do
   mov Ebx Eax
   add Eax (I 2)
   push Ebx
+  -- malloc allocate bytes? 
+  shl Eax (I 2)
   extern "__malloc"
   call (L "__malloc")
   pop Ebx

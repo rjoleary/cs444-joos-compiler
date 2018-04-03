@@ -364,4 +364,3 @@ isMethodNative x = Native `elem` methodModifiers x
 
 isConstructor :: Method -> Bool
 isConstructor x =  (methodName x) == ""
-
