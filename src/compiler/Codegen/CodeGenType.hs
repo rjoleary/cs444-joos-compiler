@@ -9,6 +9,7 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Tree
+import Debug.Trace
 import Control.Monad
 import Flow
 import JoosCompiler.Ast
@@ -222,13 +223,13 @@ generateStatement ctx x@LocalStatement{} = do
   let var = localVariable x
   let varName = variableName var
   comment "Local declaration"
-  t <- generateExpression' ctx (variableValue var)
+  sourceType <- generateExpression' ctx (variableValue var)
 
   comment ("push " ++ varName ++ " to stack")
   push Eax
 
   let newCtx = ctx {
-    ctxLocals      = Map.insert varName t (ctxLocals ctx),
+    ctxLocals      = Map.insert varName (variableType var) (ctxLocals ctx),
     ctxFrame       = Map.insert varName (ctxFrameOffset ctx - 4) (ctxFrame ctx),
     ctxFrameOffset = ctxFrameOffset ctx - 4 }
 
@@ -429,13 +430,14 @@ generateExpression ctx (NewExpression n es) = do
   push Esi
 
   -- get constructor name
-  let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
-  let tp = fromMaybe (error "Could not solve type") maybeTp
+  let tp = getTypeInProgram (ctxProgram ctx) n
   let maybeCtor = findOverload "" types (constructors tp)
   let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
   let ctorMangleName = mangle ctorName
 
-  extern ctorMangleName
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in extern ctorMangleName
   mov Eax (L ctorMangleName)
   call Eax
   pop Esi
@@ -453,7 +455,7 @@ generateExpression ctx (NewExpression n es) = do
   -- push Eax
   -- t <- mapM_ (initializeObjectField ctx wp n) fields
   -- pop Eax
-  return (methodReturn ctorName)
+  return (Type (NamedType n) False)
   where
     addr = mangle td
     td = fromMaybe (error "Could not resolve type") maybeTd
@@ -463,7 +465,7 @@ generateExpression ctx (NewExpression n es) = do
     wp = ctxProgram ctx
 
 generateExpression ctx (NewArrayExpression t e) = do
-  t <- generateExpression' ctx e
+  generateExpression' ctx e
 --  add Eax (I 1)
   mov Ebx Eax
   add Eax (I 2)
