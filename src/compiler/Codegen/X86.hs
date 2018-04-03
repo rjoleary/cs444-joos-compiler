@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Codegen.X86
   ( Asm
+  , mapAsm
   , Reg(..)
   , Addr(..)
   , I(..)
@@ -115,6 +116,14 @@ instance Applicative Asm where
 instance Monad Asm where
   return x = pure x
   Asm f >>= g = Asm $ \x -> let (y, z) = f x; Asm h = g z in h y
+
+-- Same mapM but for Asm Monad.
+mapAsm :: (a -> Asm b) -> [a] -> Asm [b]
+mapAsm _ [] = return []
+mapAsm f (x:xs) = do
+  y <- f x
+  ys <- mapAsm f xs
+  return (y:ys)
 
 instance Show (Asm a) where
   show (Asm f) = unlines . code . fst $ f AsmState{ code = [], counter = 0 }

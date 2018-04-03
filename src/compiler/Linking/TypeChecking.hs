@@ -5,6 +5,7 @@ module Linking.TypeChecking
   ( checkTypes
   , canNumericNarrow
   , toScalar
+  , isString
   , isReference
   , getTypeName
   ) where

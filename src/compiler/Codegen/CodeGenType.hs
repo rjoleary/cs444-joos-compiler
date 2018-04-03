@@ -9,6 +9,7 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Tree
+import Debug.Trace
 import Control.Monad
 import Flow
 import JoosCompiler.Ast
@@ -222,7 +223,7 @@ generateStatement ctx x@LocalStatement{} = do
   let var = localVariable x
   let varName = variableName var
   comment "Local declaration"
-  t <- generateExpression' ctx (variableValue var)
+  sourceType <- generateExpression' ctx (variableValue var)
 
   comment ("push " ++ varName ++ " to stack")
   push Eax
@@ -273,32 +274,7 @@ generateExpression' ctx e = indent $ do
 
 generateExpression :: CodeGenCtx -> Expression -> Asm Type
 
--- Divide is a special binary operator because it can throw.
-generateExpression ctx (BinaryOperation Divide x y) = do
-  t1 <- generateExpression' ctx x
-  push Eax
-  t2 <- generateExpression' ctx y
-  extern "nullcheck"
-  call (L "nullcheck")
-  mov Ebx Eax
-  pop Eax
-  idiv Ebx
-  return (Type Int False)
-
--- Modulus is special because it can throw.
-generateExpression ctx (BinaryOperation Modulus x y) = do
-  t1 <- generateExpression' ctx x
-  push Eax
-  t2 <- generateExpression' ctx y
-  extern "nullcheck"
-  call (L "nullcheck")
-  mov Ebx Eax
-  pop Eax
-  idiv Ebx
-  mov Eax Edx
-  return (Type Int False)
-
--- Add is a special because it is overloaded for strings.
+-- Add is a special binary operator because it is overloaded for strings.
 generateExpression ctx (BinaryOperation Add x y) = do
   t1 <- generateExpression' ctx x
   push Eax
@@ -306,7 +282,10 @@ generateExpression ctx (BinaryOperation Add x y) = do
   mov Ebx Eax
   pop Eax
   add Eax Ebx
-  return (Type Int False) -- TODO: strings
+  return $
+    if isString t1 || isString t2
+    then (Type (NamedType ["java", "lang", "String"]) False)
+    else (Type Int False)
 
 -- And is special because short circuiting.
 generateExpression ctx (BinaryOperation And x y) = do
@@ -334,6 +313,7 @@ generateExpression ctx (BinaryOperation Assign x y) = do
   push Eax
   t2 <- generateExpression' ctx y
   pop Ebx
+  -- TODO: casting
   mov (Addr Ebx) Eax
   return t1
 
@@ -348,6 +328,8 @@ generateExpression ctx (BinaryOperation op x y) = do
   where
     binaryOperatorAsm :: BinaryOperator -> Asm Type
     binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
+    binaryOperatorAsm Divide       = idiv Ebx >> return (Type Int False)
+    binaryOperatorAsm Modulus      = idiv Ebx >> mov Edx Eax >> return (Type Int False)
     binaryOperatorAsm Subtract     = sub Eax Ebx >> return (Type Int False)
     binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> return (Type Boolean False)
     binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> return (Type Boolean False)
@@ -417,11 +399,12 @@ generateExpression ctx ExpressionName{} = do
   --error "ExpressionName should never be present into CodeGen"
   return Void
 
-generateExpression ctx (NewExpression n e) = do
+generateExpression ctx (NewExpression n es) = do
   mov Eax (I $fromIntegral v)
   mov Ebx Eax -- ebx contains the number of fields
   add Eax (I 1)
   push Ebx
+  shl Eax (I 2)
   extern "__malloc"
   call (L "__malloc")
   -- This special extern prevents externing something in the current file.
@@ -429,31 +412,66 @@ generateExpression ctx (NewExpression n e) = do
     in extern addr
   movDword (Addr Eax) (L addr)
   push Eax
+  -- Eax contains the start address of the object.
+  -- initialize fields
   add Eax (I 4)
   extern "memclear"
   call (L "memclear")
-  pop Eax
+
+  -- call constructor
+  types <- mapAsm (\(idx, arg) -> do
+    comment ("Argument number " ++ show idx)
+    t <- generateExpression' ctx arg
+    push Eax
+    return t
+    ) (zip [1..] es)
+  push Ebx
+  push Edi
+  push Esi
+
+  -- get constructor name
+  let tp = getTypeInProgram (ctxProgram ctx) n
+  let maybeCtor = findOverload "" types (constructors tp)
+  let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
+  let ctorMangleName = mangle ctorName
+
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in extern ctorMangleName
+  mov Eax (L ctorMangleName)
+  call Eax
+  pop Esi
+  pop Edi
   pop Ebx
-  push Eax
-  add Eax (I 4)
-  push Eax
-  t <- mapM_ (initializeObjectField ctx wp n) fields
+  add Esp (I $ fromIntegral (length es * 4))
   pop Eax
-  return Void
+ -- call Eax
+ -- add Esp (I 4)
+  -- pop Eax
+  -- pop Eax
+  -- pop Ebx
+  -- push Eax
+  -- add Eax (I 4)
+  -- push Eax
+  -- t <- mapM_ (initializeObjectField ctx wp n) fields
+  -- pop Eax
+  return (Type (NamedType n) False)
   where
     addr = mangle td
     td = fromMaybe (error "Could not resolve type") maybeTd
     maybeTd = resolveTypeInProgram wp n
-    v = length $ fields
+    v = length fields
     fields = directAndIndirectDynamicFields wp n
     wp = ctxProgram ctx
 
 generateExpression ctx (NewArrayExpression t e) = do
-  t <- generateExpression' ctx e
+  generateExpression' ctx e
 --  add Eax (I 1)
   mov Ebx Eax
   add Eax (I 2)
   push Ebx
+  -- malloc allocate bytes?
+  shl Eax (I 2)
   extern "__malloc"
   call (L "__malloc")
   pop Ebx
@@ -477,38 +495,10 @@ generateExpression ctx (NewArrayExpression t e) = do
     td = fromMaybe (error "Could not resolve type") maybeTd
     obj = mangle td
 
-generateExpression ctx (CastExpression targetType e) = do
-  sourceType <- generateExpression' ctx e
-
-  -- Narrowing primitive conversion
-  when (canNumericNarrow sourceType targetType) $ do
-    comment $ "Narrowing primitive conversion: " ++ show sourceType ++ " to " ++ show targetType
-    case targetType of
-      (Type Byte False)  -> movsx Eax Al -- sign extend 8-bit
-      (Type Short False) -> movsx Eax Ax -- sign extend 16-bit
-      (Type Char False)  -> movzx Eax Ax -- zero extend 16-bit
-      otherwise          -> error $ "Cannot narrow to this type " ++ show targetType
-
-  -- Narrowing reference conversion
-  when (isArray sourceType == isArray targetType &&
-        sourceType /= targetType &&
-        isReference (toScalar targetType) &&
-        isReference (toScalar sourceType) &&
-        let sourceName      = getTypeName (toScalar sourceType)
-            targetName      = getTypeName (toScalar targetType)
-            targetHierarchy = typeHierarchyNames (ctxProgram ctx) targetName
-        in sourceName `elem` targetHierarchy) $ do
-    comment $ "Narrowing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
-    push Eax
-    mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
-    extern "instanceOfLookup"
-    call (L "instanceOfLookup")
-    extern "nullcheck"
-    call (L "nullcheck")
-    pop Eax
-
-  -- Otherwise, no additional work required.
-  return targetType
+generateExpression ctx (CastExpression t e) = do
+  generateExpression' ctx e -- TODO: is instanceof
+  -- TODO: (x instanceof Object) is true at compile time
+  return t
 
 generateExpression ctx (StaticMethodInvocation n s args) = do
   t <- mapM_ (\(idx, arg) -> do
@@ -536,29 +526,13 @@ generateExpression ctx (StaticMethodInvocation n s args) = do
         (m:_) -> m
         []    -> error $ "Expected to find a method: " ++ (showName (n ++ [s]))
 
-generateExpression ctx (InstanceOfExpression e targetType) = do
-  sourceType <- generateExpression' ctx e
+generateExpression ctx (InstanceOfExpression e t) = do
+  comment "TODO InstanceOfExpression"
+  mov Eax (I 123)
+  return Void
 
-  -- Narrowing reference conversion
-  if (isArray sourceType == isArray targetType &&
-    sourceType /= targetType &&
-    isReference (toScalar targetType) &&
-    isReference (toScalar sourceType) &&
-    let sourceName      = getTypeName (toScalar sourceType)
-        targetName      = getTypeName (toScalar targetType)
-        targetHierarchy = typeHierarchyNames (ctxProgram ctx) targetName
-    in sourceName `elem` targetHierarchy)
-  then do
-    comment $ "Narrowing reference instanceof: " ++ show sourceType ++ " to " ++ show targetType
-    mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
-    extern "instanceOfLookup"
-    call (L "instanceOfLookup")
-    return (Type Boolean False)
-  else do
-    comment $ "Compile time instanceof"
-    mov Eax (I 1)
-    return (Type Boolean False)
 
+--generateExpression ctx (ArrayExpression expr exprIdx) = do
 generateExpression ctx (ArrayExpression expr exprIdx) = do
   t <- generateLValue' ctx (ArrayExpression expr exprIdx)
   mov Eax (Addr Eax)
@@ -583,18 +557,10 @@ generateExpression ctx (ArrayLengthAccess _) = do
   mov Eax (I 123)
   return Void
 
-generateExpression ctx (StaticFieldAccess name) =
-  case findAnyFieldInUnit (ctxProgram ctx) unit $ last $ ctxThis ctx of
-    Just field -> do
-      comment "TODO get field value"
-      mov Eax (I 123) -- TODO
-      return (variableType field)
-    Nothing -> error $ "Cannot find field " ++ showName name ++ " in ctx"
-  where
-    unit =
-      (init $ ctxThis ctx) |>
-      resolveUnitInProgram (ctxProgram ctx) |>
-      fromMaybe (error $ "Unit was nothing: " ++ (showName $ init $ ctxThis ctx))
+generateExpression ctx (StaticFieldAccess _) = do
+  comment "TODO StaticFieldAccess"
+  mov Eax (I 123)
+  return Void
 
 generateExpression ctx (LocalAccess n) = do
   mov Eax $ AddrOffset Ebp (mapLookupWith (ctxFrame ctx))
