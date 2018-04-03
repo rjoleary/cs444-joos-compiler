@@ -2,6 +2,7 @@ module JoosCompiler.Ast.Transformers.TypeDeclaration
   ( typeDeclarationTransformer
   ) where
 
+import           Data.List
 import           Data.Tree
 import           JoosCompiler.Ast.NodeTypes
 import           JoosCompiler.Ast.Transformers.Types
@@ -26,7 +27,10 @@ typeDeclarationTransformer transformedChildren t@(Node label _) =
   }
   where
     _isInterface = (kInterfaceDeclaration == tokenName label)
-    modifiers = astModifiers $ getClassModifiers transformedChildren
+    modifiers =
+      (if _isInterface then [Abstract] else []) -- Interfaces are always abstract
+      `union`
+      (sort $ astModifiers $ getClassModifiers transformedChildren)
     _typeName = getTypeNameFromDeclaration t
     _superTemp = getSuperName t
     _super
@@ -34,7 +38,12 @@ typeDeclarationTransformer transformedChildren t@(Node label _) =
       | otherwise = _superTemp
     _interfaces = getInterfaceNames t
     vars = map astField $ getTypeFields transformedChildren
-    _methods = getTypeMethods transformedChildren
+    _methods = map
+      -- Interface methods are always abstract and public
+      (\m -> if _isInterface then m{
+        methodModifiers = (sort $ methodModifiers m) `union` [Abstract, Public]
+        } else m)
+      (getTypeMethods transformedChildren)
     _constructors = getClassConstructors transformedChildren
 
 getTypeFields :: [AstNode] -> [AstWrapper]

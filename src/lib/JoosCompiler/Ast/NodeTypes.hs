@@ -13,7 +13,7 @@ data Modifier
   | Abstract
   | Static
   | Native
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 data WholeProgram = WholeProgram
   { programPackages :: [Package]
