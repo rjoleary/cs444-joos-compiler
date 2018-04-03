@@ -544,7 +544,6 @@ generateExpression ctx (CastExpression targetType e) = do
         in sourceName `elem` targetHierarchy) $ do
     comment $ "Narrowing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
     push Eax
-    mov Eax (Addr Eax) -- Get pointer to vtable
     mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
     extern "instanceOfLookup"
     call (L "instanceOfLookup")
@@ -581,13 +580,29 @@ generateExpression ctx (StaticMethodInvocation n s args) = do
         (m:_) -> m
         []    -> error $ "Expected to find a method: " ++ (showName (n ++ [s]))
 
-generateExpression ctx (InstanceOfExpression e t) = do
-  comment "TODO InstanceOfExpression"
-  mov Eax (I 123)
-  return Void
+generateExpression ctx (InstanceOfExpression e targetType) = do
+  sourceType <- generateExpression' ctx e
 
+  -- Narrowing reference conversion
+  if (isArray sourceType == isArray targetType &&
+    sourceType /= targetType &&
+    isReference (toScalar targetType) &&
+    isReference (toScalar sourceType) &&
+    let sourceName      = getTypeName (toScalar sourceType)
+        targetName      = getTypeName (toScalar targetType)
+        targetHierarchy = typeHierarchyNames (ctxProgram ctx) targetName
+    in sourceName `elem` targetHierarchy)
+  then do
+    comment $ "Narrowing reference instanceof: " ++ show sourceType ++ " to " ++ show targetType
+    mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
+    extern "instanceOfLookup"
+    call (L "instanceOfLookup")
+    return (Type Boolean False)
+  else do
+    comment $ "Compile time instanceof"
+    mov Eax (I 1)
+    return (Type Boolean False)
 
---generateExpression ctx (ArrayExpression expr exprIdx) = do
 generateExpression ctx (ArrayExpression expr exprIdx) = do
   t <- generateLValue' ctx (ArrayExpression expr exprIdx)
   mov Eax (Addr Eax)
