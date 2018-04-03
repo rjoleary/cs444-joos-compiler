@@ -394,7 +394,7 @@ generateExpression ctx ExpressionName{} = do
   --error "ExpressionName should never be present into CodeGen"
   return Void
 
-generateExpression ctx (NewExpression n e) = do
+generateExpression ctx (NewExpression n es) = do
   mov Eax (I $fromIntegral v)
   mov Ebx Eax -- ebx contains the number of fields
   add Eax (I 1)
@@ -414,21 +414,21 @@ generateExpression ctx (NewExpression n e) = do
   call (L "memclear")
 
   -- call constructor
-  t <- mapM_ (\(idx, arg) -> do
+  types <- mapAsm (\(idx, arg) -> do
     comment ("Argument number " ++ show idx)
     t <- generateExpression' ctx arg
     push Eax
-    ) (zip [1..] e)
+    return t
+    ) (zip [1..] es)
   push Ebx
   push Edi
   push Esi
 
   -- get constructor name
-  types <- mapM (generateExpression' ctx) e
   let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
   let tp = fromMaybe (error "Could not solve type") maybeTp
   let maybeCtor = findOverload "" types (constructors tp)
-  let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
+  let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
   let ctorMangleName = mangle ctorName
 
   extern ctorMangleName
@@ -437,7 +437,7 @@ generateExpression ctx (NewExpression n e) = do
   pop Esi
   pop Edi
   pop Ebx
-  add Esp (I $ fromIntegral (length e * 4))
+  add Esp (I $ fromIntegral (length es * 4))
   pop Eax
  -- call Eax
  -- add Esp (I 4)
