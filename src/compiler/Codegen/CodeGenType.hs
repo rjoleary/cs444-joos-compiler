@@ -425,8 +425,8 @@ generateExpression ctx (NewExpression n e) = do
   push Esi
 
   -- get constructor name
-  -- types <- mapM (generateExpression' ctx) e
-  types <- if length e == 0 then pure [] else (fmap (\x -> [x]) $ generateExpression' ctx (head e))
+  types <- mapM (generateExpression' ctx) e
+  -- types <- if length e == 0 then pure [] else (fmap (\x -> [x]) $ generateExpression' ctx (head e))
   let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
   let tp = fromMaybe (error "Could not solve type") maybeTp
   let maybeCtor = findOverload "" (trace (show types) types) (constructors tp)
