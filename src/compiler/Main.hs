@@ -9,6 +9,7 @@ import           Data.Tree
 import           Flow
 import           JoosCompiler.Ast
 import           JoosCompiler.Ast.NodeTypes
+import           JoosCompiler.Ast.Transformers.Types
 import           JoosCompiler.Exit
 import           JoosCompiler.Treeify
 import           JoosCompiler.TreeUtils
@@ -42,7 +43,7 @@ main = do
     filenames <- getArgs
     taggedTrees <- mapM taggedTreeFromFile filenames
     let ast@(Node (AstWholeProgram program@WholeProgram{programCus = units}) unitNodes) = cstsToAst taggedTrees
-    putStrLn $ drawTree (fmap show ast)
+    putStrLn $ drawTree $ fmap show $ asTree $ wrap $ program
 
     let typeDecls = map typeDecl units
                     |> catMaybes

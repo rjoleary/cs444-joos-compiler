@@ -9,6 +9,7 @@ import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Tree
+import Debug.Trace
 import Control.Monad
 import Flow
 import JoosCompiler.Ast
@@ -51,18 +52,20 @@ generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
 
   -- instanceof table
   -- This excludes objects because (x instanceof Object) is true at compile time.
-  let instanceOfTable = nub $ tail $ flatten $ typeHierarchy wp t
-  comment "Instanceof table"
-  dd (I 0)
-  dd . L . mangle $ t
-  mapM_ (\l -> (extern l) >> (dd . L . mangle $ l)) instanceOfTable
-  space
+  when (not $ isClassAbstract t) $ do
+    let instanceOfTable = nub $ tail $ flatten $ typeHierarchy wp t
+    comment "Instanceof table"
+    dd (I 0)
+    dd . L . mangle $ t
+    mapM_ (\l -> (extern l) >> (dd . L . mangle $ l)) instanceOfTable
+    space
 
   -- Vtable
-  comment "TODO: vtable"
   global t
   label t
-  space
+  when (not $ isClassAbstract t) $ do
+    comment "TODO: vtable"
+    space
 
   -- Uninitialized static fields
   comment (show (length staticFields) ++ " static fields")
@@ -128,15 +131,10 @@ generateMethod ctx m
 
   -- constructor 
   | isConstructor m = do
-<<<<<<< HEAD
     global m
     label m
     generateConstructor ctx m 
-    generateStatement ctx (methodStatement m)
-=======
-    generateConstructor ctx m
     generateStatement' ctx (methodStatement m)
->>>>>>> de1035450ad08b1ccd1a5a01ee2cc0399c976d8b
     mov Esp Ebp
     pop Ebp
     ret
@@ -257,7 +255,7 @@ generateStatement ctx x@LoopStatement{} = do
 
 generateStatement ctx x@EmptyStatement{} = do
   -- No code
-  return ()
+  generateStatement' ctx (nextStatement x)
 
 generateStatement ctx x@TerminalStatement{} = do
   -- No code
@@ -427,10 +425,11 @@ generateExpression ctx (NewExpression n e) = do
   push Esi
 
   -- get constructor name
-  types <- mapM (generateExpression' ctx) e
+  -- types <- mapM (generateExpression' ctx) e
+  types <- if length e == 0 then pure [] else (fmap (\x -> [x]) $ generateExpression' ctx (head e))
   let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
   let tp = fromMaybe (error "Could not solve type") maybeTp
-  let maybeCtor = findOverload "" types (constructors tp)
+  let maybeCtor = findOverload "" (trace (show types) types) (constructors tp)
   let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
   let ctorMangleName = mangle ctorName
   
