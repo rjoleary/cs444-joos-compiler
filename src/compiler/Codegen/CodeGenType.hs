@@ -535,13 +535,14 @@ generateExpression ctx (CastExpression targetType e) = do
 
   -- Narrowing reference conversion
   when (isArray sourceType == isArray targetType &&
+        sourceType /= targetType &&
         isReference (toScalar targetType) &&
         isReference (toScalar sourceType) &&
         let sourceName      = getTypeName (toScalar sourceType)
             targetName      = getTypeName (toScalar targetType)
             targetHierarchy = typeHierarchyNames (ctxProgram ctx) targetName
         in sourceName `elem` targetHierarchy) $ do
-    comment $ "Narrwoing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
+    comment $ "Narrowing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
     push Eax
     mov Eax (Addr Eax) -- Get pointer to vtable
     mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
