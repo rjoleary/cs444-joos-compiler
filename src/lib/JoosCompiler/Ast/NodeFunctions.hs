@@ -170,8 +170,7 @@ mapStatementVars f vars x@(BlockStatement s _) =
     newInnerBlock = mapStatementVars f vars s
 
 mapStatementVars f vars x@LocalStatement{localVariable = v} =
-  result |>
-  (trace $ "Vars: " ++ show newVars)
+  result
   where
     newVars = if (isJust $ Map.lookup (variableName v) vars)
                  then error "Duplicate local"

@@ -177,33 +177,27 @@ makeOnDemandImportDeclaration name =
 
 canonicalizeStatement :: WholeProgram -> CompilationUnit -> VariableMap -> Statement -> Statement
 canonicalizeStatement program unit formalParameters statement =
-  mapStatementVars g formalParameters statement
+  mapStatementVarsExpression (canonicalizeExpression program unit) formalParameters fakeFirstStatement
   where
-    g :: VariableMap -> Statement -> Statement
-    g vars old@LocalStatement{ localVariable = oldVar } =
-      canonicalizedStatement { localVariable = canonicalizedVar }
-      where
-        canonicalizedVar = canonicalizeVar program unit vars oldVar
-        canonicalizedStatement = mapStatementVarsExpression (canonicalizeExpression program unit) vars old
-    g vars old = mapStatementVarsExpression (canonicalizeExpression program unit) vars old
+    fakeFirstStatement = EmptyStatement statement
 
 canonicalizeExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
 canonicalizeExpression program unit vars (CastExpression (Type (NamedType name) isArr) e) =
   CastExpression newType e
   where
-    newType = Type (NamedType $ canonicalize program unit name) isArr
+    newType = Type (NamedType $ canonicalizeNameInExpression program unit vars name) isArr
 canonicalizeExpression program unit vars old@(CastExpression oldType e) = old
 
 canonicalizeExpression program unit vars (NewArrayExpression (Type (NamedType name) isArr) e) =
   NewArrayExpression newType e
   where
-    newType = Type (NamedType $ canonicalize program unit name) isArr
+    newType = Type (NamedType $ canonicalizeNameInExpression program unit vars name) isArr
 canonicalizeExpression program unit vars old@(NewArrayExpression oldType e) = old
 
 canonicalizeExpression program unit vars (InstanceOfExpression e (Type (NamedType name) isArr)) =
   InstanceOfExpression e newType
   where
-    newType = Type (NamedType $ canonicalize program unit name) isArr
+    newType = Type (NamedType $ canonicalizeNameInExpression program unit vars name) isArr
 canonicalizeExpression program unit vars old@(InstanceOfExpression e oldType) = old
 
 canonicalizeExpression program unit vars (ExpressionName name) =
@@ -299,7 +293,7 @@ canonicalizeTypeDecl
                   , isInterface    = _isInterface
                   , super          = newSuper
                   , interfaces     = newInterfaces
-                  , classFields    = newFields
+                  , classFields    = fields
                   , methods        = _methods
                   , constructors   = _constructors
                   , typeCanonicalName = _typeCanonicalName
@@ -307,7 +301,6 @@ canonicalizeTypeDecl
   where
     newSuper = canonicalize program unit oldSuper
     newInterfaces = map (canonicalize program unit) oldInterfaces
-    newFields = map (canonicalizeVar program unit Map.empty) fields
     _typeCanonicalName = pName ++ [name]
 canonicalizeTypeDecl _ EmptyFile{} _ = error "Tried to canonicalize type in empty file"
 
@@ -317,13 +310,16 @@ canonicalizeTypeDeclMethods
   unit@(CompilationUnit pName _ _ _)
   old@TypeDeclaration { methods = oldMethods
                       , constructors = oldConstructors
+                      , classFields = fields
                       } =
   old { methods = newMethods
       , constructors = newConstructors
+      , classFields = newFields
       }
   where
     newMethods = map (canonicalizeMethod program unit) oldMethods
     newConstructors = map (canonicalizeMethod program unit) oldConstructors
+    newFields = map (canonicalizeVar program unit Map.empty) fields
 canonicalizeTypeDeclMethods _ EmptyFile{} _ = error "Tried to canonicalize methods in empty file"
 
 canonicalizeMethodName :: CompilationUnit -> String -> Name

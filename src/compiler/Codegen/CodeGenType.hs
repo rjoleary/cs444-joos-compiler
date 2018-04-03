@@ -580,12 +580,17 @@ generateExpression ctx (ArrayLengthAccess _) = do
   return Void
 
 generateExpression ctx (StaticFieldAccess name) =
-  case resolveFieldInType (ctxProgram ctx) (Type (NamedType $ ctxThis ctx) False) name of
+  case findAnyFieldInUnit (ctxProgram ctx) unit $ last $ ctxThis ctx of
     Just field -> do
       comment "TODO get field value"
       mov Eax (I 123) -- TODO
       return (variableType field)
     Nothing -> error $ "Cannot find field " ++ showName name ++ " in ctx"
+  where
+    unit =
+      (init $ ctxThis ctx) |>
+      resolveUnitInProgram (ctxProgram ctx) |>
+      fromMaybe (error $ "Unit was nothing: " ++ (showName $ init $ ctxThis ctx))
 
 generateExpression ctx (LocalAccess n) = do
   mov Eax $ AddrOffset Ebp (mapLookupWith (ctxFrame ctx))
