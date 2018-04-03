@@ -45,7 +45,7 @@ data CodeGenCtx = CodeGenCtx
 ---------- Type Declaration ----------
 
 generateTypeDeclaration :: CodeGenCtx -> TypeDeclaration -> Asm ()
-generateTypeDeclaration ctx t = do
+generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
   let wp = ctxProgram ctx
   let staticFields = filter isFieldStatic $ classFields t
 
@@ -64,38 +64,38 @@ generateTypeDeclaration ctx t = do
   label t
   space
 
-  -- Interfaces only have instanceof table and vtable.
-  when (not $ isInterface t) $ do
+  -- Uninitialized static fields
+  comment (show (length staticFields) ++ " static fields")
+  mapM_ (\field -> do
+    comment (variableName field)
+    label field
+    dd (I 0)
+    ) staticFields
+  space
 
-    -- Uninitialized static fields
-    comment (show (length staticFields) ++ " static fields")
-    mapM_ (\field -> do
-      comment (variableName field)
-      label field
-      dd (I 0)
-      ) staticFields
-    space
+  -- Init function for initializing static variables.
+  comment "Init function"
+  global (Init t)
+  label (Init t)
+  -- Initialized in the order defined
+  indent $ mapM_ (\field -> do
+    comment (variableName field)
+    generateExpression' ctx (variableValue field)
+    mov Ebx (L (mangle field))
+    mov (Addr Ebx) Eax
+    ) staticFields
+  space
 
-    -- Init function for initializing static variables.
-    comment "Init function"
-    global (Init t)
-    label (Init t)
-    -- Initialized in the order defined
-    indent $ mapM_ (\field -> do
-      comment (variableName field)
-      generateExpression' ctx (variableValue field)
-      mov Ebx (L (mangle field))
-      mov (Addr Ebx) Eax
-      ) staticFields
-    space
+  -- Constructors
+  comment "Constructors"
+  mapM_ (\m -> comment "Constructor" >> generateMethod' ctx m >> space) (constructors t)
 
-    -- Constructors
-    comment "Constructors"
-    mapM_ (\m -> comment "Constructor" >> generateMethod' ctx m >> space) (constructors t)
+  -- Methods
+  comment "Methods"
+  mapM_ (\m -> generateMethod' ctx m >> space) (methods t)
 
-    -- Methods
-    comment "Methods"
-    mapM_ (\m -> generateMethod' ctx m >> space) (methods t)
+-- Interface have no code.
+generateTypeDeclaration ctx t@TypeDeclaration{isInterface=True} = return ()
 
 
 ---------- Method ----------
