@@ -224,7 +224,7 @@ generateStatement ctx x@LocalStatement{} = do
   push Eax
 
   let newCtx = ctx {
-    ctxLocals      = Map.insert varName t (ctxLocals ctx),
+    ctxLocals      = Map.insert varName (variableType var) (ctxLocals ctx),
     ctxFrame       = Map.insert varName (ctxFrameOffset ctx - 4) (ctxFrame ctx),
     ctxFrameOffset = ctxFrameOffset ctx - 4 }
 
@@ -488,13 +488,14 @@ generateExpression ctx (CastExpression targetType e) = do
 
   -- Narrowing reference conversion
   when (isArray sourceType == isArray targetType &&
+        sourceType /= targetType &&
         isReference (toScalar targetType) &&
         isReference (toScalar sourceType) &&
         let sourceName      = getTypeName (toScalar sourceType)
             targetName      = getTypeName (toScalar targetType)
             targetHierarchy = typeHierarchyNames (ctxProgram ctx) targetName
         in sourceName `elem` targetHierarchy) $ do
-    comment $ "Narrwoing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
+    comment $ "Narrowing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
     push Eax
     mov Eax (Addr Eax) -- Get pointer to vtable
     mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
