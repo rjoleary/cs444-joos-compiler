@@ -268,7 +268,32 @@ generateExpression' ctx e = indent $ do
 
 generateExpression :: CodeGenCtx -> Expression -> Asm Type
 
--- Add is a special binary operator because it is overloaded for strings.
+-- Divide is a special binary operator because it can throw.
+generateExpression ctx (BinaryOperation Divide x y) = do
+  t1 <- generateExpression' ctx x
+  push Eax
+  t2 <- generateExpression' ctx y
+  extern "nullcheck"
+  call (L "nullcheck")
+  mov Ebx Eax
+  pop Eax
+  idiv Ebx
+  return (Type Int False)
+
+-- Modulus is special because it can throw.
+generateExpression ctx (BinaryOperation Modulus x y) = do
+  t1 <- generateExpression' ctx x
+  push Eax
+  t2 <- generateExpression' ctx y
+  extern "nullcheck"
+  call (L "nullcheck")
+  mov Ebx Eax
+  pop Eax
+  idiv Ebx
+  mov Eax Edx
+  return (Type Int False)
+
+-- Add is a special because it is overloaded for strings.
 generateExpression ctx (BinaryOperation Add x y) = do
   t1 <- generateExpression' ctx x
   push Eax
@@ -319,8 +344,6 @@ generateExpression ctx (BinaryOperation op x y) = do
   where
     binaryOperatorAsm :: BinaryOperator -> Asm Type
     binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
-    binaryOperatorAsm Divide       = idiv Ebx >> return (Type Int False)
-    binaryOperatorAsm Modulus      = idiv Ebx >> mov Edx Eax >> return (Type Int False)
     binaryOperatorAsm Subtract     = sub Eax Ebx >> return (Type Int False)
     binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> return (Type Boolean False)
     binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> return (Type Boolean False)
