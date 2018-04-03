@@ -447,7 +447,7 @@ generateExpression ctx (NewExpression n e) = do
   -- push Eax
   -- t <- mapM_ (initializeObjectField ctx wp n) fields
   -- pop Eax
-  return Void
+  return (methodReturn ctorName)
   where
     addr = mangle td
     td = fromMaybe (error "Could not resolve type") maybeTd
