@@ -126,17 +126,12 @@ generateMethod ctx m
     extern nativeLabel
     jmp (L nativeLabel)
 
-  -- constructor 
+  -- constructor
   | isConstructor m = do
-<<<<<<< HEAD
     global m
     label m
-    generateConstructor ctx m 
-    generateStatement ctx (methodStatement m)
-=======
     generateConstructor ctx m
     generateStatement' ctx (methodStatement m)
->>>>>>> de1035450ad08b1ccd1a5a01ee2cc0399c976d8b
     mov Esp Ebp
     pop Ebp
     ret
@@ -433,7 +428,7 @@ generateExpression ctx (NewExpression n e) = do
   let maybeCtor = findOverload "" types (constructors tp)
   let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
   let ctorMangleName = mangle ctorName
-  
+
   extern ctorMangleName
   mov Eax (L ctorMangleName)
   call Eax
@@ -445,7 +440,7 @@ generateExpression ctx (NewExpression n e) = do
  -- call Eax
  -- add Esp (I 4)
   -- pop Eax
-  -- pop Eax  
+  -- pop Eax
   -- pop Ebx
   -- push Eax
   -- add Eax (I 4)
@@ -467,7 +462,7 @@ generateExpression ctx (NewArrayExpression t e) = do
   mov Ebx Eax
   add Eax (I 2)
   push Ebx
-  -- malloc allocate bytes? 
+  -- malloc allocate bytes?
   shl Eax (I 2)
   extern "__malloc"
   call (L "__malloc")
@@ -611,7 +606,7 @@ generateLValue _ _ = do
   return Void
 
 generateConstructor :: CodeGenCtx -> Method -> Asm()
-generateConstructor ctx m 
+generateConstructor ctx m
   | isNoSuperObject ctx m = do
     push Ebp
     mov Esp Ebp
@@ -633,7 +628,7 @@ generateConstructor ctx m
     push Edi
     push Esi
     let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    let superConstructorLabel = "Class$" ++ intercalate "$" superName 
+    let superConstructorLabel = "Class$" ++ intercalate "$" superName
     extern superConstructorLabel
     call (L superConstructorLabel)
     pop Esi
