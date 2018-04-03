@@ -98,8 +98,11 @@ generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
   comment "Methods"
   mapM_ (\m -> generateMethod' ctx m >> space) (methods t)
 
--- Interface have no code.
-generateTypeDeclaration ctx t@TypeDeclaration{isInterface=True} = return ()
+generateTypeDeclaration ctx t@TypeDeclaration{isInterface=True} = do
+  -- Interfaces do not need anything besides a label.
+  global t
+  label t
+  dd (I 0)
 
 
 ---------- Method ----------
