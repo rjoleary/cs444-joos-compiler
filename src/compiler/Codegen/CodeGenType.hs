@@ -627,7 +627,7 @@ generateExpression ctx (ArrayLengthAccess _) = do
   return Void
 
 generateExpression ctx (StaticFieldAccess name) =
-  case resolveFieldInType (ctxProgram ctx) (Type (NamedType $ ctxThis ctx) False) name of
+  case findStaticFieldInType (ctxProgram ctx) (getTypeInProgram (ctxProgram ctx) (init name)) (last name) of
     Just field -> do
       comment "TODO get field value"
       mov Eax (I 123) -- TODO
