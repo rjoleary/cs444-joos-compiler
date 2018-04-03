@@ -177,9 +177,14 @@ makeOnDemandImportDeclaration name =
 
 canonicalizeStatement :: WholeProgram -> CompilationUnit -> VariableMap -> Statement -> Statement
 canonicalizeStatement program unit formalParameters statement =
-  mapStatementVarsExpression (canonicalizeExpression program unit) formalParameters fakeFirstStatement
+  canonicalizedReal
   where
+    g = (canonicalizeExpression program unit)
     fakeFirstStatement = EmptyStatement statement
+    canonicalizedFake =
+      fakeFirstStatement |>
+      mapStatementVarsExpression g formalParameters
+    canonicalizedReal = nextStatement canonicalizedFake
 
 canonicalizeExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
 canonicalizeExpression program unit vars (CastExpression (Type (NamedType name) isArr) e) =
