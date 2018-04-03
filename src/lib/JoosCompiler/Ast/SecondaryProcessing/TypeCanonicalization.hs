@@ -245,13 +245,15 @@ canonicalizeNameInExpression program unit vars (n:ns)
 canonicalizeNameInExpression program unit vars [] = error "Invalid Name in Expression"
 
 canonicalizeMethod :: WholeProgram -> CompilationUnit -> Method -> Method
-canonicalizeMethod program unit old@Method{methodName = n} =
+canonicalizeMethod program unit old@Method{methodName = n, methodParameters = oldParameters} =
   old { methodCanonicalName = canonicalizeMethodName unit n
       , methodStatement     = newStatement
+      , methodParameters    = newParameters
       }
   where
     statement = methodStatement old
-    formalParameters = Map.fromList $ map (\v -> (variableName v, v)) $ methodParameters old
+    formalParameters = Map.fromList $ map (\v -> (variableName v, v)) newParameters
+    newParameters = map (canonicalizeVar program unit Map.empty) oldParameters
     newStatement = canonicalizeStatement program unit formalParameters statement
 
 canonicalizeVar :: WholeProgram -> CompilationUnit -> VariableMap -> Variable -> Variable
