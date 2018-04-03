@@ -359,7 +359,9 @@ isReferenceAssignable wp t@(Type (NamedType tName) tArr) s@(Type (NamedType sNam
   | not sArr && not tArr && tName `elem` sourceHierarchy = True  -- Widening reference conversion
   | otherwise                             = False
   where sourceHierarchy = typeHierarchyNames wp sName
+isReferenceAssignable _ (Type (NamedType ["java", "lang", "Object"]) False) s = isReference s
 isReferenceAssignable _ t Null = isReference t -- Can assign null to reference type
+isReferenceAssignable _ (Type t True) (Type s True) = t == s -- Arrays of primitives
 isReferenceAssignable _ _ _ = error "Must pass reference types to isReferenceAssignable"
 
 -- See JLS 5.1.2: Widening Primitive Conversion
