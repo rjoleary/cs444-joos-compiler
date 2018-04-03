@@ -255,7 +255,7 @@ generateStatement ctx x@LoopStatement{} = do
 
 generateStatement ctx x@EmptyStatement{} = do
   -- No code
-  return ()
+  generateStatement' ctx (nextStatement x)
 
 generateStatement ctx x@TerminalStatement{} = do
   -- No code
