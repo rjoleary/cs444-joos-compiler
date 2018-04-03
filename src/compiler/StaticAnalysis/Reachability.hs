@@ -9,6 +9,7 @@ import Data.Tree
 import JoosCompiler.Ast
 import JoosCompiler.Ast.ConstantExpression
 import JoosCompiler.Ast.NodeTypes
+import JoosCompiler.Ast.NodeFunctions
 import JoosCompiler.Ast.Visitor.Analysis
 import JoosCompiler.Error
 import JoosCompiler.TreeUtils
@@ -29,7 +30,7 @@ data CheckReachability = CheckReachability
 
 instance Analysis CheckReachability Status where
   analyze ctx (AstMethod m@Method{methodReturn=r, methodStatement=s}) =
-    if s == TerminalStatement
+    if isMethodAbstract m || isMethodNative m
       then Right CompletesNormally -- Ignore methods with not implementation.
       else do
         status <- analyze' ctx s

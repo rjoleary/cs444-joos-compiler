@@ -128,10 +128,15 @@ generateMethod ctx m
 
   -- constructor 
   | isConstructor m = do
+<<<<<<< HEAD
     global m
     label m
     generateConstructor ctx m 
     generateStatement ctx (methodStatement m)
+=======
+    generateConstructor ctx m
+    generateStatement' ctx (methodStatement m)
+>>>>>>> de1035450ad08b1ccd1a5a01ee2cc0399c976d8b
     mov Esp Ebp
     pop Ebp
     ret
@@ -156,7 +161,7 @@ generateMethod ctx m
       ctxFrame       = Map.fromList (zip paramNames [20,24..]),
       ctxFrameOffset = 0 }
 
-    generateStatement newCtx (methodStatement m)
+    generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
     pop Ebp
     ret
