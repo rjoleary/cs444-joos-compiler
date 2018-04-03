@@ -50,12 +50,3 @@ instanceOfLookup:
   instanceOfReturnFalse:
     mov eax, 0;
     ret;
-
-; Create a string literal
-; eax is the address of the string's start.
-; ebx is the length of the string.
-; A java.lang.String is returned in eax.
-global allocStrLiteral;
-allocStrLiteral:
-  mov eax, 123; ; TODO
-  ret;

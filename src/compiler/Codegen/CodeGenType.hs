@@ -378,6 +378,8 @@ generateExpression ctx (LiteralExpression (StringLiteral x)) = do
   comment ("StringLiteral " ++ show x)
   jmp (L strEnd) -- Jump over the string
   label strStart
+  dd (I 0)
+  dd (I $ fromIntegral $ length x)
   mapM_ (\c ->
     if isAlphaNum c
       then raw ("dd " ++ show c ++ ";") -- Pretty print characters
@@ -385,9 +387,7 @@ generateExpression ctx (LiteralExpression (StringLiteral x)) = do
     ) x
   label strEnd
   mov Eax (L strStart)
-  mov Ebx (I $ fromIntegral $ length x)
-  extern "allocStrLiteral"
-  call (L "allocStrLiteral")
+  -- TODO: call string constructor
   return (Type (NamedType ["java", "lang", "String"]) False)
 
 generateExpression ctx (LiteralExpression NullLiteral) = do
