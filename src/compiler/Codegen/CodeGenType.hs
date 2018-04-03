@@ -18,6 +18,7 @@ import JoosCompiler.Ast.NodeTypes
 import JoosCompiler.Ast.Utils
 import Codegen.X86
 import Codegen.Mangling
+import Linking.TypeChecking
 import qualified Codegen.X86 as X86
 import qualified Data.Map.Strict as Map
 
@@ -129,11 +130,15 @@ generateMethod ctx m
     extern nativeLabel
     jmp (L nativeLabel)
 
-  -- constructor 
+  -- constructor
   | isConstructor m = do
     global m
     label m
+<<<<<<< HEAD
     generateConstructor ctx m 
+=======
+    generateConstructor ctx m
+>>>>>>> d1b7e3e1c532223620a3326cc0132143c7b11e79
     generateStatement' ctx (methodStatement m)
     mov Esp Ebp
     pop Ebp
@@ -222,13 +227,13 @@ generateStatement ctx x@LocalStatement{} = do
   let var = localVariable x
   let varName = variableName var
   comment "Local declaration"
-  t <- generateExpression' ctx (variableValue var)
+  sourceType <- generateExpression' ctx (variableValue var)
 
   comment ("push " ++ varName ++ " to stack")
   push Eax
 
   let newCtx = ctx {
-    ctxLocals      = Map.insert varName t (ctxLocals ctx),
+    ctxLocals      = Map.insert varName (variableType var) (ctxLocals ctx),
     ctxFrame       = Map.insert varName (ctxFrameOffset ctx - 4) (ctxFrame ctx),
     ctxFrameOffset = ctxFrameOffset ctx - 4 }
 
@@ -281,7 +286,10 @@ generateExpression ctx (BinaryOperation Add x y) = do
   mov Ebx Eax
   pop Eax
   add Eax Ebx
-  return (Type Int False) -- TODO: strings
+  return $
+    if isString t1 || isString t2
+    then (Type (NamedType ["java", "lang", "String"]) False)
+    else (Type Int False)
 
 -- And is special because short circuiting.
 generateExpression ctx (BinaryOperation And x y) = do
@@ -395,7 +403,7 @@ generateExpression ctx ExpressionName{} = do
   --error "ExpressionName should never be present into CodeGen"
   return Void
 
-generateExpression ctx (NewExpression n e) = do
+generateExpression ctx (NewExpression n es) = do
   mov Eax (I $fromIntegral v)
   mov Ebx Eax -- ebx contains the number of fields
   add Eax (I 1)
@@ -415,43 +423,52 @@ generateExpression ctx (NewExpression n e) = do
   call (L "memclear")
 
   -- call constructor
-  t <- mapM_ (\(idx, arg) -> do
+  types <- mapAsm (\(idx, arg) -> do
     comment ("Argument number " ++ show idx)
     t <- generateExpression' ctx arg
     push Eax
-    ) (zip [1..] e)
+    return t
+    ) (zip [1..] es)
   push Ebx
   push Edi
   push Esi
 
   -- get constructor name
+<<<<<<< HEAD
   types <- mapM (generateExpression' ctx) e
   -- types <- if length e == 0 then pure [] else (fmap (\x -> [x]) $ generateExpression' ctx (head e))
   let maybeTp = resolveTypeInProgram (ctxProgram ctx) n
   let tp = fromMaybe (error "Could not solve type") maybeTp
   let maybeCtor = findOverload "" (trace (show types) types) (constructors tp)
   let ctorName = fromMaybe (error "Does not contain a constructure") maybeCtor
+=======
+  let tp = getTypeInProgram (ctxProgram ctx) n
+  let maybeCtor = findOverload "" types (constructors tp)
+  let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
+>>>>>>> d1b7e3e1c532223620a3326cc0132143c7b11e79
   let ctorMangleName = mangle ctorName
-  
-  extern ctorMangleName
+
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in extern ctorMangleName
   mov Eax (L ctorMangleName)
   call Eax
   pop Esi
   pop Edi
   pop Ebx
-  add Esp (I $ fromIntegral (length e * 4))
+  add Esp (I $ fromIntegral (length es * 4))
   pop Eax
  -- call Eax
  -- add Esp (I 4)
   -- pop Eax
-  -- pop Eax  
+  -- pop Eax
   -- pop Ebx
   -- push Eax
   -- add Eax (I 4)
   -- push Eax
   -- t <- mapM_ (initializeObjectField ctx wp n) fields
   -- pop Eax
-  return (methodReturn ctorName)
+  return (Type (NamedType n) False)
   where
     addr = mangle td
     td = fromMaybe (error "Could not resolve type") maybeTd
@@ -461,12 +478,12 @@ generateExpression ctx (NewExpression n e) = do
     wp = ctxProgram ctx
 
 generateExpression ctx (NewArrayExpression t e) = do
-  t <- generateExpression' ctx e
+  generateExpression' ctx e
 --  add Eax (I 1)
   mov Ebx Eax
   add Eax (I 2)
   push Ebx
-  -- malloc allocate bytes? 
+  -- malloc allocate bytes?
   shl Eax (I 2)
   extern "__malloc"
   call (L "__malloc")
@@ -610,7 +627,7 @@ generateLValue _ _ = do
   return Void
 
 generateConstructor :: CodeGenCtx -> Method -> Asm()
-generateConstructor ctx m 
+generateConstructor ctx m
   | isNoSuperObject ctx m = do
     push Ebp
     mov Esp Ebp
@@ -632,7 +649,11 @@ generateConstructor ctx m
     push Edi
     push Esi
     let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+<<<<<<< HEAD
     let superConstructorLabel = "Class$" ++ intercalate "$" superName 
+=======
+    let superConstructorLabel = "Method$" ++ intercalate "$" superName ++ "$##"
+>>>>>>> d1b7e3e1c532223620a3326cc0132143c7b11e79
     extern superConstructorLabel
     call (L superConstructorLabel)
     pop Esi
