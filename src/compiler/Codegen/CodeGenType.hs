@@ -130,7 +130,7 @@ generateMethod ctx m
   -- constructor
   | isConstructor m = do
     generateConstructor ctx m
-    generateStatement ctx (methodStatement m)
+    generateStatement' ctx (methodStatement m)
     mov Esp Ebp
     pop Ebp
     ret
@@ -155,7 +155,7 @@ generateMethod ctx m
       ctxFrame       = Map.fromList (zip paramNames [20,24..]),
       ctxFrameOffset = 0 }
 
-    generateStatement newCtx (methodStatement m)
+    generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
     pop Ebp
     ret
