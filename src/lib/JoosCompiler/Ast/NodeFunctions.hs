@@ -102,7 +102,6 @@ instance Show Expression where
   show (AmbiguousFieldAccess e s)            = "AmbiguousFieldAccess(" ++ show e ++ "." ++ s ++ ")"
   show (DynamicFieldAccess e n)              = "DynamicFieldAccess(" ++ show e ++ "." ++ n ++ ")"
   show (StaticFieldAccess n)                 = "StaticFieldAccess(" ++ showName n ++ ")"
-  show (ArrayLengthAccess e)                 = "ArrayLengthAccess(" ++ show e ++ ".length)"
   show (LocalAccess n)                       = "LocalAccess(" ++ n ++ ")"
   show (ExpressionName n)                    = "ExpressionName(" ++ showName n ++ ")"
   show (NewExpression name args)             = "(new " ++ showName name ++ "(" ++ intercalate "," (map show args) ++ "))"
@@ -287,7 +286,6 @@ mapExpression f (BinaryOperation o e1 e2) =
 mapExpression f (UnaryOperation o e)       = f $ UnaryOperation o      (mapExpression f e)
 mapExpression f (AmbiguousFieldAccess e s) = f $ AmbiguousFieldAccess  (mapExpression f e) s
 mapExpression f (DynamicFieldAccess e s)   = f $ DynamicFieldAccess    (mapExpression f e) s
-mapExpression f (ArrayLengthAccess e)      = f $ ArrayLengthAccess     (mapExpression f e)
 mapExpression f (NewExpression n le)       = f $ NewExpression n $ map (mapExpression f) le
 mapExpression f (NewArrayExpression t e)   = f $ NewArrayExpression t $ mapExpression f e
 mapExpression f (CastExpression t e)       = f $ CastExpression t $     mapExpression f e

@@ -196,16 +196,16 @@ wrapAccess _ _ oldExpression [] = oldExpression
 -- Array
 wrapAccess
   program
+  -- isArray
   oldExprType@(Type t True)
   oldExpression
   name@(n:ns)
   | n == "length" =
-    wrapAccess program (Type Int False) newExpression ns |>
-    trace (showName name)
+    wrapAccess program (Type Int False) newExpression ns
   | otherwise = error $ intercalate " " ["Tried to access field", n, "in array"]
   where
     trace = DumbTrace.trace
-    newExpression = ArrayLengthAccess oldExpression
+    newExpression = DynamicFieldAccess oldExpression "length"
 
 -- Static Access
 wrapAccess

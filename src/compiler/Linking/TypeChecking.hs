@@ -305,11 +305,6 @@ instance Analysis TypeAnalysis Type where
       then Left "Cannot dynamically access static field"
       else Right (variableType field)
 
-  -- JLS 15.11: Field Access Expressions (length)
-  analyze ctx (AstExpression (ArrayLengthAccess e)) =
-    -- TODO: This is going to be removed
-    Right $ Type (NamedType ["TODO ArrayLengthAccess"]) False
-
   -- JLS 15.12: Method Invocation Expressions (static)
   analyze ctx (AstExpression (StaticMethodInvocation className name argExprs)) = do
     Right $ Type (NamedType ["TODO StaticMethodInvocation"]) False -- TODO

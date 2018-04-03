@@ -143,7 +143,6 @@ data Expression
 
   -- Non-ambiguous accesses
   | DynamicFieldAccess Expression String
-  | ArrayLengthAccess Expression
   | StaticFieldAccess Name
   | LocalAccess String
   -- Only used as an intermediate for StaticMethodAccess
