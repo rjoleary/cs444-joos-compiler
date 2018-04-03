@@ -126,6 +126,15 @@ generateMethod ctx m
     extern nativeLabel
     jmp (L nativeLabel)
 
+  -- constructor 
+  | isConstructor m = do
+    generateConstructor ctx m 
+    generateStatement ctx (methodStatement m)
+    mov Esp Ebp
+    pop Ebp
+    ret
+
+
   -- Regular static and non-static methods
   | otherwise = do
     global m
@@ -559,6 +568,37 @@ generateLValue _ _ = do
   mov Eax (I 123)
   return Void
 
+generateConstructor :: CodeGenCtx -> Method -> Asm()
+generateConstructor ctx m 
+  | isNoSuperObject ctx m = do
+    push Ebp
+    mov Esp Ebp
+
+  | otherwise = do
+    push Ebp
+    mov Esp Ebp
+    push Ebp
+    mov Esp Ebp
+    -- call super first
+      --push this into stack
+
+    let thisLabel = getTypeInProgram (ctxProgram ctx) (ctxThis ctx)
+    mov Eax (L thisLabel)
+    push Eax
+
+      -- save registers
+    push Ebx
+    push Edi
+    push Esi
+    let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    let superConstructorLabel = "Class$" ++ intercalate "$" superName 
+    extern superConstructorLabel
+    call (L superConstructorLabel)
+    pop Esi
+    pop Edi
+    pop Ebx
+    ret
+
 initializeObjectField :: CodeGenCtx -> WholeProgram -> Name -> Variable -> Asm Type
 initializeObjectField ctx wp n var = do
   ge <- generateExpression' ctx (variableValue var)
@@ -578,3 +618,9 @@ getDynamicFieldOffset wp n var = fromInteger $ toInteger offset
     index = fromMaybe (error "Object doesn't have this field") maybeIndex
     maybeIndex = elemIndex var vars
     vars = directAndIndirectDynamicFields wp n
+
+isNoSuperObject :: CodeGenCtx -> Method -> Bool
+isNoSuperObject ctx x = superLabel == "java$lang$Object"
+  where
+    superLabel = intercalate "$" superName
+    superName = (super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx)))

@@ -361,3 +361,7 @@ isMethodAbstract x = Abstract `elem` methodModifiers x
 
 isMethodNative :: Method -> Bool
 isMethodNative x = Native `elem` methodModifiers x
+
+isConstructor :: Method -> Bool
+isConstructor x =  (methodName x) == ""
+
