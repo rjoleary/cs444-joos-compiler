@@ -133,18 +133,38 @@ generateMethod ctx m
     extern nativeLabel
     jmp (L nativeLabel)
 
-  -- constructor
   | isConstructor m = do
     global m
     label m
-    let thisType = Type (NamedType (ctxThis ctx)) False
-    let newCtx = getMethodCtx thisType m ctx
-    generateConstructor newCtx m
+    push Ebp
+    mov Ebp Esp
+
+    -- Object's constructor does not recurse.
+    when (not $ isPrefixOf ["java", "lang", "Object"] (methodCanonicalName m)) $ do
+
+      -- Copy the `this` pointer into eax.
+      mov Eax (AddrOffset Ebp (fromJust $ Map.lookup "this" (ctxFrame newCtx)))
+
+      -- Call the super with 1 arg
+      push Eax -- `this` argument
+      push Ebx
+      push Edi
+      push Esi
+      let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+      let superConstructorLabel = "Method$" ++ intercalate "$" superName ++ "$##"
+      extern superConstructorLabel
+      call (L superConstructorLabel)
+      pop Esi
+      pop Edi
+      pop Ebx
+      pop Eax
+
+    -- TODO: initialize fields
+
     generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
     pop Ebp
     ret
-
 
   -- Regular static and non-static methods
   | otherwise = do
@@ -156,13 +176,23 @@ generateMethod ctx m
     -- The caller already pushed these arguments onto the stack.
     -- Type checking has already ensured static methods do not use "this", so
     -- the final parameter will simply be ignored for static methods.
-    let thisType = Type (NamedType (ctxThis ctx)) False
-    let newCtx = getMethodCtx thisType m ctx
 
     generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
     pop Ebp
     ret
+
+  where
+    thisType = Type (NamedType (ctxThis ctx)) False
+
+    newCtx = ctx { ctxLocals      = Map.fromList (zip paramNames paramTypes)
+                 -- The first argument is 16 to skip 4 registers: ebx, ebi, esi, link, ebp
+                 , ctxFrame       = Map.fromList (zip paramNames [20,24..])
+                 , ctxFrameOffset = 0 }
+      where
+        paramNames = reverse $ "this":map variableName (methodParameters m)
+        paramTypes = reverse $ thisType:map variableType (methodParameters m)
+
 
 ---------- Statements ----------
 
@@ -421,62 +451,54 @@ generateExpression ctx ExpressionName{} = do
   return Void
 
 generateExpression ctx (NewExpression n es) = do
-  mov Eax (I $fromIntegral v)
-  mov Ebx Eax -- ebx contains the number of fields
-  add Eax (I 1)
-  push Ebx
-  shl Eax (I 2)
+  comment "Allocate space"
+  mov Eax (I $ 4 + 4 * fromIntegral v) -- Size in bytes
   extern "__malloc"
   call (L "__malloc")
+  -- eax now contains the uninitialized object.
+
+  comment "Clear space"
+  push Eax
+  mov Ebx (I $ 1 + fromIntegral v) -- Size in dwords
+  extern "memclear"
+  call (L "memclear")
+  pop Eax
+
+  comment "Insert the vptr"
   -- This special extern prevents externing something in the current file.
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
     in extern addr
   movDword (Addr Eax) (L addr)
-  pop Ebx
-  push Eax
-  -- Eax contains the start address of the object.
-  -- initialize fields
-  add Eax (I 4)
-  extern "memclear"
-  call (L "memclear")
 
-  -- call constructor
+  comment "Evaluate the arguments"
+  push Eax -- this pointer
   types <- mapAsm (\(idx, arg) -> do
     comment ("Argument number " ++ show idx)
     t <- generateExpression' ctx arg
     push Eax
     return t
     ) (zip [1..] es)
-  push Ebx
-  push Edi
-  push Esi
 
-  -- get constructor name
+  -- Get the constructor name.
   let tp = getTypeInProgram (ctxProgram ctx) n
   let maybeCtor = findOverload "" types (constructors tp)
   let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
-  let ctorMangleName = mangle ctorName
 
+  comment "Call the constructor"
+  push Ebx
+  push Edi
+  push Esi
   -- This special extern prevents externing something in the current file.
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    in extern ctorMangleName
-  mov Eax (L ctorMangleName)
+    in extern (mangle ctorName)
+  mov Eax (L $ mangle ctorName)
   call Eax
   pop Esi
   pop Edi
   pop Ebx
   add Esp (I $ fromIntegral (length es * 4))
   pop Eax
- -- call Eax
- -- add Esp (I 4)
-  -- pop Eax
-  -- pop Eax
-  -- pop Ebx
-  -- push Eax
-  -- add Eax (I 4)
-  -- push Eax
-  -- t <- mapM_ (initializeObjectField ctx wp n) fields
-  -- pop Eax
+
   return (Type (NamedType n) False)
   where
     addr = mangle td
@@ -487,30 +509,39 @@ generateExpression ctx (NewExpression n es) = do
     wp = ctxProgram ctx
 
 generateExpression ctx (NewArrayExpression t e) = do
+  comment "Determine length of new array"
   generateExpression' ctx e
---  add Eax (I 1)
+  add Eax (I 2) -- Make room for vptr and length
+
+  comment "Allocate space"
   mov Ebx Eax
-  add Eax (I 2)
   push Ebx
-  -- malloc allocate bytes?
-  shl Eax (I 2)
+  shl Eax (I 2) -- Convert to bytes
   extern "__malloc"
   call (L "__malloc")
+  pop Ebx -- Pop length+2 into ebx
+
+  comment "Clear space"
+  push Eax
+  push Ebx
+  extern "memclear" -- Takes dwords
+  call (L "memclear")
+
+  comment "Set length"
   pop Ebx
+  pop Eax
+  sub Ebx (I 2) -- Convert length+2 to length.
+  movDword (AddrOffset Eax 4) Ebx
+
+  comment "Set vptr"
   -- This special extern prevents externing something in the current file.
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
     in case it of
       (NamedType name) -> extern td >> movDword (Addr Eax) (L (mangle td))
-      otherwise        -> movDword (Addr Eax) (I 0)
-  push Eax
-  add Eax (I 4)
-  movDword (Addr Eax) Ebx
-  -- pop Eax
-  -- push Eax
-  extern "memclear"
-  call (L "memclear")
-  pop Eax
+      otherwise        -> return () -- Already cleared to zero
+
   return t
+
   where
     it = innerType t
     maybeTd = resolveTypeInProgram (ctxProgram ctx) (unNamedType it)
@@ -615,11 +646,12 @@ generateExpression ctx (DynamicMethodInvocation expr name argExprs) = do
   return (methodReturn method)
 
 generateExpression ctx (DynamicFieldAccess expr name) = do
-  -- TODO: this is a piece of work
   classType <- generateExpression ctx expr
   if isArray classType && name == "length"
-  then return (Type Int False) -- special case for array.length
-  else do
+  then do
+    mov Eax (AddrOffset Eax 4)
+    return (Type Int False)
+  else do -- TODO: this is a piece of work
     let cu = case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
           Just x  -> x
           Nothing -> error "Cannot find unit, should be done in type checking"
@@ -696,47 +728,6 @@ generateLValue _ _ = do
   mov Eax (I 123)
   return Void
 
-getMethodCtx :: Type -> Method -> CodeGenCtx -> CodeGenCtx
-getMethodCtx thisType m ctx =
-  ctx { ctxLocals      = Map.fromList (zip paramNames paramTypes)
-      -- The first argument is 16 to skip 4 registers: ebx, ebi, esi, link, ebp
-      , ctxFrame       = Map.fromList (zip paramNames [20,24..])
-      , ctxFrameOffset = 0 }
-  where
-    paramNames = reverse $ "this":map variableName (methodParameters m)
-    paramTypes = reverse $ thisType:map variableType (methodParameters m)
-
-generateConstructor :: CodeGenCtx -> Method -> Asm()
-generateConstructor ctx m
-  | isNoSuperObject ctx m = do
-    push Ebp
-    mov Esp Ebp
-
-  | otherwise = do
-    push Ebp
-    mov Esp Ebp
-    push Ebp
-    mov Esp Ebp
-    -- call super first
-      --push this into stack
-
-    let thisLabel = getTypeInProgram (ctxProgram ctx) (ctxThis ctx)
-    mov Eax (L thisLabel)
-    push Eax
-
-      -- save registers
-    push Ebx
-    push Edi
-    push Esi
-    let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    let superConstructorLabel = "Method$" ++ intercalate "$" superName ++ "$##"
-    extern superConstructorLabel
-    call (L superConstructorLabel)
-    pop Esi
-    pop Edi
-    pop Ebx
-    ret
-
 initializeObjectField :: CodeGenCtx -> WholeProgram -> Name -> Variable -> Asm Type
 initializeObjectField ctx wp n var = do
   ge <- generateExpression' ctx (variableValue var)
@@ -757,15 +748,7 @@ getDynamicFieldOffset wp n var = fromInteger $ toInteger offset
     maybeIndex = elemIndex var vars
     vars = directAndIndirectDynamicFields wp n
 
-isNoSuperObject :: CodeGenCtx -> Method -> Bool
-isNoSuperObject ctx x = superLabel == "java$lang$Object"
-  where
-    superLabel = intercalate "$" superName
-    superName = (super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx)))
-
-
 convertToString :: Type -> Type
 convertToString t = do
   let label = case t of
         (Type Short False) -> "Method$java$lang$String$valueof$#short#"
-       
