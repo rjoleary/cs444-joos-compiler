@@ -209,7 +209,7 @@ canonicalizeExpression program unit vars (ExpressionName name) =
   ExpressionName $ canonicalizeNameInExpression program unit vars name
 
 canonicalizeExpression program unit vars (NewExpression name e) =
-  (NewExpression (canonicalizeNameInExpression program unit vars name) $ e) |>
+  (NewExpression (canonicalizeNameInExpression program unit Map.empty name) $ e) |>
   trace ("Canonicalizing new: " ++ showName name)
 
 -- Do not need canonicalization
