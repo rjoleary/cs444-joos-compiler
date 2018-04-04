@@ -505,8 +505,8 @@ generateExpression ctx (NewArrayExpression t e) = do
   push Eax
   add Eax (I 4)
   movDword (Addr Eax) Ebx
-  pop Eax
-  push Eax
+  -- pop Eax
+  -- push Eax
   extern "memclear"
   call (L "memclear")
   pop Eax
@@ -762,3 +762,10 @@ isNoSuperObject ctx x = superLabel == "java$lang$Object"
   where
     superLabel = intercalate "$" superName
     superName = (super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx)))
+
+
+convertToString :: Type -> Type
+convertToString t = do
+  let label = case t of
+        (Type Short False) -> "Method$java$lang$String$valueof$#short#"
+       

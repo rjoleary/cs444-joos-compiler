@@ -5,7 +5,7 @@
 ; Both registers are modified.
 global memclear;
 memclear:
-  add eax, 8;
+  ;; add eax, 8
   shl ebx, 2;
   add ebx, eax;
   memclear_loop:
