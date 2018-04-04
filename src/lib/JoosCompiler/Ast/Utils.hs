@@ -105,11 +105,11 @@ findMethodInProgram expectingStatic program typeName mName signature =
           )) |> const "" -- This line hides the methods above
          )
           ++
-        "\nResult: " ++ (if (isJust result)
+        "\nResult:   " ++ (if (isJust result)
                          then let m = (fromJust result) in
                             (if isMethodStatic m then "static " else "dynamic ") ++
                               (showName $ methodCanonicalName m) ++ "(" ++
-                              (intercalate ", " $ map (typeSignature . variableType) $ methodParameters m) ++ ")"
+                              (intercalate ", " $ map (typeSignature . variableType) $ methodParameters m) ++ ")\n"
                          else "Nothing")
         )
   where
