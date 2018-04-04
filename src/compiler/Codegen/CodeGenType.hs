@@ -748,7 +748,3 @@ getDynamicFieldOffset wp n var = fromInteger $ toInteger offset
     maybeIndex = elemIndex var vars
     vars = directAndIndirectDynamicFields wp n
 
-convertToString :: Type -> Type
-convertToString t = do
-  let label = case t of
-        (Type Short False) -> "Method$java$lang$String$valueof$#short#"
