@@ -137,8 +137,10 @@ generateMethod ctx m
   | isConstructor m = do
     global m
     label m
-    generateConstructor ctx m
-    generateStatement' ctx (methodStatement m)
+    let thisType = Type (NamedType (ctxThis ctx)) False
+    let newCtx = getMethodCtx thisType m ctx
+    generateConstructor newCtx m
+    generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
     pop Ebp
     ret
@@ -155,13 +157,7 @@ generateMethod ctx m
     -- Type checking has already ensured static methods do not use "this", so
     -- the final parameter will simply be ignored for static methods.
     let thisType = Type (NamedType (ctxThis ctx)) False
-    let paramNames = reverse $ "this":map variableName (methodParameters m)
-    let paramTypes = reverse $ thisType:map variableType (methodParameters m)
-    let newCtx = ctx {
-      ctxLocals      = Map.fromList (zip paramNames paramTypes),
-      -- The first argument is 16 to skip 4 registers: ebx, ebi, esi, link, ebp
-      ctxFrame       = Map.fromList (zip paramNames [20,24..]),
-      ctxFrameOffset = 0 }
+    let newCtx = getMethodCtx thisType m ctx
 
     generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
@@ -628,7 +624,18 @@ generateExpression ctx (StaticFieldAccess name) = do
 generateExpression ctx (LocalAccess n) = do
   mov Eax $ AddrOffset Ebp (mapLookupWith (ctxFrame ctx))
   return $ mapLookupWith (ctxLocals ctx)
-  where mapLookupWith m = fromMaybe (error $ "Could not find " ++ n) $ Map.lookup n m
+  where
+    mapLookupWith m =
+      Map.lookup n m |>
+      fromMaybe (error $
+                 "Could not find " ++
+                 n ++
+                 " in " ++
+                 (showName $ ctxThis ctx) ++
+                 " with locals: " ++
+                 (intercalate ", " $ Map.keys m)
+                )
+
 
 generateExpression ctx (ClassAccess _) = error "ClassAccess should not reach code generation"
 
@@ -675,6 +682,16 @@ generateLValue _ _ = do
 -- comment "TODO"
   mov Eax (I 123)
   return Void
+
+getMethodCtx :: Type -> Method -> CodeGenCtx -> CodeGenCtx
+getMethodCtx thisType m ctx =
+  ctx { ctxLocals      = Map.fromList (zip paramNames paramTypes)
+      -- The first argument is 16 to skip 4 registers: ebx, ebi, esi, link, ebp
+      , ctxFrame       = Map.fromList (zip paramNames [20,24..])
+      , ctxFrameOffset = 0 }
+  where
+    paramNames = reverse $ "this":map variableName (methodParameters m)
+    paramTypes = reverse $ thisType:map variableType (methodParameters m)
 
 generateConstructor :: CodeGenCtx -> Method -> Asm()
 generateConstructor ctx m
