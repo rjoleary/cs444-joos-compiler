@@ -436,6 +436,7 @@ generateExpression ctx (NewExpression n es) = do
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
     in extern addr
   movDword (Addr Eax) (L addr)
+  pop Ebx
   push Eax
   -- Eax contains the start address of the object.
   -- initialize fields
