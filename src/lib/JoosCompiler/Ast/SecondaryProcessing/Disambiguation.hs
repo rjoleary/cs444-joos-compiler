@@ -7,7 +7,7 @@ module JoosCompiler.Ast.SecondaryProcessing.Disambiguation
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
-import           Debug.Trace(trace)
+import           Debug.DumbTrace(trace)
 import qualified Debug.DumbTrace as DumbTrace
 import           Flow
 import           JoosCompiler.Ast.NodeFunctions
@@ -83,7 +83,8 @@ disambiguateExpression program unit vars e@(ExpressionName [n])
     staticFieldMaybe = findStaticFieldInUnit program unit n
 
 disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
-  | isJust localMaybe               = (LocalAccess n)
+  | isJust localMaybe               =
+    wrapAccess program localType (LocalAccess n) ns
   | staticFieldExistsInUnit program unit n  =
     wrapAccess program staticFieldType (StaticFieldAccess staticFieldName) ns
   | dynamicFieldExistsInUnit program unit n =
@@ -94,7 +95,10 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | otherwise                       = error $ "Could not disambiguate expression: " ++ showName (n:ns)
   where
     trace = DumbTrace.trace
+
     localMaybe = Map.lookup n vars
+    local = fromMaybe (error "No local") localMaybe
+    localType = variableType local
 
     staticField = getStaticFieldInUnit program unit n
     staticFieldName = variableCanonicalName staticField
