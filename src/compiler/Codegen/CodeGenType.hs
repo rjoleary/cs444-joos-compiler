@@ -167,8 +167,20 @@ generateMethod ctx m
       pop Ebx
       pop Eax
 
-    -- TODO: initialize fields
+    -- Initialize fields
+    push Eax
+    mapM_ (\(offset, field) ->
+      -- Filter direct fields
+      if (ctxThis ctx) `isPrefixOf` (variableCanonicalName field)
+        then do
+          generateExpression' newCtx (variableValue field)
+          mov Ebx (Addr Esp) -- this pointer
+          mov (AddrOffset Ebx (fromInteger offset)) Eax
+        else return ()
+      ) (directAndIndirectDynamicFieldOffsets (ctxProgram ctx) (ctxThis ctx))
+    pop Eax
 
+    -- Constructor body
     generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
     pop Ebp
@@ -858,7 +870,7 @@ generateLValue ctx (DynamicFieldAccess expr name) = do
   then do
     add Eax (I 4)
     return (Type Int False)
-  else do -- TODO: this is a piece of work
+  else do
     let (offset, field) = getFieldOffset (ctxProgram ctx) (getTypeName classType) name
     add Eax (I $ fromInteger $ offset)
     return (variableType field)
