@@ -9,6 +9,10 @@ FAILED=0
 ERROR=0
 IGNORED=0
 
+findtestfile() {
+    egrep -lr 'int\s+test\s*\(' $1
+}
+
 # runtests <PASS_CODE> <FAIL_CODE> <TESTS>...
 runtests() {
     local PASS_CODE=$1
@@ -27,7 +31,11 @@ runtests() {
 
         # If testname is a directory, run all the tests inside it.
         if [ -d $testname ]; then
-            local files=$(find $testname -name '*.java')
+            local raw_files=$(find $testname -name '*.java')
+            local test_file=$(findtestfile $testname)
+            # As per https://stackoverflow.com/questions/11532157/unix-removing-duplicate-lines-without-sorting
+            local files=$(for i in $test_file $raw_files; do echo $i; done | awk '!x[$0]++')
+
         else
             local files=$testname
         fi
