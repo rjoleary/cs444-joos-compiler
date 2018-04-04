@@ -159,6 +159,8 @@ generateMethod ctx m
       pop Ebx
       pop Eax
 
+    -- TODO: initialize fields
+
     generateStatement' newCtx (methodStatement m)
     mov Esp Ebp
     pop Ebp
@@ -507,30 +509,39 @@ generateExpression ctx (NewExpression n es) = do
     wp = ctxProgram ctx
 
 generateExpression ctx (NewArrayExpression t e) = do
+  comment "Determine length of new array"
   generateExpression' ctx e
---  add Eax (I 1)
+  add Eax (I 2) -- Make room for vptr and length
+
+  comment "Allocate space"
   mov Ebx Eax
-  add Eax (I 2)
   push Ebx
-  -- malloc allocate bytes?
-  shl Eax (I 2)
+  shl Eax (I 2) -- Convert to bytes
   extern "__malloc"
   call (L "__malloc")
+  pop Ebx -- Pop length+2 into ebx
+
+  comment "Clear space"
+  push Eax
+  push Ebx
+  extern "memclear" -- Takes dwords
+  call (L "memclear")
+
+  comment "Set length"
   pop Ebx
+  pop Eax
+  sub Ebx (I 2) -- Convert length+2 to length.
+  movDword (AddrOffset Eax 4) Ebx
+
+  comment "Set vptr"
   -- This special extern prevents externing something in the current file.
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
     in case it of
       (NamedType name) -> extern td >> movDword (Addr Eax) (L (mangle td))
-      otherwise        -> movDword (Addr Eax) (I 0)
-  push Eax
-  add Eax (I 4)
-  movDword (Addr Eax) Ebx
-  pop Eax
-  push Eax
-  extern "memclear"
-  call (L "memclear")
-  pop Eax
+      otherwise        -> return () -- Already cleared to zero
+
   return t
+
   where
     it = innerType t
     maybeTd = resolveTypeInProgram (ctxProgram ctx) (unNamedType it)
