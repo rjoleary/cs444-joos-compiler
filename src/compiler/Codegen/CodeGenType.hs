@@ -643,11 +643,12 @@ generateExpression ctx (DynamicMethodInvocation expr name argExprs) = do
   return (methodReturn method)
 
 generateExpression ctx (DynamicFieldAccess expr name) = do
-  -- TODO: this is a piece of work
   classType <- generateExpression ctx expr
   if isArray classType && name == "length"
-  then return (Type Int False) -- special case for array.length
-  else do
+  then do
+    mov Eax (AddrOffset Eax 4)
+    return (Type Int False)
+  else do -- TODO: this is a piece of work
     let cu = case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
           Just x  -> x
           Nothing -> error "Cannot find unit, should be done in type checking"
