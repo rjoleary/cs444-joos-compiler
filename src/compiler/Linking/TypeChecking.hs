@@ -52,6 +52,10 @@ data TypeAnalysis = TypeAnalysis
 
 -- Analysis on classes/methods/statements. No Type is returned.
 instance Analysis TypeAnalysis () where
+  -- TODO: This skips type checking on standard libraries. However, it should pass.
+  -- analyze ctx (AstCompilationUnit (CompilationUnit{cuPackage=("java":_)})) =
+  --   return ()
+
   analyze ctx a@(AstTypeDeclaration x) =
     propagateAnalyze ctx{ ctxThis = Just $ typeCanonicalName x } a
 

@@ -4,7 +4,7 @@ import           Control.Applicative((<|>))
 import           Data.List
 import           Data.Maybe
 import           Data.Tree
-import           Debug.DumbTrace(trace)
+import           Debug.Trace(trace)
 import qualified Debug.DumbTrace as DumbTrace
 import           Flow
 import           JoosCompiler.Ast.NodeTypes
@@ -91,26 +91,35 @@ findDynamicMethodInProgram = findMethodInProgram False
 findMethodInProgram :: Bool -> WholeProgram -> Name -> String -> [Type] -> Maybe Method
 findMethodInProgram expectingStatic program typeName mName signature =
   result |>
-  trace ("Resolving " ++ (showName $ typeName ++ [mName]) ++ " in methods: " ++
-         (program |>
+  trace ("Resolving " ++ (if expectingStatic then "static " else "dynamic ") ++
+         (showName $ typeName ++ [mName]) ++ "(" ++ (intercalate ", " $ map typeSignature signature) ++ ") in methods: " ++
+         ((program |>
           (programCus .>
            map typeDecl .>
            catMaybes .>
            map (\t -> (typeCanonicalName t, methods t)) .>
-           map (\(t,ms) -> map (\m -> intercalate "." [showName t, methodName m]) ms) .>
+           map (\(t,ms) -> map (\m -> (showName $ t ++ [methodName m]) ++ "(" ++ (intercalate ", " $ map (typeSignature . variableType) $ methodParameters m) ++ ")") ms) .>
            mconcat .>
            map ("\n  " ++) .>
            mconcat
-          )))
+          )) |> const "" -- This line hides the methods above
+         )
+          ++
+        "\nResult: " ++ (if (isJust result)
+                         then let m = (fromJust result) in
+                            (if isMethodStatic m then "static " else "dynamic ") ++
+                              (showName $ methodCanonicalName m) ++ "(" ++
+                              (intercalate ", " $ map (typeSignature . variableType) $ methodParameters m) ++ ")"
+                         else "Nothing")
+        )
   where
-    trace = DumbTrace.trace
     typeDeclMaybe = resolveTypeInProgram program typeName
     _typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
     resolvedMethods =
       allMethods program typeName |>
       filter (\m -> (isMethodStatic m == expectingStatic))
-    result = listToMaybe resolvedMethods
-    -- result = findOverload mName signature resolvedMethods
+    -- result = listToMaybe resolvedMethods
+    result = findOverload mName signature resolvedMethods
 
 canonicalizeUnitName :: CompilationUnit -> Name
 canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]
@@ -173,6 +182,7 @@ findFieldInType expectingStatic program typeDecl n
   = result |>
     trace (show allFields)
   where
+    trace = DumbTrace.trace
     canonicalName = typeCanonicalName typeDecl
     -- the function above returns super first. We want the opposite
     allFields = directAndIndirectFields expectingStatic program canonicalName |>
