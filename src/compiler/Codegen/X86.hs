@@ -223,6 +223,7 @@ externIfRequired decl m =
     stripPrefix ('C':'l':'a':'s':'s':'$':xs)     = xs
     stripPrefix ('F':'i':'e':'l':'d':'$':xs)     = xs
     stripPrefix ('M':'e':'t':'h':'o':'d':'$':xs) = xs
+    stripPrefix ('S':'t':'a':'t':'i':'c':'F':'i':'e':'l':'d':'$':xs) = xs
     stripPrefix xs = error $ "Do not use externIfRequired on this type " ++ xs
 
 -- Generic instruction taking zero arguments.

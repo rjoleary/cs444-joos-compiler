@@ -73,6 +73,7 @@ generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
   raw "section .data"
   mapM_ (\field -> do
     comment (variableName field)
+    global field
     label field
     dd (I 0)
     ) staticFields
@@ -861,6 +862,9 @@ generateLValue ctx (ArrayExpression expr exprIdx) = do
 generateLValue ctx (StaticFieldAccess name) = do
   let classType = getTypeInProgram (ctxProgram ctx) (init name)
   let field = getStaticFieldInType (ctxProgram ctx) classType (last name)
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in extern field
   mov Eax (L $ mangle $ field)
   return (variableType field)
 
