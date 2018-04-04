@@ -282,11 +282,15 @@ instance Analysis TypeAnalysis Type where
   -- JLS 15.12: Method Invocation Expressions (dynamic)
   analyze ctx (AstExpression e@(DynamicMethodInvocation expr name argExprs)) = do
     exprType <- analyze' ctx expr
-    when (not $ isReference exprType)
+    when (not $ isName exprType)
       (Left $ "Method may only be invoked on reference types " ++ show e)
     argTypes <- foldEither $ map (analyze' ctx) argExprs
-    let lookupSignature = createLookupSignature name argTypes
-    return (Type Int False) -- TODO: lookup
+    let className = getTypeName exprType
+    method <- case findDynamicMethodInProgram (ctxProgram ctx) className name argTypes of
+      Just m  -> Right m
+      Nothing -> Left $ "Cannot find static method " ++ name ++ " in " ++ showName className ++
+        " with arguments " ++ show argTypes
+    return (methodReturn method)
 
   -- JLS 15.11: Field Access Expressions (dynamic)
   analyze ctx (AstExpression (DynamicFieldAccess e name)) = do
