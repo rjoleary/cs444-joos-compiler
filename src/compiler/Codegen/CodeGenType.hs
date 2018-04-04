@@ -656,7 +656,6 @@ generateExpression ctx (NewArrayExpression t e) = do
     it = innerType t
     maybeTd = resolveTypeInProgram (ctxProgram ctx) (unNamedType it)
     td = fromMaybe (error "Could not resolve type") maybeTd
-    obj = mangle td
 
 generateExpression ctx (CastExpression targetType e) = do
   sourceType <- generateExpression' ctx e
@@ -681,7 +680,11 @@ generateExpression ctx (CastExpression targetType e) = do
         in sourceName `elem` targetHierarchy) $ do
     comment $ "Narrowing reference conversion: " ++ show sourceType ++ " to " ++ show targetType
     push Eax
-    mov Ebx (L $ getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType)
+    let targetDecl = getTypeInProgram (ctxProgram ctx) $ getTypeName $ targetType
+    -- This special extern prevents externing something in the current file.
+    let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+      in extern targetDecl
+    mov Ebx (L $ targetDecl)
     extern "instanceOfLookup"
     call (L "instanceOfLookup")
     extern "nullcheck"
