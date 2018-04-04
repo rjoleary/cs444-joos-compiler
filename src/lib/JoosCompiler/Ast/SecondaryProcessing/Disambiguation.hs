@@ -73,17 +73,6 @@ disambiguateStatement program unit method statement = newStatement
     f vars old = disambiguateExpression program unit vars old
 
 disambiguateExpression :: WholeProgram -> CompilationUnit -> VariableMap -> Expression -> Expression
-disambiguateExpression program unit vars e@(ExpressionName [n])
-  | isJust localMaybe       = LocalAccess $ variableName local
-  | isJust staticFieldMaybe = StaticFieldAccess $ variableCanonicalName staticField
-  | otherwise               = DynamicFieldAccess This  n
-  where
-    localMaybe = Map.lookup n vars
-    local      = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
-
-    staticField = getStaticFieldInUnit program unit n
-    staticFieldMaybe = findStaticFieldInUnit program unit n
-
 disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
   | isJust localMaybe               =
     wrapAccess program localType (LocalAccess n) ns
@@ -99,7 +88,7 @@ disambiguateExpression program unit vars e@(ExpressionName name@(n:ns))
     trace = DumbTrace.trace
 
     localMaybe = Map.lookup n vars
-    local = fromMaybe (error "No local") localMaybe
+    local = fromMaybe (error $ intercalate " " ["Local", n, "not found"]) localMaybe
     localType = variableType local
 
     staticField = getStaticFieldInUnit program unit n
