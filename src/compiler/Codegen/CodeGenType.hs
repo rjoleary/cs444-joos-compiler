@@ -382,12 +382,12 @@ generateExpression ctx (BinaryOperation op x y) = do
     binaryOperatorAsm :: BinaryOperator -> Asm Type
     binaryOperatorAsm Multiply     = imul Eax Ebx >> return (Type Int False)
     binaryOperatorAsm Subtract     = sub Eax Ebx >> return (Type Int False)
-    binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> return (Type Boolean False)
-    binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> return (Type Boolean False)
-    binaryOperatorAsm LessEqual    = cmp Eax Ebx >> setle Al >> return (Type Boolean False)
-    binaryOperatorAsm GreaterEqual = cmp Eax Ebx >> setge Al >> return (Type Boolean False)
-    binaryOperatorAsm Equality     = cmp Eax Ebx >> sete Al >> return (Type Boolean False)
-    binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> return (Type Boolean False)
+    binaryOperatorAsm Less         = cmp Eax Ebx >> setl Al >> movzx Eax Al >> return (Type Boolean False)
+    binaryOperatorAsm Greater      = cmp Eax Ebx >> setg Al >> movzx Eax Al >> return (Type Boolean False)
+    binaryOperatorAsm LessEqual    = cmp Eax Ebx >> setle Al >> movzx Eax Al >> return (Type Boolean False)
+    binaryOperatorAsm GreaterEqual = cmp Eax Ebx >> setge Al >> movzx Eax Al >> return (Type Boolean False)
+    binaryOperatorAsm Equality     = cmp Eax Ebx >> sete Al >> movzx Eax Al >> return (Type Boolean False)
+    binaryOperatorAsm Inequality   = cmp Eax Ebx >> setne Al >> movzx Eax Al >> return (Type Boolean False)
     binaryOperatorAsm LazyAnd      = X86.and Eax Ebx >> return (Type Boolean False)
     binaryOperatorAsm LazyOr       = X86.or Eax Ebx >> return (Type Boolean False)
     binaryOperatorAsm x            = error ("Codegen does not support binary operator '" ++ show x ++ "'")
@@ -622,8 +622,10 @@ generateExpression ctx (InstanceOfExpression e targetType) = do
     call (L "instanceOfLookup")
     return (Type Boolean False)
   else do
-    comment $ "Compile time instanceof"
-    mov Eax (I 1)
+    comment $ "Compile time instanceof, still check for null"
+    cmp Eax (I 0)
+    setne Al
+    movzx Eax Al
     return (Type Boolean False)
 
 generateExpression ctx (ArrayExpression expr exprIdx) = do

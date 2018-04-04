@@ -35,6 +35,8 @@ instanceOfLookup:
   cmp eax, 0;
   je instanceOfReturnFalse;
   mov eax, [eax];
+  cmp eax, 0;
+  je instanceOfReturnFalse;
   instanceOfLookupLoop:
     sub eax, 4;
     mov ecx, [eax];
