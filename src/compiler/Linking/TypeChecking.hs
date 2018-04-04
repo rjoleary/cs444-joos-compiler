@@ -9,6 +9,7 @@ module Linking.TypeChecking
   , isReference
   , toArray
   , getTypeName
+  , isName
   , isNumeric
   ) where
 

@@ -672,8 +672,8 @@ generateExpression ctx (CastExpression targetType e) = do
   -- Narrowing reference conversion
   when (isArray sourceType == isArray targetType &&
         sourceType /= targetType &&
-        isReference (toScalar targetType) &&
-        isReference (toScalar sourceType) &&
+        isName (toScalar targetType) &&
+        isName (toScalar sourceType) &&
         let sourceName      = getTypeName (toScalar sourceType)
             targetName      = getTypeName (toScalar targetType)
             targetHierarchy = typeHierarchyNames (ctxProgram ctx) targetName
