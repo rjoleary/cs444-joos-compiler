@@ -19,6 +19,11 @@ public class Main {
 
 	public static int test() {
 		JTree tree = new JTree();
+    boolean b = new JTree() instanceof Object;
+    b = (new JTree()) instanceof Object;
+    {
+        boolean b2 = new JTree() instanceof Object;
+    }
 		return 123;
 	}
 }
