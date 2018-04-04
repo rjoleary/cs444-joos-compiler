@@ -43,9 +43,11 @@ disambiguateUnit program oldUnit
     oldTypeDecl = fromMaybe (error "oldTypeDecl was Nothing") maybeOldTypeDecl
     newUnit = oldUnit {typeDecl = Just newTypeDecl}
     newMethods = map (disambiguateMethod program oldUnit) $ methods oldTypeDecl
+    newConstructors = map (disambiguateMethod program oldUnit) $ constructors oldTypeDecl
     newFields = map (disambiguateVariable program oldUnit) $ classFields oldTypeDecl
     newTypeDecl = oldTypeDecl { methods = newMethods
                               , classFields = newFields
+                              , constructors = newConstructors
                               }
 
 disambiguateVariable program unit variable =
