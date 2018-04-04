@@ -20,15 +20,19 @@ codeGenMain wp = Right $ do
   space
 
   comment "Initialize static fields"
-  comment "TODO: re-enable when this does not cause segfault"
-  {-mapM_ (\x -> extern (Init x) >> call (L . mangle . Init $ x)) (let
+  push Ebx
+  push Edi
+  push Esi
+  mapM_ (\x -> extern (Init x) >> call (L . mangle . Init $ x)) (let
     decl CompilationUnit{typeDecl=Just x} = [x]
     decl _                                = []
     types = foldl (++) [] . map decl . programCus $ wp
     classes = filter (not . isInterface) types
     in classes)
-    -}
   space
+  pop Esi
+  pop Edi
+  pop Ebx
 
   comment "Call the test method, then exit"
   (let

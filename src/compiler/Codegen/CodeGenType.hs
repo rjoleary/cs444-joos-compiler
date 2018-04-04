@@ -70,6 +70,7 @@ generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
 
   -- Uninitialized static fields
   comment (show (length staticFields) ++ " static fields")
+  raw "section .data"
   mapM_ (\field -> do
     comment (variableName field)
     label field
@@ -79,16 +80,23 @@ generateTypeDeclaration ctx t@TypeDeclaration{isInterface=False} = do
 
   -- Init function for initializing static variables.
   comment "Init function"
+  raw "section .text"
   global (Init t)
   label (Init t)
-  -- Initialized in the order defined
-  indent $ mapM_ (\field -> do
-    comment (variableName field)
-    generateExpression' ctx (variableValue field)
-    mov Ebx (L (mangle field))
-    mov (Addr Ebx) Eax
-    ) staticFields
-  space
+  indent $ do
+    push Ebp
+    mov Ebp Esp
+    -- Initialized in the order defined
+    indent $ mapM_ (\field -> do
+      comment (variableName field)
+      generateExpression' ctx (variableValue field)
+      mov Ebx (L (mangle field))
+      mov (Addr Ebx) Eax
+      ) staticFields
+    mov Esp Ebp
+    pop Ebp
+    ret
+    space
 
   -- Constructors
   comment "Constructors"
