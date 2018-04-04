@@ -449,62 +449,54 @@ generateExpression ctx ExpressionName{} = do
   return Void
 
 generateExpression ctx (NewExpression n es) = do
-  mov Eax (I $fromIntegral v)
-  mov Ebx Eax -- ebx contains the number of fields
-  add Eax (I 1)
-  push Ebx
-  shl Eax (I 2)
+  comment "Allocate space"
+  mov Eax (I $ 4 + 4 * fromIntegral v) -- Size in bytes
   extern "__malloc"
   call (L "__malloc")
+  -- eax now contains the uninitialized object.
+
+  comment "Clear space"
+  push Eax
+  mov Ebx (I $ 1 + fromIntegral v) -- Size in dwords
+  extern "memclear"
+  call (L "memclear")
+  pop Eax
+
+  comment "Insert the vptr"
   -- This special extern prevents externing something in the current file.
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
     in extern addr
   movDword (Addr Eax) (L addr)
-  pop Ebx
-  push Eax
-  -- Eax contains the start address of the object.
-  -- initialize fields
-  add Eax (I 4)
-  extern "memclear"
-  call (L "memclear")
 
-  -- call constructor
+  comment "Evaluate the arguments"
+  push Eax -- this pointer
   types <- mapAsm (\(idx, arg) -> do
     comment ("Argument number " ++ show idx)
     t <- generateExpression' ctx arg
     push Eax
     return t
     ) (zip [1..] es)
-  push Ebx
-  push Edi
-  push Esi
 
-  -- get constructor name
+  -- Get the constructor name.
   let tp = getTypeInProgram (ctxProgram ctx) n
   let maybeCtor = findOverload "" types (constructors tp)
   let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
-  let ctorMangleName = mangle ctorName
 
+  comment "Call the constructor"
+  push Ebx
+  push Edi
+  push Esi
   -- This special extern prevents externing something in the current file.
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    in extern ctorMangleName
-  mov Eax (L ctorMangleName)
+    in extern (mangle ctorName)
+  mov Eax (L $ mangle ctorName)
   call Eax
   pop Esi
   pop Edi
   pop Ebx
   add Esp (I $ fromIntegral (length es * 4))
   pop Eax
- -- call Eax
- -- add Esp (I 4)
-  -- pop Eax
-  -- pop Eax
-  -- pop Ebx
-  -- push Eax
-  -- add Eax (I 4)
-  -- push Eax
-  -- t <- mapM_ (initializeObjectField ctx wp n) fields
-  -- pop Eax
+
   return (Type (NamedType n) False)
   where
     addr = mangle td
