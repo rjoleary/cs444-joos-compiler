@@ -52,10 +52,6 @@ data TypeAnalysis = TypeAnalysis
 
 -- Analysis on classes/methods/statements. No Type is returned.
 instance Analysis TypeAnalysis () where
-  -- TODO: This skips type checking on standard libraries. However, it should pass.
-  analyze ctx (AstCompilationUnit (CompilationUnit{cuPackage=("java":_)})) =
-    return ()
-
   analyze ctx a@(AstTypeDeclaration x) =
     propagateAnalyze ctx{ ctxThis = Just [typeName x] } a
 
@@ -309,18 +305,14 @@ instance Analysis TypeAnalysis Type where
       then Left "Cannot dynamically access static field"
       else Right (variableType field)
 
-  -- JLS 15.11: Field Access Expressions (length)
-  analyze ctx (AstExpression (ArrayLengthAccess e)) =
-    -- TODO: This is going to be removed
-    Right $ Type (NamedType ["TODO ArrayLengthAccess"]) False
-
   -- JLS 15.12: Method Invocation Expressions (static)
   analyze ctx (AstExpression (StaticMethodInvocation className name argExprs)) = do
     Right $ Type (NamedType ["TODO StaticMethodInvocation"]) False -- TODO
 
   -- JLS 15.11: Field Access Expressions (static)
-  analyze ctx (AstExpression (StaticFieldAccess name)) =
-    Right $ Type (NamedType ["TODO StaticFieldAccess"]) False -- TODO
+  analyze ctx (AstExpression (StaticFieldAccess name)) = do
+    let field = getStaticFieldInType (ctxProgram ctx) (getTypeInProgram (ctxProgram ctx) (init name)) (last name)
+    Right $ variableType field
 
   analyze ctx (AstExpression (LocalAccess name)) =
     case maybeLocalType of

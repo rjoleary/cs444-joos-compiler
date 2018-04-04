@@ -53,7 +53,6 @@ children (AstExpression (NewArrayExpression t e))   = [AstExpression e]
 children (AstExpression (CastExpression t e))       = [AstExpression e, AstType t]
 children (AstExpression (InstanceOfExpression e t)) = [AstExpression e, AstType t]
 children (AstExpression (ArrayExpression e1 e2))    = [AstExpression e1, AstExpression e2]
-children (AstExpression (ArrayLengthAccess e)) = [AstExpression e]
 children (AstExpression (StaticMethodInvocation _ _ args)) = map AstExpression args
 children (AstExpression (StaticFieldAccess n)) = []
 children (AstExpression (LocalAccess _)) = []

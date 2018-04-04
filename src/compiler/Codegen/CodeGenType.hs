@@ -622,18 +622,11 @@ generateExpression ctx (DynamicFieldAccess _ _) = do
   mov Eax (I 123)
   return Void
 
-generateExpression ctx (ArrayLengthAccess _) = do
-  comment "TODO ArrayLengthAccess"
-  mov Eax (I 123)
-  return Void
-
-generateExpression ctx (StaticFieldAccess name) =
-  case findStaticFieldInType (ctxProgram ctx) (getTypeInProgram (ctxProgram ctx) (init name)) (last name) of
-    Just field -> do
-      comment "TODO get field value"
-      mov Eax (I 123) -- TODO
-      return (variableType field)
-    Nothing -> error $ "Cannot find field " ++ showName name ++ " in ctx"
+generateExpression ctx (StaticFieldAccess name) = do
+  let classType = getTypeInProgram (ctxProgram ctx) (init name)
+  let field = getStaticFieldInType (ctxProgram ctx) classType (last name)
+  mov Eax (L $ mangle $ field)
+  return (variableType field)
 
 generateExpression ctx (LocalAccess n) = do
   mov Eax $ AddrOffset Ebp (mapLookupWith (ctxFrame ctx))

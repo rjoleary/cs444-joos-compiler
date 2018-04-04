@@ -228,7 +228,6 @@ canonicalizeExpression program unit _ old@AmbiguousFieldAccess{} = old
 -- Those are only available after disambiguation
 canonicalizeExpression program unit _ old@DynamicMethodInvocation{} = old
 canonicalizeExpression program unit _ old@DynamicFieldAccess{} = old
-canonicalizeExpression program unit _ old@ArrayLengthAccess{} = old
 canonicalizeExpression program unit _ old@StaticMethodInvocation{} = old
 canonicalizeExpression program unit _ old@StaticFieldAccess{} = old
 canonicalizeExpression program unit _ old@LocalAccess{} = old
