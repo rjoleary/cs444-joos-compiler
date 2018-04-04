@@ -555,30 +555,27 @@ generateExpression ctx (CastExpression targetType e) = do
   return targetType
 
 generateExpression ctx (StaticMethodInvocation n s args) = do
-  t <- mapM_ (\(idx, arg) -> do
+  types <- mapAsm (\(idx, arg) -> do
     comment ("Argument number " ++ show idx)
     t <- generateExpression' ctx arg
     push Eax
+    return t
     ) (zip [1..] args)
   push Ebx
   push Edi
   push Esi
+  let maybeMethod = findStaticMethodInProgram (ctxProgram ctx) n s types
+  let method = fromMaybe (error $ "Not static method found for class" ++ showName n ++ " with arguments " ++ show types) maybeMethod
   -- This special extern prevents externing something in the current file.
   let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    in extern na
-  mov Eax (L (mangle na))
+    in extern method
+  mov Eax (L (mangle method))
   call Eax
   pop Esi
   pop Edi
   pop Ebx
   add Esp (I $ fromIntegral (length args * 4))
-  return (methodReturn $ na)
-    where
-      argTypes = [Type Int False]
-      methods = resolveStaticMethodInProgram (ctxProgram ctx) n s argTypes
-      na = case methods of
-        (m:_) -> m
-        []    -> error $ "Expected to find a method: " ++ (showName (n ++ [s]))
+  return (methodReturn method)
 
 generateExpression ctx (InstanceOfExpression e targetType) = do
   sourceType <- generateExpression' ctx e
