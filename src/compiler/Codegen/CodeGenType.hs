@@ -365,7 +365,7 @@ generateExpression ctx (BinaryOperation Add x y) = do
     pop Eax
     add Eax Ebx
     return (Type Int False)
-  else if (isNumeric t1)
+  else if (isNumeric t1 || isBoolean t1)
     then do
     push Edi
     push Esi
@@ -394,7 +394,7 @@ generateExpression ctx (BinaryOperation Add x y) = do
     pop Ebx
     add Esp (I 8)
     return (Type (NamedType ["java", "lang", "String"]) False)
-  else if (isNumeric t2)
+  else if (isNumeric t2 || isBoolean t2)
     then do
     push Ebx
     push Edi

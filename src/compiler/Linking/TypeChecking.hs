@@ -11,6 +11,7 @@ module Linking.TypeChecking
   , getTypeName
   , isName
   , isNumeric
+  , isBoolean
   ) where
 
 import Control.Monad
