@@ -699,7 +699,7 @@ generateConstructor ctx m
     push Edi
     push Esi
     let superName = super(getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
-    let superConstructorLabel = "Class$" ++ intercalate "$" superName
+    let superConstructorLabel = "Method$" ++ intercalate "$" superName ++ "$##"
     extern superConstructorLabel
     call (L superConstructorLabel)
     pop Esi
