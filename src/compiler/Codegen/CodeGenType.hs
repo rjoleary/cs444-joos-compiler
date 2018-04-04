@@ -168,17 +168,19 @@ generateMethod ctx m
       pop Ebx
       pop Eax
 
+    -- Get list of direct fields in the other of initialization.
+    let fields = reverse $ filter
+                  (\(_, field) -> (ctxThis ctx) `isPrefixOf` (variableCanonicalName field))
+                  (directAndIndirectDynamicFieldOffsets (ctxProgram ctx) (ctxThis ctx))
+
     -- Initialize fields
     push Eax
-    mapM_ (\(offset, field) ->
+    mapM_ (\(offset, field) -> do
       -- Filter direct fields
-      if (ctxThis ctx) `isPrefixOf` (variableCanonicalName field)
-        then do
-          generateExpression' newCtx (variableValue field)
-          mov Ebx (Addr Esp) -- this pointer
-          mov (AddrOffset Ebx (fromInteger offset)) Eax
-        else return ()
-      ) (directAndIndirectDynamicFieldOffsets (ctxProgram ctx) (ctxThis ctx))
+      generateExpression' newCtx (variableValue field)
+      mov Ebx (Addr Esp) -- this pointer
+      mov (AddrOffset Ebx (fromInteger offset)) Eax
+      ) fields
     pop Eax
 
     -- Constructor body
