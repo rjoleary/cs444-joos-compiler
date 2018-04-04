@@ -19,6 +19,7 @@ module Codegen.X86
   -- generic 0
   , nop
   , ret
+  , cdq
 
   -- generic 1
   , idiv
@@ -233,6 +234,9 @@ nop = generic0 "nop"
 
 ret :: Asm ()
 ret = generic0 "ret"
+
+cdq :: Asm ()
+cdq = generic0 "cdq"
 
 -- Generic instruction taking one argument.
 generic1 :: (Arg b) => String -> b -> Asm ()

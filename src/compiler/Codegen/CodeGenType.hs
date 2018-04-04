@@ -320,6 +320,7 @@ generateExpression ctx (BinaryOperation Divide x y) = do
   call (L "nullcheck")
   mov Ebx Eax
   pop Eax
+  cdq -- Sign extend eax into edx
   idiv Ebx
   return (Type Int False)
 
@@ -332,6 +333,7 @@ generateExpression ctx (BinaryOperation Modulus x y) = do
   call (L "nullcheck")
   mov Ebx Eax
   pop Eax
+  cdq -- Sign extend eax into edx
   idiv Ebx
   mov Eax Edx
   return (Type Int False)
@@ -414,8 +416,13 @@ generateExpression ctx (UnaryOperation Not x) = do
   sub Eax Ebx
   return (Type Boolean False)
 
+-- Edge case for most negative integer.
+generateExpression ctx (LiteralExpression (IntegerLiteral 2147483648)) = do
+  raw ("mov eax, 0xffffffff;")
+  return (Type Int False)
+
 generateExpression ctx (LiteralExpression (IntegerLiteral x)) = do
-  mov Eax (I $ fromInteger x) -- TODO: double check extremities
+  mov Eax (I $ fromInteger x)
   return (Type Int False)
 
 generateExpression ctx (LiteralExpression (BooleanLiteral x)) = do
