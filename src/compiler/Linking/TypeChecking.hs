@@ -307,7 +307,12 @@ instance Analysis TypeAnalysis Type where
 
   -- JLS 15.12: Method Invocation Expressions (static)
   analyze ctx (AstExpression (StaticMethodInvocation className name argExprs)) = do
-    Right $ Type (NamedType ["TODO StaticMethodInvocation"]) False -- TODO
+    argTypes <- foldEither $ map (analyze' ctx) argExprs
+    method <- case findStaticMethodInProgram (ctxProgram ctx) className name argTypes of
+      Just m  -> Right m
+      Nothing -> Left $ "Cannot find static method " ++ name ++ " in " ++ showName className ++
+        " with arguments " ++ show argTypes
+    return (methodReturn method)
 
   -- JLS 15.11: Field Access Expressions (static)
   analyze ctx (AstExpression (StaticFieldAccess name)) = do
