@@ -860,7 +860,7 @@ generateLValue ctx (ArrayExpression expr exprIdx) = do
   add Ebx (I 2)
   shl Ebx (I 2)
   add Eax Ebx
-  return t
+  return (toScalar t)
 
 generateLValue ctx (StaticFieldAccess name) = do
   let classType = getTypeInProgram (ctxProgram ctx) (init name)
