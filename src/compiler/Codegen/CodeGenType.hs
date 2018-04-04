@@ -700,33 +700,46 @@ generateLValue ctx (LocalAccess n) = do
   add Eax (I $ (fromMaybe (error "Could not find local") $ Map.lookup n (ctxFrame ctx)))
   return $ fromMaybe (error "Could not find local") $ Map.lookup n (ctxLocals ctx)
 
--- TODO: other lvalues
 generateLValue ctx (ArrayExpression expr exprIdx) = do
+  comment "Array lvalue"
   t <- generateExpression' ctx expr
   push Eax
+
+  comment "Array index"
   p <- generateExpression' ctx exprIdx
-  mov Ebx Eax
-  pop Eax
+  mov Ebx Eax -- ebx contains the index
+  pop Eax     -- eax contains the array object
+
   extern "nullcheck"
   call (L "nullcheck")
+
+  comment "Check index is not negative"
   cmp Ebx (I 0)
   extern "__exception"
   jl (L "__exception")
+
+  comment "Check index is not greater or equal to length"
   push Eax
   add Eax (I 4)
   cmp (Addr Eax) Ebx
   extern "__exception"
   jle (L "__exception")
   pop Eax
+
+  comment "Calculate the address of the index"
   add Ebx (I 2)
   shl Ebx (I 2)
   add Eax Ebx
   return t
 
+-- TODO: other lvalues
 generateLValue _ _ = do
 -- comment "TODO"
   mov Eax (I 123)
   return Void
+
+
+---------- Helper functions ----------
 
 initializeObjectField :: CodeGenCtx -> WholeProgram -> Name -> Variable -> Asm Type
 initializeObjectField ctx wp n var = do
