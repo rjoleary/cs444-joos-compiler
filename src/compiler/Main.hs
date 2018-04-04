@@ -57,6 +57,13 @@ main = do
     case hierarchy of
       Right _  -> return ()
       Left err -> exitError err
+
+    when (testNum > 2) $ do
+      -- Type checking
+      case (lefts $ map (checkUnitTypes program) unitNodes) of
+        [] -> return ()
+        err:_ -> exitError err
+
     when (testNum > 3) $ do
       -- 3rd reachability rule
       case (checkReachability3 ast) of
