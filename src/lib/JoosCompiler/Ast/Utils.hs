@@ -113,6 +113,7 @@ findMethodInProgram expectingStatic program typeName mName signature =
                          else "Nothing")
         )
   where
+    trace = DumbTrace.trace
     typeDeclMaybe = resolveTypeInProgram program typeName
     _typeDecl = fromMaybe (error "No type declaration found for this method") typeDeclMaybe
     resolvedMethods =
