@@ -681,25 +681,14 @@ generateExpression ctx (DynamicMethodInvocation expr name argExprs) = do
   return (methodReturn method)
 
 generateExpression ctx (DynamicFieldAccess expr name) = do
-  classType <- generateExpression ctx expr
-  if isArray classType && name == "length"
-  then do
-    mov Eax (AddrOffset Eax 4)
-    return (Type Int False)
-  else do -- TODO: this is a piece of work
-    let cu = case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
-          Just x  -> x
-          Nothing -> error "Cannot find unit, should be done in type checking"
-    let field = case findDynamicFieldInUnit (ctxProgram ctx) cu name of -- TODO: last?
-          Just x  -> x
-          Nothing -> error "Cannot find dynamic field, should be done in type checkin"
-    return (variableType field)
+  t <- generateLValue' ctx (DynamicFieldAccess expr name)
+  mov Eax (Addr Eax)
+  return t
 
 generateExpression ctx (StaticFieldAccess name) = do
-  let classType = getTypeInProgram (ctxProgram ctx) (init name)
-  let field = getStaticFieldInType (ctxProgram ctx) classType (last name)
-  mov Eax (L $ mangle $ field)
-  return (variableType field)
+  t <- generateLValue' ctx (StaticFieldAccess name)
+  mov Eax (Addr Eax)
+  return t
 
 generateExpression ctx (LocalAccess n) = do
   mov Eax $ AddrOffset Ebp (mapLookupWith (ctxFrame ctx))
@@ -766,6 +755,27 @@ generateLValue ctx (ArrayExpression expr exprIdx) = do
   shl Ebx (I 2)
   add Eax Ebx
   return t
+
+generateLValue ctx (StaticFieldAccess name) = do
+  let classType = getTypeInProgram (ctxProgram ctx) (init name)
+  let field = getStaticFieldInType (ctxProgram ctx) classType (last name)
+  mov Eax (L $ mangle $ field)
+  return (variableType field)
+
+generateLValue ctx (DynamicFieldAccess expr name) = do
+  classType <- generateExpression ctx expr
+  if isArray classType && name == "length"
+  then do
+    add Eax (I 4)
+    return (Type Int False)
+  else do -- TODO: this is a piece of work
+    let cu = case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
+          Just x  -> x
+          Nothing -> error "Cannot find unit, should be done in type checking"
+    let field = case findDynamicFieldInUnit (ctxProgram ctx) cu name of
+          Just x  -> x
+          Nothing -> error "Cannot find dynamic field, should be done in type checkin"
+    return (variableType field)
 
 -- TODO: other lvalues
 generateLValue _ _ = do
