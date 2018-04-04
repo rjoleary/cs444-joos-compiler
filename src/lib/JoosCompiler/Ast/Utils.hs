@@ -109,7 +109,8 @@ findMethodInProgram expectingStatic program typeName mName signature =
     resolvedMethods =
       allMethods program typeName |>
       filter (\m -> (isMethodStatic m == expectingStatic))
-    result = findOverload mName signature resolvedMethods
+    result = listToMaybe resolvedMethods
+    -- result = findOverload mName signature resolvedMethods
 
 canonicalizeUnitName :: CompilationUnit -> Name
 canonicalizeUnitName unit = cuPackage unit ++ [cuTypeName unit]
