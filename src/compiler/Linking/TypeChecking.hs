@@ -7,6 +7,7 @@ module Linking.TypeChecking
   , toScalar
   , isString
   , isReference
+  , toArray
   , getTypeName
   ) where
 

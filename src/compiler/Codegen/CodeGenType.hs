@@ -421,20 +421,19 @@ generateExpression ctx (LiteralExpression (CharacterLiteral x)) = do
   return (Type Char False)
 
 generateExpression ctx (LiteralExpression (StringLiteral x)) = do
-  strStart <- uniqueLabel
-  strEnd <- uniqueLabel
   comment ("StringLiteral " ++ show x)
-  t <- generateExpression' ctx (NewExpression ["java","lang","String"] [(NewArrayExpression (Type Char True) (LiteralExpression (IntegerLiteral $ fromIntegral (length x))))])
+  comment "Create the underlying java.lang.String"
+  t <- generateExpression' ctx (NewExpression ["java","lang","String"] [(NewArrayExpression (Type Char False) (LiteralExpression (IntegerLiteral $ fromIntegral (length x))))])
+
+  comment "Move data into the inner char[]"
   push Eax
-  add Eax (I 4)
+  add Eax (I 4) -- The char[] field is the first field after the vptr.
   mov Eax (Addr Eax)
-  add Eax (I 8)
-  mapM_ (\c -> do
-     add Eax (I 4)
+  mapM_ (\(idx, c) -> do
      if isAlphaNum c
-       then raw("mov dword [eax], " ++ show c ++ ";")
-       else movDword (Addr Eax) (I $ fromInteger $ toInteger $ ord c)
-     ) x
+       then raw("mov dword [eax+" ++ show idx ++"], " ++ show c ++ ";")
+       else movDword (AddrOffset Eax idx) (I $ fromInteger $ toInteger $ ord c)
+     ) (zip [8,12..] x)
   pop Eax
   return (Type (NamedType ["java", "lang", "String"]) False)
 
@@ -482,7 +481,7 @@ generateExpression ctx (NewExpression n es) = do
   -- Get the constructor name.
   let tp = getTypeInProgram (ctxProgram ctx) n
   let maybeCtor = findOverload "" types (constructors tp)
-  let ctorName = fromMaybe (error $ "Not constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
+  let ctorName = fromMaybe (error $ "No constructor found for type " ++ showName n ++ " with arguments " ++ show types) maybeCtor
 
   comment "Call the constructor"
   push Ebx
@@ -540,7 +539,7 @@ generateExpression ctx (NewArrayExpression t e) = do
       (NamedType name) -> extern td >> movDword (Addr Eax) (L (mangle td))
       otherwise        -> return () -- Already cleared to zero
 
-  return t
+  return (toArray t)
 
   where
     it = innerType t
