@@ -169,9 +169,13 @@ instance Analysis TypeAnalysis Type where
     | op `elem` [Equality, Inequality] = do
       expr1Type <- analyze' ctx expr1
       expr2Type <- analyze' ctx expr2
-      if ((expr1Type :: Type) == (expr2Type :: Type))
-         then return (Type Boolean False)
-         else Left ("Bad equality types (" ++
+      if (isNumeric expr1Type && isNumeric expr2Type) ||
+          (isBoolean expr1Type && isBoolean expr2Type) ||
+          ((isReference expr1Type && isReference expr2Type) &&
+            (isTypeCastable (ctxProgram ctx) expr1Type expr2Type ||
+            isTypeCastable (ctxProgram ctx) expr2Type expr1Type))
+        then return (Type Boolean False)
+        else Left ("Bad equality types (" ++
           show expr1Type ++
           show op ++
           show expr2Type ++ ")")
