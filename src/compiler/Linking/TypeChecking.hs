@@ -9,6 +9,7 @@ module Linking.TypeChecking
   , isReference
   , toArray
   , getTypeName
+  , isNumeric
   ) where
 
 import Control.Monad

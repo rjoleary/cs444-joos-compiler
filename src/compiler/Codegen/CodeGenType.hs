@@ -343,13 +343,96 @@ generateExpression ctx (BinaryOperation Add x y) = do
   t1 <- generateExpression' ctx x
   push Eax
   t2 <- generateExpression' ctx y
-  mov Ebx Eax
-  pop Eax
-  add Eax Ebx
-  return $
-    if isString t1 || isString t2
-    then (Type (NamedType ["java", "lang", "String"]) False)
-    else (Type Int False)
+  push Eax
+  if (isNumeric t1) && (isNumeric t2)
+    then do
+    pop Ebx
+    pop Eax
+    add Eax Ebx
+    return (Type Int False)
+  else if (isNumeric t1)
+    then do
+    push Edi
+    push Esi
+    let label = getValueOfLabel t1
+    let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+      in extern label
+    mov Eax (L label)
+    call Eax
+    pop Esi
+    pop Edi
+    pop Ebx
+    add Esp (I 4)
+    push Eax
+    push Ebx
+
+    push Ebx
+    push Edi
+    push Esi
+    let concatLabel = "Method$java$lang$String$concat#java.lang.String#"
+    let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+      in extern concatLabel
+    mov Eax (L concatLabel)
+    call Eax
+    pop Esi
+    pop Edi
+    pop Ebx
+    add Esp (I 8)
+    return (Type (NamedType ["java", "lang", "String"]) False)
+  else if (isNumeric t2)
+    then do
+    push Ebx
+    push Edi
+    push Esi
+    let label = getValueOfLabel t2
+    let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+      in extern label
+    mov Eax (L label)
+    call Eax
+    pop Esi
+    pop Edi
+    pop Ebx
+    add Esp (I 4)
+    push Eax
+
+    push Ebx
+    push Edi
+    push Esi
+    let concatLabel = "Method$java$lang$String$concat#java.lang.String#"
+    let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+      in extern concatLabel
+    mov Eax (L concatLabel)
+    call Eax
+    pop Esi
+    pop Edi
+    pop Ebx
+    add Esp (I 8)
+    return (Type (NamedType ["java", "lang", "String"]) False)
+
+  else do
+    push Ebx
+    push Edi
+    push Esi
+    let concatLabel = "Method$java$lang$String$concat#java.lang.String#"
+    let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+      in extern concatLabel
+    mov Eax (L concatLabel)
+    call Eax
+    pop Esi
+    pop Edi
+    pop Ebx
+    add Esp (I 8)
+    return (Type (NamedType ["java", "lang", "String"]) False)
+
+
+
+  -- mov Ebx Eax
+  -- pop Eax
+  -- add Eax Ebx
+  -- return $
+  --   if isString t1 || isString t2
+  --   then (Type (NamedType ["java", "lang", "String"]) False)
+  --   else (Type Int False)
 
 -- And is special because short circuiting.
 generateExpression ctx (BinaryOperation And x y) = do
@@ -812,4 +895,16 @@ getDynamicFieldOffset wp n var = fromInteger $ toInteger offset
     index = fromMaybe (error "Object doesn't have this field") maybeIndex
     maybeIndex = elemIndex var vars
     vars = directAndIndirectDynamicFields wp n
+
+
+getValueOfLabel :: Type -> String
+getValueOfLabel ty =
+   case ty of
+        (Type Short False) -> "Method$java$lang$String$valueOf#short#"
+        (Type Int False) -> "Method$java$lang$String$valueOf#int#"
+        (Type Byte False) -> "Method$java$lang$String$valueOf#byte#"
+        (Type Char False) -> "Method$java$lang$String$valueOf#char#"
+        (Type Boolean False) -> "Method$java$lang$String$valueOf#boolean#"
+        _ -> ""
+
 
