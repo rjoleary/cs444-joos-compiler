@@ -308,7 +308,7 @@ instance Analysis TypeAnalysis Type where
         Just x  -> Right x
         Nothing -> Left $ ("Could not resolve type " ++ show classType ++
           "; This should have been checked by disambiguation.")
-      field <- case findDynamicFieldInUnit (ctxProgram ctx) cu name of -- TODO: last?
+      field <- case findDynamicFieldInUnit (ctxProgram ctx) cu name of
         Just x  -> Right x
         Nothing -> Left $ ("Could not resolve field " ++ name ++
           " in " ++ show classType ++

@@ -602,18 +602,31 @@ generateExpression ctx (ArrayExpression expr exprIdx) = do
   return t
 
 generateExpression ctx (AmbiguousFieldAccess _ _) = do
-  comment "TODO AmbiguousFieldAccess -- make this an error"
-  return Void
+  error "AmbiguousFieldAccess"
 
-generateExpression ctx (DynamicMethodInvocation _ _ _) = do
-  comment "TODO DynamicMethodInvocation"
-  mov Eax (I 123)
-  return Void
+generateExpression ctx (DynamicMethodInvocation expr name argExprs) = do
+  -- TODO: this is a piece of work
+  exprType <- generateExpression ctx expr
+  argTypes <- mapAsm (generateExpression' ctx) argExprs
+  let className = getTypeName exprType
+  let method = case findDynamicMethodInProgram (ctxProgram ctx) className name argTypes of
+        Just m  -> m
+        Nothing -> error $ "Cannot find static, should be done in type checking"
+  return (methodReturn method)
 
-generateExpression ctx (DynamicFieldAccess _ _) = do
-  comment "TODO DynamicFieldAccess"
-  mov Eax (I 123)
-  return Void
+generateExpression ctx (DynamicFieldAccess expr name) = do
+  -- TODO: this is a piece of work
+  classType <- generateExpression ctx expr
+  if isArray classType && name == "length"
+  then return (Type Int False) -- special case for array.length
+  else do
+    let cu = case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
+          Just x  -> x
+          Nothing -> error "Cannot find unit, should be done in type checking"
+    let field = case findDynamicFieldInUnit (ctxProgram ctx) cu name of -- TODO: last?
+          Just x  -> x
+          Nothing -> error "Cannot find dynamic field, should be done in type checkin"
+    return (variableType field)
 
 generateExpression ctx (StaticFieldAccess name) = do
   let classType = getTypeInProgram (ctxProgram ctx) (init name)
