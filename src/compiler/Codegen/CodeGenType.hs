@@ -514,11 +514,6 @@ generateExpression ctx (UnaryOperation Not x) = do
   sub Eax Ebx
   return (Type Boolean False)
 
--- Edge case for most negative integer.
-generateExpression ctx (LiteralExpression (IntegerLiteral 2147483648)) = do
-  raw ("mov eax, 0xffffffff;")
-  return (Type Int False)
-
 generateExpression ctx (LiteralExpression (IntegerLiteral x)) = do
   mov Eax (I $ fromInteger x)
   return (Type Int False)
