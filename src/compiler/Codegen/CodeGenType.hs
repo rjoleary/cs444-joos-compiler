@@ -645,13 +645,39 @@ generateExpression ctx (AmbiguousFieldAccess _ _) = do
   error "AmbiguousFieldAccess"
 
 generateExpression ctx (DynamicMethodInvocation expr name argExprs) = do
-  -- TODO: this is a piece of work
+  -- Generate the expression to get the this pointer.
   exprType <- generateExpression ctx expr
-  argTypes <- mapAsm (generateExpression' ctx) argExprs
+
+  -- Push arguments
+  push Eax -- this pointer
+  argTypes <- mapAsm (\(idx, arg) -> do
+    comment ("Argument number " ++ show idx)
+    t <- generateExpression' ctx arg
+    push Eax
+    return t
+    ) (zip [1..] argExprs)
+
+  -- Type link the method.
   let className = getTypeName exprType
   let method = case findDynamicMethodInProgram (ctxProgram ctx) className name argTypes of
         Just m  -> m
-        Nothing -> error $ "Cannot find static, should be done in type checking"
+        Nothing -> error $ "Cannot find dynamic method, should be done in type checking"
+
+  -- Call the method
+  -- TODO: this does not do vtable lookup!
+  push Ebx
+  push Edi
+  push Esi
+  -- This special extern prevents externing something in the current file.
+  let extern = externIfRequired (getTypeInProgram (ctxProgram ctx) (ctxThis ctx))
+    in extern method
+  mov Eax (L (mangle method))
+  call Eax
+  pop Esi
+  pop Edi
+  pop Ebx
+  add Esp (I $ fromIntegral (4 + length argExprs * 4))
+
   return (methodReturn method)
 
 generateExpression ctx (DynamicFieldAccess expr name) = do
