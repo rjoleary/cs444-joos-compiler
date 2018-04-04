@@ -859,12 +859,8 @@ generateLValue ctx (DynamicFieldAccess expr name) = do
     add Eax (I 4)
     return (Type Int False)
   else do -- TODO: this is a piece of work
-    let cu = case resolveUnitInProgram (ctxProgram ctx) (getTypeName classType) of
-          Just x  -> x
-          Nothing -> error "Cannot find unit, should be done in type checking"
-    let field = case findDynamicFieldInUnit (ctxProgram ctx) cu name of
-          Just x  -> x
-          Nothing -> error "Cannot find dynamic field, should be done in type checkin"
+    let (offset, field) = getFieldOffset (ctxProgram ctx) (getTypeName classType) name
+    add Eax (I $ fromInteger $ offset)
     return (variableType field)
 
 -- TODO: other lvalues

@@ -233,6 +233,15 @@ directAndIndirectFields expectingStatic program name = fields
       | otherwise = directAndIndirectFields expectingStatic program _super
     fields = superFields ++ classFields resolvedType
 
+directAndIndirectDynamicFieldOffsets :: WholeProgram -> Name -> [(Integer, Variable)]
+directAndIndirectDynamicFieldOffsets wp n =
+  zip [4,8..] (reverse $ directAndIndirectDynamicFields wp n)
+
+getFieldOffset :: WholeProgram -> Name -> String -> (Integer, Variable)
+getFieldOffset wp className fieldName =
+  head $ filter (\(_, x) -> variableName x == fieldName) $
+    directAndIndirectDynamicFieldOffsets wp className
+
 allMethods :: WholeProgram -> Name -> [Method]
 allMethods program name = ms
   where
