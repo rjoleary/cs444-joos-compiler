@@ -11,7 +11,7 @@ maxNegativeInt = 2147483648
 
 asLexeme :: Token -> Maybe String
 asLexeme (Token CharLiteral _) = Just "CharacterLiteral"
-asLexeme (Token StringLiteral _) = Just "StringLiteral"
+asLexeme (Token StringLiteral _) = Just "StringLiteral''''"
 asLexeme (Token IntLiteral _) = Just "IntegerLiteral"
 asLexeme (Token Assign _) = Just "="
 asLexeme (Token Add _) = Just "+"

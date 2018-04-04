@@ -60,7 +60,7 @@ S                       BOF CompilationUnit EOF
 Literal                 IntegerLiteral
 Literal                 BooleanLiteral
 Literal                 CharacterLiteral
-Literal                 StringLiteral
+Literal                 StringLiteral''''
 Literal                 NullLiteral
 
 

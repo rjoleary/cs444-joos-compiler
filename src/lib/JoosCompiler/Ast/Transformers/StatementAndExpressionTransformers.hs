@@ -27,8 +27,11 @@ literalTransformer = match . asRule
       BooleanLiteral (if tokenString (lhs x) == "true" then True else False)
     match [("Literal", _), ("CharacterLiteral", x)] =
       CharacterLiteral (head . read . quote '\"' . tokenString . lhs $ x)
-    match [("Literal", _), ("StringLiteral", x)] =
-      StringLiteral (read . quote '\"' . tokenString . lhs $ x)
+    match [("Literal", _), ("StringLiteral''''", x)] =
+      StringLiteral (let n = (read . quote '\"' . tokenString . lhs $ x)
+                     in if n == "StringLiteral''''"
+                        then ""
+                        else n)
     match [("Literal", _), ("NullLiteral", x)] =
       NullLiteral
 
