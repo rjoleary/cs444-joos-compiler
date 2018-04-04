@@ -394,18 +394,18 @@ generateExpression ctx (LiteralExpression (StringLiteral x)) = do
   strStart <- uniqueLabel
   strEnd <- uniqueLabel
   comment ("StringLiteral " ++ show x)
-  jmp (L strEnd) -- Jump over the string
-  label strStart
-  dd (I 0)
-  dd (I $ fromIntegral $ length x)
-  mapM_ (\c ->
-    if isAlphaNum c
-      then raw ("dd " ++ show c ++ ";") -- Pretty print characters
-      else dd (I $ fromInteger $ toInteger $ ord c)
-    ) x
-  label strEnd
-  mov Eax (L strStart)
-  -- TODO: call string constructor
+  t <- generateExpression' ctx (NewExpression ["java","lang","String"] [(NewArrayExpression (Type Char True) (LiteralExpression (IntegerLiteral $ fromIntegral (length x))))])
+  push Eax
+  add Eax (I 4)
+  mov Eax (Addr Eax)
+  add Eax (I 8)
+  mapM_ (\c -> do
+     add Eax (I 4)
+     if isAlphaNum c
+       then raw("mov dword [eax], " ++ show c ++ ";")
+       else movDword (Addr Eax) (I $ fromInteger $ toInteger $ ord c)
+     ) x
+  pop Eax
   return (Type (NamedType ["java", "lang", "String"]) False)
 
 generateExpression ctx (LiteralExpression NullLiteral) = do
