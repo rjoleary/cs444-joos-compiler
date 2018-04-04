@@ -2,7 +2,7 @@
 GRAMMAR  := Jlalr1
 
 GHC_WARNINGS := -w -Wmissing-fields -Woverflowed-literals -Werror
-GHC_OPTIONS = -threaded -rtsopts -with-rtsopts=-N -outputdir ${HS_BUILD} -O2 ${GHC_WARNINGS} -i${HS_INCLUDE}
+GHC_OPTIONS = -threaded -rtsopts -with-rtsopts=-N -outputdir ${HS_BUILD} -O3 ${GHC_WARNINGS} -i${HS_INCLUDE}
 
 GHC = stack build --only-dependencies && stack ghc -- ${GHC_OPTIONS}
 
