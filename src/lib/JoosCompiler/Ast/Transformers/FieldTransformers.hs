@@ -39,4 +39,4 @@ getFieldExpression :: TaggedParseTree -> Type -> Expression
 getFieldExpression (Node _ [(Node (TaggedToken "Identifier" _ _ _) []), (Node (TaggedToken "=" _ _ _) []), e]) _ =
   expressionTransformer e
 getFieldExpression (Node _ [(Node (TaggedToken "Identifier" _ _ _) [])]) t =
-  LiteralExpression $ unitializedLiteral t
+  uninitializedExpression t

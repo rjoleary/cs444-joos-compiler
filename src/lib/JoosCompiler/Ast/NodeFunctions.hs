@@ -321,14 +321,14 @@ literalType CharacterLiteral{} = Type Char False
 literalType StringLiteral{}    = Type (NamedType ["java", "lang", "String"]) False
 literalType NullLiteral{}      = Null
 
--- Returns the default value for fields if they are left uninitialized.
-unitializedLiteral :: Type -> Literal
-unitializedLiteral (Type (NamedType _) _) = NullLiteral
-unitializedLiteral (Type _ True)          = NullLiteral
-unitializedLiteral (Type Boolean _)       = BooleanLiteral False
-unitializedLiteral (Type _ _)             = IntegerLiteral 0
-unitializedLiteral Void                   = error "Void is not a literal"
-unitializedLiteral Null                   = NullLiteral
+-- Return a default expression for fields if they are left uninitialized.
+uninitializedExpression :: Type -> Expression
+uninitializedExpression (Type (NamedType _) _) = LiteralExpression NullLiteral
+uninitializedExpression (Type _ True)          = LiteralExpression NullLiteral
+uninitializedExpression (Type Boolean _)       = LiteralExpression (BooleanLiteral False)
+uninitializedExpression x@(Type _ _)           = CastExpression x (LiteralExpression (IntegerLiteral 0))
+uninitializedExpression Void                   = error "Void is not a literal"
+uninitializedExpression Null                   = LiteralExpression NullLiteral
 
 isArray :: Type -> Bool
 isArray (Type _ True) = True
