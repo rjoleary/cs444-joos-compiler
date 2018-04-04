@@ -53,7 +53,7 @@ data TypeAnalysis = TypeAnalysis
 -- Analysis on classes/methods/statements. No Type is returned.
 instance Analysis TypeAnalysis () where
   analyze ctx a@(AstTypeDeclaration x) =
-    propagateAnalyze ctx{ ctxThis = Just [typeName x] } a
+    propagateAnalyze ctx{ ctxThis = Just $ typeCanonicalName x } a
 
   analyze ctx a@(AstField v) = do
     sourceType <- analyze' ctx (variableValue v)
