@@ -380,6 +380,7 @@ isReferenceAssignable wp t@(Type (NamedType tName) tArr) s@(Type (NamedType sNam
 isReferenceAssignable _ (Type (NamedType ["java", "lang", "Object"]) False) s = isReference s
 isReferenceAssignable _ t Null = isReference t -- Can assign null to reference type
 isReferenceAssignable _ (Type t True) (Type s True) = t == s -- Arrays of primitives
+isReferenceAssignable _ (Type (NamedType tName) False) (Type _ True) = tName `elem` arrayAssignables
 isReferenceAssignable _ target source = False
 
 -- See JLS 5.1.2: Widening Primitive Conversion
