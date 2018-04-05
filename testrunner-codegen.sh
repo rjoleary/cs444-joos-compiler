@@ -1,6 +1,6 @@
 #!/bin/bash
 
-COMPILER=${COMPILER-timeout 5s ./joosrun}
+COMPILER=${COMPILER-timeout 15s ./joosrun}
 TESTSET=${TESTSET-test/marmoset/a5}
 
 RUN=0
