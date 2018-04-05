@@ -65,7 +65,7 @@ bin/compiler : ${COMPILER_FILES} ${HS_LIB_FILES}
 docs : ${DOC_OUTPUT}
 
 docs/%.pdf : docs/%.md
-	./docs/generate-docs.sh $@ $<
+	cd docs && ./generate-docs.sh $@ $<
 
 grammar : def/joos.lr1
 
