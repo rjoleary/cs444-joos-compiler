@@ -425,6 +425,25 @@ generateExpression ctx (BinaryOperation Add x y) = do
     return (Type (NamedType ["java", "lang", "String"]) False)
 
   else do
+    -- Null check (Esp+0)
+    label1 <- uniqueLabel
+    mov Eax (AddrOffset Esp 0)
+    cmp Eax (I 0)
+    jne (L label1)
+    generateExpression' ctx (LiteralExpression (StringLiteral "null"))
+    mov (AddrOffset Esp 0) Eax
+    label label1
+
+    -- Null check (Esp+4)
+    label2 <- uniqueLabel
+    mov Eax (AddrOffset Esp 4)
+    cmp Eax (I 0)
+    jne (L label2)
+    generateExpression' ctx (LiteralExpression (StringLiteral "null"))
+    mov (AddrOffset Esp 4) Eax
+    label label2
+
+
     push Ebx
     push Edi
     push Esi
