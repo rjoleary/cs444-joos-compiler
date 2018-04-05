@@ -281,7 +281,6 @@ for stepping through the generated program.
 (gdb) layout regs
 ```
 
-\pagebreak
 
 # Appendix A
 
