@@ -50,6 +50,6 @@ The generated code looks something the following expression:
 
 Do-notation allows state to be hidden behind the scenes.
 
-$\includegraphics{my_ps_file.ps}$
+![profile](profile.png)
 
 
