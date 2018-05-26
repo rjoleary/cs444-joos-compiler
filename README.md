@@ -1,17 +1,13 @@
-Assignment 2
-============
+CS444 Joos Compiler
+===================
 
-The previous README has been moved to
-[docs/report1.md](docs/report1.md).
+CS444 Course Project -- DO NOT PLAGIARIZE
 
-### Assignment 2 plan
+### Authors
 
-I (Ahmed) put some ideas for how we can solve the different parts of
-A2 in [a document](docs/planning.md). Feel free to modify if you have
-something better in mind.
-
-Several items are marked as TODO -- usually because I need to consult
-JLS.
+- Xia Liu
+- Ryan O'Leary
+- Ahmed Al-Sudani
 
 ### AST Summary
 
